@@ -17,8 +17,7 @@ const UserDetailsPage: React.FC = () => {
     email: '',
     profilePictureUrl: '',
     isAdmin: false,
-    enabled: true,
-    emailVerified: false
+    enabled: true
   });
 
   useEffect(() => {
@@ -29,7 +28,10 @@ const UserDetailsPage: React.FC = () => {
 
   const loadUser = async () => {
     try {
+      console.log('Loading user with ID:', id);
       const data = await usersService.getUserById(Number(id));
+      console.log('User data received:', data);
+      
       setUser(data);
       setFormData({
         firstName: data.firstName || '',
@@ -37,11 +39,11 @@ const UserDetailsPage: React.FC = () => {
         email: data.email || '',
         profilePictureUrl: data.profilePictureUrl || '',
         isAdmin: data.isAdmin || false,
-        enabled: data.enabled !== false,
-        emailVerified: data.emailVerified || false
+        enabled: data.enabled !== false
       });
     } catch (error) {
-      toast.error('Failed to load user');
+      console.error('Error loading user:', error);
+      toast.error('Falha ao carregar usuário');
       navigate('/users');
     } finally {
       setLoading(false);
@@ -51,10 +53,10 @@ const UserDetailsPage: React.FC = () => {
   const handleDelete = async () => {
     try {
       await usersService.deleteUser(Number(id));
-      toast.success('User deleted successfully');
+      toast.success('Usuário excluído com sucesso');
       navigate('/users');
     } catch (error) {
-      toast.error('Failed to delete user');
+      toast.error('Falha ao excluir usuário');
     }
   };
 
@@ -99,8 +101,7 @@ const UserDetailsPage: React.FC = () => {
         email: user.email || '',
         profilePictureUrl: user.profilePictureUrl || '',
         isAdmin: user.isAdmin || false,
-        enabled: user.enabled !== false,
-        emailVerified: user.emailVerified || false
+        enabled: user.enabled !== false
       });
     }
   };
@@ -130,12 +131,12 @@ const UserDetailsPage: React.FC = () => {
           className="inline-flex items-center text-gray-400 hover:text-white transition-colors mb-4"
         >
           <FiArrowLeft className="mr-2" />
-          Back to Users
+          Voltar para Usuários
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">User Details</h1>
-            <p className="text-gray-400">Manage user information and permissions</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Detalhes do Usuário</h1>
+            <p className="text-gray-400">Gerencie informações e permissões do usuário</p>
           </div>
           <div className="flex gap-3">
             {!editMode ? (
@@ -144,7 +145,7 @@ const UserDetailsPage: React.FC = () => {
                   onClick={() => setEditMode(true)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
-                  Edit User
+                  Editar Usuário
                 </button>
                 <button
                   onClick={handleToggleAdmin}
@@ -173,7 +174,7 @@ const UserDetailsPage: React.FC = () => {
                   className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
                 >
                   <FiTrash2 />
-                  Delete User
+                  Excluir Usuário
                 </button>
               </>
             ) : (
@@ -200,10 +201,10 @@ const UserDetailsPage: React.FC = () => {
 
       {/* User Information */}
       <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6 mb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">User Information</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">Informações do Usuário</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-gray-400 text-sm">First Name</label>
+            <label className="text-gray-400 text-sm">Nome</label>
             {editMode ? (
               <input
                 type="text"
@@ -219,7 +220,7 @@ const UserDetailsPage: React.FC = () => {
             )}
           </div>
           <div>
-            <label className="text-gray-400 text-sm">Last Name</label>
+            <label className="text-gray-400 text-sm">Sobrenome</label>
             {editMode ? (
               <input
                 type="text"
@@ -244,9 +245,6 @@ const UserDetailsPage: React.FC = () => {
               <p className="text-white flex items-center gap-2">
                 <FiMail className="text-gray-400" />
                 {user.email}
-                {user.emailVerified && (
-                  <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">Verified</span>
-                )}
               </p>
             )}
           </div>
@@ -255,51 +253,33 @@ const UserDetailsPage: React.FC = () => {
 
       {/* Account Status */}
       <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Account Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Status da Conta</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-gray-400 text-sm">Role</label>
-            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-              user.isAdmin 
-                ? 'bg-yellow-500/20 text-yellow-400' 
-                : 'bg-gray-700 text-gray-300'
-            }`}>
-              <FiShield />
-              {user.isAdmin ? 'Administrator' : 'Regular User'}
-            </span>
+            <label className="text-gray-400 text-sm">Função</label>
+            <div className="mt-1">
+              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                user.isAdmin 
+                  ? 'bg-yellow-500/20 text-yellow-400' 
+                  : 'bg-gray-700 text-gray-300'
+              }`}>
+                <FiShield />
+                {user.isAdmin ? 'Administrador' : 'Usuário Regular'}
+              </span>
+            </div>
           </div>
           <div>
             <label className="text-gray-400 text-sm">Status</label>
-            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-              user.enabled 
-                ? 'bg-green-500/20 text-green-400' 
-                : 'bg-red-500/20 text-red-400'
-            }`}>
-              {user.enabled ? <FiCheck /> : <FiX />}
-              {user.enabled ? 'Active' : 'Disabled'}
-            </span>
-          </div>
-
-          <div>
-            <label className="text-gray-400 text-sm">Email Verification</label>
-            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-              user.emailVerified 
-                ? 'bg-green-500/20 text-green-400' 
-                : 'bg-orange-500/20 text-orange-400'
-            }`}>
-              {user.emailVerified ? <FiCheck /> : <FiX />}
-              {user.emailVerified ? 'Verified' : 'Unverified'}
-            </span>
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Push Notifications</label>
-            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
-              user.receivePushNotifications 
-                ? 'bg-blue-500/20 text-blue-400' 
-                : 'bg-gray-700 text-gray-300'
-            }`}>
-              {user.receivePushNotifications ? 'Enabled' : 'Disabled'}
-            </span>
+            <div className="mt-1">
+              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                user.enabled 
+                  ? 'bg-green-500/20 text-green-400' 
+                  : 'bg-red-500/20 text-red-400'
+              }`}>
+                {user.enabled ? <FiCheck /> : <FiX />}
+                {user.enabled ? 'Ativo' : 'Desabilitado'}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -308,28 +288,24 @@ const UserDetailsPage: React.FC = () => {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <h1 className="text-2xl font-bold text-white">Detalhes do Usuário</h1>
-            <div className="flex gap-2">
-              {editMode ? (
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                >
-                  Salvar
-                </button>
-              ) : (
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-                >
-                  Editar
-                </button>
-              )}
+            <h2 className="text-xl font-bold text-white mb-4">Confirmar Exclusão</h2>
+            <p className="text-gray-300 mb-6">
+              Tem certeza de que deseja excluir o usuário <strong>{user?.firstName} {user?.lastName}</strong>? 
+              Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center gap-2"
               >
-                Excluir
+                <FiTrash2 />
+                Excluir Usuário
               </button>
             </div>
           </div>

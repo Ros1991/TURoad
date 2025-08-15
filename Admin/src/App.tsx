@@ -20,6 +20,7 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import UsersPage from './pages/users/UsersPage';
 import UserDetailsPage from './pages/users/UserDetailsPage';
+import CreateUserPage from './pages/users/CreateUserPage';
 import CategoriesPage from './pages/categories/CategoriesPage';
 import CategoryDetailsPage from './pages/categories/CategoryDetailsPage';
 import CitiesPage from './pages/cities/CitiesPage';
@@ -60,6 +61,7 @@ function App() {
                 
                 {/* Users */}
                 <Route path="/users" element={<UsersPage />} />
+                <Route path="/users/new" element={<CreateUserPage />} />
                 <Route path="/users/:id" element={<UserDetailsPage />} />
                 
                 {/* Categories */}

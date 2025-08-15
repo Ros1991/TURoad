@@ -111,6 +111,7 @@ export class BaseRepository<T extends ObjectLiteral> {
    * Apply search to query builder - override in child classes
    */
   protected applySearch(qb: SelectQueryBuilder<T>, search: any): void {
+    console.log(JSON.stringify(search));
   }
 
 

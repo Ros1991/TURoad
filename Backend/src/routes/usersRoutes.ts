@@ -14,7 +14,9 @@ router.use(authenticate);
 // Users routes
 router.get('/', usersController.list.bind(usersController));
 router.get('/:id', usersController.getById.bind(usersController));
+router.post('/', usersController.create.bind(usersController));
 router.put('/:id', usersController.update.bind(usersController));
 router.delete('/:id', usersController.delete.bind(usersController));
+router.patch('/:id/toggle-status', usersController.toggleStatus.bind(usersController));
 
 export default router;

@@ -49,6 +49,14 @@ export class UpdateUserDto implements IDto {
 
   @IsOptional()
   @IsString()
+  @Length(6, 100)
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'password too weak',
+  })
+  password?: string;
+
+  @IsOptional()
+  @IsString()
   @Length(2, 50)
   firstName?: string;
 

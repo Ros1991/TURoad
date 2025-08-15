@@ -1,12 +1,25 @@
 import { User } from '@/entities/User';
 import { BaseRepository } from '@/core/base/BaseRepository';
+import { SelectQueryBuilder } from 'typeorm';
 
 export class UserRepository extends BaseRepository<User> {
   constructor() {
     super(User);
   }
 
-  // findByUsername method removed - using email only
+  protected override applySearch(qb: SelectQueryBuilder<User>, search: any): void {
+    if(search && search.search && search.search.length > 0) {
+      qb.andWhere('entity.firstName ILIKE :search', { search: `%${search.search}%` })
+        .orWhere('entity.lastName ILIKE :search', { search: `%${search.search}%` })
+        .orWhere('entity.email ILIKE :search', { search: `%${search.search}%` });
+    }
+    if(search && search.enabled !== undefined){
+      qb.andWhere('entity.enabled = :enabled', { enabled: search.enabled });
+    }
+    if(search && search.isAdmin !== undefined){
+      qb.andWhere('entity.isAdmin = :isAdmin', { isAdmin: search.isAdmin });
+    }
+  }
 
   async findByEmail(email: string): Promise<User | null> {
     return await this.repository.findOne({ where: { email } });
@@ -42,21 +55,13 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  // updateLastLogin method removed - User entity doesn't have lastLogin field
-
   async countByStatus(enabled: boolean): Promise<number> {
     return await this.repository.count({
       where: { enabled },
     });
   }
-
-  async searchUsers(searchTerm: string): Promise<User[]> {
-    return await this.repository
-      .createQueryBuilder('user')
-      .where('user.username ILIKE :search', { search: `%${searchTerm}%` })
-      .orWhere('user.firstName ILIKE :search', { search: `%${searchTerm}%` })
-      .orWhere('user.lastName ILIKE :search', { search: `%${searchTerm}%` })
-      .getMany();
-  }
 }
+
+// Export singleton instance
+export const userRepository = new UserRepository();
 

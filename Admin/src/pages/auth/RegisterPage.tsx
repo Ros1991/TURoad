@@ -21,7 +21,7 @@ const RegisterPage: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = 'Primeiro nome é obrigatório';
+      newErrors.firstName = 'Nome é obrigatório';
     }
     if (!formData.lastName.trim()) {
       newErrors.lastName = 'Sobrenome é obrigatório';
@@ -33,8 +33,26 @@ const RegisterPage: React.FC = () => {
     }
     if (!formData.password) {
       newErrors.password = 'Senha é obrigatória';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Senha deve ter pelo menos 6 caracteres';
+    } else {
+      const passwordErrors = [];
+      if (formData.password.length < 6) {
+        passwordErrors.push('pelo menos 6 caracteres');
+      }
+      if (!/[a-z]/.test(formData.password)) {
+        passwordErrors.push('uma letra minúscula');
+      }
+      if (!/[A-Z]/.test(formData.password)) {
+        passwordErrors.push('uma letra maiúscula');
+      }
+      if (!/\d/.test(formData.password)) {
+        passwordErrors.push('um número');
+      }
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(formData.password)) {
+        passwordErrors.push('um caractere especial');
+      }
+      if (passwordErrors.length > 0) {
+        newErrors.password = `A senha deve conter: ${passwordErrors.join(', ')}`;
+      }
     }
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Senhas não conferem';
@@ -50,12 +68,41 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      await register({
-        email: formData.email,
-        password: formData.password,
-        firstName: formData.firstName,
-        lastName: formData.lastName
-      });
+      try {
+        await register({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        });
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        
+        // Handle specific error types
+        if (error?.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+          // Password validation errors from backend
+          setErrors(prev => ({
+            ...prev,
+            password: error.response.data.errors.join(', ')
+          }));
+        } else if (error?.response?.data?.message) {
+          // General error message from backend
+          const message = error.response.data.message;
+          if (message.includes('Email') || message.includes('email')) {
+            setErrors(prev => ({ ...prev, email: message }));
+          } else if (message.includes('senha') || message.includes('password')) {
+            setErrors(prev => ({ ...prev, password: message }));
+          } else {
+            setErrors(prev => ({ ...prev, general: message }));
+          }
+        } else if (error?.message) {
+          // Generic error
+          setErrors(prev => ({ ...prev, general: error.message }));
+        } else {
+          // Fallback error
+          setErrors(prev => ({ ...prev, general: 'Erro ao criar conta. Tente novamente.' }));
+        }
+      }
     }
   };
 
@@ -83,7 +130,7 @@ const RegisterPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-             Sobrenome
+              Nome
             </label>
             <div className="relative">
               <input
@@ -95,7 +142,7 @@ const RegisterPage: React.FC = () => {
                 className={`w-full px-4 py-3 pl-12 bg-gray-800/50 border ${
                   errors.firstName ? 'border-red-500' : 'border-gray-700'
                 } rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
-                placeholder="Silva"
+                placeholder="João"
               />
               <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             </div>
@@ -106,7 +153,7 @@ const RegisterPage: React.FC = () => {
 
           <div>
             <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-              Nome
+              Sobrenome
             </label>
             <div className="relative">
               <input
@@ -118,7 +165,7 @@ const RegisterPage: React.FC = () => {
                 className={`w-full px-4 py-3 pl-12 bg-gray-800/50 border ${
                   errors.lastName ? 'border-red-500' : 'border-gray-700'
                 } rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
-                placeholder="João"
+                placeholder="Silva"
               />
               <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             </div>
@@ -167,7 +214,7 @@ const RegisterPage: React.FC = () => {
               className={`w-full px-4 py-3 pl-12 pr-12 bg-gray-800/50 border ${
                 errors.password ? 'border-red-500' : 'border-gray-700'
               } rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all`}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mín. 6 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 especial"
             />
             <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={20} />
             <button
@@ -238,6 +285,13 @@ const RegisterPage: React.FC = () => {
             <p className="mt-1 text-xs text-red-400">{errors.acceptTerms}</p>
           )}
         </div>
+
+        {/* General Error */}
+        {errors.general && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+            <p className="text-sm text-red-400">{errors.general}</p>
+          </div>
+        )}
 
         {/* Submit Button */}
         <button

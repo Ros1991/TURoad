@@ -15,27 +15,27 @@ export class PasswordUtils {
     const errors: string[] = [];
 
     if (password.length < 6) {
-      errors.push('Password must be at least 6 characters long');
+      errors.push('A senha deve ter pelo menos 6 caracteres');
     }
 
     if (password.length > 128) {
-      errors.push('Password must be less than 128 characters long');
+      errors.push('A senha deve ter menos de 128 caracteres');
     }
 
     if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
+      errors.push('A senha deve conter pelo menos uma letra minúscula');
     }
 
     if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
+      errors.push('A senha deve conter pelo menos uma letra maiúscula');
     }
 
     if (!/\d/.test(password)) {
-      errors.push('Password must contain at least one number');
+      errors.push('A senha deve conter pelo menos um número');
     }
 
     if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.push('Password must contain at least one special character');
+      errors.push('A senha deve conter pelo menos um caractere especial');
     }
 
     return {

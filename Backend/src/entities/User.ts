@@ -5,9 +5,10 @@ import { UserFavoriteCity } from './UserFavoriteCity';
 import { UserVisitedRoute } from './UserVisitedRoute';
 import { UserPushSettings } from './UserPushSettings';
 import { PushNotificationLog } from './PushNotificationLog';
+import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('users')
-export class User {
+export class User extends SoftDeleteBaseEntity{
   @PrimaryGeneratedColumn('increment', { name: 'user_id' })
   userId!: number;
 
@@ -39,20 +40,6 @@ export class User {
 
   @Column({ name: 'enabled', type: 'boolean', default: true })
   enabled!: boolean;
-
-  // Audit fields
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: Date;
-
-  // Soft delete fields
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt!: Date | null;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted!: boolean;
 
   // Relationships
   @OneToMany(() => JwtToken, (token) => token.user)

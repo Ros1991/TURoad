@@ -86,7 +86,7 @@ export class AuthService {
     // Validate password strength
     const passwordValidation = PasswordUtils.validatePasswordStrength(registerDto.password);
     if (!passwordValidation.isValid) {
-      throw new ValidationError('Password does not meet requirements', passwordValidation.errors);
+      throw new ValidationError('A senha não atende aos requisitos', passwordValidation.errors);
     }
 
     // Hash password

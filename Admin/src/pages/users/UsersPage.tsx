@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { FiUser, FiMail, FiShield, FiCheck, FiX, FiSearch, FiPlus, FiEdit, FiEdit2, FiTrash2, FiEye, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiUser, FiShield, FiSearch, FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import usersService, { User } from '../../services/users.service';
 import { PaginatedRequest } from '../../services/api';
@@ -9,10 +9,12 @@ interface UserFilters extends PaginatedRequest {
   search?: string;
   isAdmin?: boolean;
   enabled?: boolean;
-  emailVerified?: boolean;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
 }
 
 const UsersPage: React.FC = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -23,23 +25,36 @@ const UsersPage: React.FC = () => {
     search: '',
     isAdmin: undefined,
     enabled: undefined,
-    emailVerified: undefined
+    sortBy: 'firstName',
+    sortOrder: 'ASC'
   });
+  const [sortConfig, setSortConfig] = useState({ field: 'firstName', direction: 'asc' });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; user: User | null }>({
     open: false,
     user: null
   });
   const [searchDebounce, setSearchDebounce] = useState<ReturnType<typeof setTimeout> | null>(null);
 
+  const handleSort = (field: string) => {
+    const newDirection = sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    setSortConfig({ field, direction: newDirection });
+    setFilters(prev => ({
+      ...prev,
+      sortBy: field,
+      sortOrder: newDirection.toUpperCase() as 'ASC' | 'DESC',
+      page: 1
+    }));
+  };
+
   const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       const response = await usersService.getUsers(filters);
-      setUsers(response.data.items);
-      setTotal(response.data.total);
-      setTotalPages(response.data.totalPages);
+      setUsers(response.items);
+      setTotal(response.pagination.total);
+      setTotalPages(response.pagination.totalPages);
     } catch (error) {
-      toast.error('Failed to load users');
+      toast.error('Erro ao carregar usuários');
       console.error(error);
     } finally {
       setLoading(false);
@@ -154,7 +169,7 @@ const UsersPage: React.FC = () => {
             className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 flex items-center gap-2"
           >
             <FiPlus size={18} />
-            <span>Add User</span>
+            <span>Novo Usuário</span>
           </Link>
         </div>
       </div>
@@ -175,16 +190,44 @@ const UsersPage: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Usuário</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Função</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                  <th 
+                    className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider cursor-pointer hover:text-white transition-colors select-none"
+                    onClick={() => handleSort('firstName')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Usuário
+                      {sortConfig.field === 'firstName' && (
+                        <span className="text-blue-400">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th 
+                    className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider cursor-pointer hover:text-white transition-colors select-none"
+                    onClick={() => handleSort('email')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Email
+                      {sortConfig.field === 'email' && (
+                        <span className="text-blue-400">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Função</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
                 {users.map((user: User) => (
-                  <tr key={user.userId} className="hover:bg-gray-700/30 transition-colors">
+                  <tr 
+                    key={user.userId} 
+                    className="hover:bg-gray-700/30 dark:hover:bg-gray-700/30 hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/users/${user.userId}`)}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -206,59 +249,66 @@ const UsersPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">
                         {user.email}
-                        {user.emailVerified && (
-                          <span className="ml-2 text-green-400">✓</span>
-                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {user.isAdmin ? (
-                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-400">
-                          <FiShield />
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                          <FiShield size={14} />
                           Administrador
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-gray-700 text-gray-300">
-                          <FiUser />
+                        <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm bg-gray-500/20 text-gray-400 border border-gray-500/30">
+                          <FiUser size={14} />
                           Usuário Regular
                         </span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
-                        onClick={() => handleToggleStatus(user)}
-                        className={`px-2 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(user);
+                        }}
+                        className={`px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full transition-colors border ${
                           user.enabled
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-500/30 hover:bg-green-200 dark:hover:bg-green-500/30'
+                            : 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-500/30'
                         }`}
+                        title={user.enabled ? 'Clique para desativar' : 'Clique para ativar'}
                       >
                         {user.enabled ? (
                           <>
-                            <FiToggleRight className="mr-1" /> Ativo
+                            <FiToggleRight size={14} /> Ativo
                           </>
                         ) : (
                           <>
-                            <FiToggleLeft className="mr-1" /> Inativo
+                            <FiToggleLeft size={14} /> Inativo
                           </>
                         )}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-3">
-                        <Link
-                          to={`/users/${user.userId}`}
-                          className="text-blue-400 hover:text-blue-300 transition-colors"
-                          title="View Details"
-                        >
-                          <FiEdit2 size={18} />
-                        </Link>
                         <button
-                          onClick={() => setDeleteModal({ open: true, user })}
-                          className="text-red-400 hover:text-red-300 transition-colors"
-                          title="Delete User"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/users/${user.userId}`);
+                          }}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          title="Editar Usuário"
                         >
-                          <FiTrash2 size={18} />
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteModal({ open: true, user });
+                          }}
+                          className="p-2 text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="Excluir Usuário"
+                        >
+                          <FiTrash2 size={16} />
                         </button>
                       </div>
                     </td>
@@ -326,29 +376,25 @@ const UsersPage: React.FC = () => {
 
       {/* Delete Modal */}
       {deleteModal.open && deleteModal.user && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold text-white mb-4">Confirm Delete</h3>
-            <p className="text-gray-300 mb-6">
-              Are you sure you want to delete user <strong>{deleteModal.user.firstName}</strong>? This action cannot be undone.
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirmar Exclusão</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Tem certeza que deseja excluir o usuário <strong className="text-gray-900 dark:text-white">{deleteModal.user.firstName} {deleteModal.user.lastName}</strong>? Esta ação não pode ser desfeita.
             </p>
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteModal({ open: false, user: null })}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
-                Delete
+                Excluir
               </button>
-              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2">
-              <FiPlus size={20} />
-              Adicionar Usuário
-            </button>
             </div>
           </div>
         </div>

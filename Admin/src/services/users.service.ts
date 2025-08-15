@@ -2,13 +2,12 @@ import { api, PaginatedRequest, PaginatedResponse } from './api';
 
 export interface User {
   userId: number;
+  email: string;
   firstName: string;
   lastName: string;
-  email: string;
-  profilePictureUrl: string;
+  profilePictureUrl?: string;
   isAdmin: boolean;
   enabled: boolean;
-  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -17,30 +16,20 @@ export interface User {
 
 export interface CreateUserDto {
   email: string;
-  username: string;
   password: string;
   firstName: string;
   lastName: string;
-  birthDate?: Date;
-  gender?: string;
   profilePictureUrl?: string;
-  bioTextRefId?: string;
   isAdmin?: boolean;
-  receivePushNotifications?: boolean;
 }
 
 export interface UpdateUserDto {
   email?: string;
-  username?: string;
   firstName?: string;
   lastName?: string;
-  birthDate?: Date;
-  gender?: string;
   profilePictureUrl?: string;
-  bioTextRefId?: string;
   isAdmin?: boolean;
   enabled?: boolean;
-  receivePushNotifications?: boolean;
 }
 
 export interface PushSettings {

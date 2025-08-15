@@ -89,11 +89,15 @@ export interface PaginatedRequest {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  items: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 export interface ApiError {
@@ -102,31 +106,38 @@ export interface ApiError {
   error?: string;
 }
 
+// Backend response wrapper interface
+interface BackendResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
 // API methods
 class ApiService {
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.get<T>(url, config);
-    return response.data;
+    const response = await apiClient.get<BackendResponse<T>>(url, config);
+    return response.data.data; // Extract actual data from backend response structure
   }
 
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.post<T>(url, data, config);
-    return response.data;
+    const response = await apiClient.post<BackendResponse<T>>(url, data, config);
+    return response.data.data; // Extract actual data from backend response structure
   }
 
   async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.put<T>(url, data, config);
-    return response.data;
+    const response = await apiClient.put<BackendResponse<T>>(url, data, config);
+    return response.data.data; // Extract actual data from backend response structure
   }
 
   async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.patch<T>(url, data, config);
-    return response.data;
+    const response = await apiClient.patch<BackendResponse<T>>(url, data, config);
+    return response.data.data; // Extract actual data from backend response structure
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.delete<T>(url, config);
-    return response.data;
+    const response = await apiClient.delete<BackendResponse<T>>(url, config);
+    return response.data.data; // Extract actual data from backend response structure
   }
 
   async upload<T>(url: string, file: File, onProgress?: (progress: number) => void): Promise<T> {
