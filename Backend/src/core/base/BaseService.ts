@@ -4,11 +4,17 @@ import { IDto, ListResponseDto, PaginationRequestDto } from './BaseDto';
 import { PaginationRequestVO } from './BaseVO';
 import { AppError } from '../errors/AppError';
 import { BaseMapper } from './BaseMapper';
+import { LocalizedTextHelper } from '../../utils/LocalizedTextHelper';
+import { LocalizedTextRepository } from '../../repositories/LocalizedTextRepository';
+import { LocalizedText } from '../../entities/LocalizedText';
 
 export class BaseService<Entity extends ObjectLiteral> {
   protected baseMapper: BaseMapper<Entity>;
   protected repository: BaseRepository<Entity>;
   protected entityName: string;
+  protected localizedTextRepository: LocalizedTextRepository;
+  protected EntityClass?: new () => Entity;
+  protected currentLanguage: string = 'pt';
   
   constructor(
     EntityClass?: new () => Entity,
@@ -22,6 +28,137 @@ export class BaseService<Entity extends ObjectLiteral> {
       this.baseMapper = new BaseMapper<Entity>();
     }
     this.entityName = entityName;
+    this.EntityClass = EntityClass;
+    this.localizedTextRepository = new LocalizedTextRepository();
+  }
+
+  /**
+   * Set the current language for localized text operations
+   */
+  setLanguage(language: string): void {
+    this.currentLanguage = language || 'pt';
+  }
+
+  /**
+   * Handle localized text fields for entity creation
+   */
+  private async handleLocalizedTextFieldsForCreate(dto: IDto, entity: any): Promise<void> {
+    if (!this.EntityClass || !LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
+      return;
+    }
+
+    const localizedFields = LocalizedTextHelper.extractLocalizedFieldsFromDto(dto, this.EntityClass);
+    
+    // Check for existing reference IDs first (from frontend translation dialog)
+    const localizedFieldsArray = Array.from(localizedFields.entries());
+    
+    for (const [fieldName, textContent] of localizedFieldsArray) {
+      // fieldName is "nameTextRefId", check if DTO already has this reference ID
+      const existingReferenceId = (dto as any)[fieldName];
+      
+      if (existingReferenceId && existingReferenceId > 0) {
+        entity[fieldName] = existingReferenceId;
+        continue;
+      } else if (textContent) {
+        const referenceId = LocalizedTextHelper.generateReferenceId();
+        await this.localizedTextRepository.create({
+          referenceId,
+          languageCode: this.currentLanguage,
+          textContent: textContent as string
+        });
+        entity[fieldName] = referenceId;
+      }
+    }
+  }
+
+  /**
+   * Handle localized text fields for entity update
+   */
+  private async handleLocalizedTextFieldsForUpdate(dto: IDto, entity: any): Promise<void> {
+    if (!this.EntityClass || !LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
+      return;
+    }
+
+    const localizedFields = LocalizedTextHelper.extractLocalizedFieldsFromDto(dto, this.EntityClass);
+    
+    for (const [fieldName, textContent] of localizedFields.entries()) {
+      const referenceId = entity[fieldName];
+      
+      if (referenceId) {
+        // Update existing localized text
+        const existingTexts = await this.localizedTextRepository.findAll({
+          where: { 
+            referenceId, 
+            languageCode: this.currentLanguage 
+          } as any
+        });
+        const existingText = existingTexts.length > 0 ? existingTexts[0] : null;
+        
+        if (existingText) {
+          await this.localizedTextRepository.update(existingText.textId, {
+            textContent: textContent as string
+          });
+        } else {
+          // Create new localized text for this language
+          await this.localizedTextRepository.create({
+            referenceId,
+            languageCode: this.currentLanguage,
+            textContent: textContent as string
+          });
+        }
+      } else {
+        // Create new localized text with new reference ID
+        const newReferenceId = LocalizedTextHelper.generateReferenceId();
+        await this.localizedTextRepository.create({
+          referenceId: newReferenceId,
+          languageCode: this.currentLanguage,
+          textContent: textContent as string
+        });
+        entity[fieldName] = newReferenceId;
+      }
+    }
+  }
+
+  /**
+   * Fetch localized text values for an entity
+   */
+  private async fetchLocalizedTextForEntity(entity: any): Promise<any> {
+    if (!this.EntityClass || !LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
+      return entity;
+    }
+
+    const localizedFields = LocalizedTextHelper.getLocalizedTextFields(this.EntityClass);
+    const localizedTexts = new Map<number, string>();
+    
+    // Collect all reference IDs
+    const referenceIds: number[] = [];
+    for (const field of localizedFields) {
+      const refId = entity[field.propertyName];
+      if (refId) {
+        referenceIds.push(refId);
+      }
+    }
+    
+    if (referenceIds.length > 0) {
+      // Import In operator from TypeORM
+      const { In } = await import('typeorm');
+      
+      // Fetch all localized texts for these reference IDs
+      const texts = await this.localizedTextRepository.findAll({
+        where: {
+          referenceId: In(referenceIds),
+          languageCode: this.currentLanguage
+        } as any
+      });
+      
+      // Map reference IDs to text content
+      texts.forEach((text: LocalizedText) => {
+        localizedTexts.set(text.referenceId, text.textContent);
+      });
+    }
+    
+    // Map entity to DTO with localized strings
+    return LocalizedTextHelper.mapEntityToDto(entity, localizedTexts, this.EntityClass);
   }
 
   /**
@@ -32,7 +169,14 @@ export class BaseService<Entity extends ObjectLiteral> {
     if (!entity) {
       throw new AppError(`${this.entityName} with id ${id} not found`, 404);
     }
-    return this.baseMapper.toResponseDto(entity);
+    const entityWithLocalizedText = await this.fetchLocalizedTextForEntity(entity);
+    
+    // Preserve nameTextRefId from original entity
+    if ((entity as any).nameTextRefId !== undefined) {
+      (entityWithLocalizedText as any).nameTextRefId = (entity as any).nameTextRefId;
+    }
+    
+    return this.baseMapper.toResponseDto(entityWithLocalizedText);
   }
 
   /**
@@ -40,7 +184,10 @@ export class BaseService<Entity extends ObjectLiteral> {
    */
   async findAll(): Promise<IDto[]> {
     const entities = await this.repository.findAll();
-    return entities.map(entity => this.baseMapper.toResponseDto(entity));
+    const entitiesWithLocalizedText = await Promise.all(
+      entities.map(entity => this.fetchLocalizedTextForEntity(entity))
+    );
+    return entitiesWithLocalizedText.map(entity => this.baseMapper.toResponseDto(entity));
   }
 
   /**
@@ -52,7 +199,10 @@ export class BaseService<Entity extends ObjectLiteral> {
   ): Promise<ListResponseDto<IDto>> {
     const paginationVO = new PaginationRequestVO(paginationDto);
     const result = await this.repository.findWithPagination(paginationVO, options);
-    const mappedData = result.items.map(entity => this.baseMapper.toResponseDto(entity));
+    const entitiesWithLocalizedText = await Promise.all(
+      result.items.map(entity => this.fetchLocalizedTextForEntity(entity))
+    );
+    const mappedData = entitiesWithLocalizedText.map(entity => this.baseMapper.toResponseDto(entity));
     return new ListResponseDto<IDto>(mappedData, result.pagination.total, paginationVO.page, paginationVO.limit);
   }
 
@@ -61,10 +211,34 @@ export class BaseService<Entity extends ObjectLiteral> {
    */
   async create(createDto: IDto): Promise<IDto> {
     await this.validateBeforeCreate(createDto);
-    const entityData = this.baseMapper.toEntity(createDto);
+    
+    // First, prepare entity data without localized text fields
+    const entityData: any = {};
+    
+    // Copy non-localized fields from DTO
+    for (const key in createDto) {
+      if (createDto.hasOwnProperty(key)) {
+        entityData[key] = (createDto as any)[key];
+      }
+    }
+    
+    // Handle localized text fields and set reference IDs
+    await this.handleLocalizedTextFieldsForCreate(createDto, entityData);
+    
+    // Remove the string fields that were converted to reference IDs
+    if (this.EntityClass && LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
+      const fields = LocalizedTextHelper.getLocalizedTextFields(this.EntityClass);
+      fields.forEach(field => {
+        const dtoFieldName = field.propertyName.replace('TextRefId', '');
+        delete entityData[dtoFieldName];
+      });
+    }
+    
     const entity = await this.repository.create(entityData as any);
     await this.afterCreate(entity);
-    return this.baseMapper.toResponseDto(entity);
+    
+    const entityWithLocalizedText = await this.fetchLocalizedTextForEntity(entity);
+    return this.baseMapper.toResponseDto(entityWithLocalizedText);
   }
 
   /**
@@ -76,13 +250,37 @@ export class BaseService<Entity extends ObjectLiteral> {
       throw new AppError(`${this.entityName} with id ${id} not found`, 404);
     }
     await this.validateBeforeUpdate(id, updateDto, existingEntity);
-    const entityData = this.baseMapper.toEntityFromUpdate(updateDto, existingEntity);
+    
+    // Prepare entity data for update
+    const entityData: any = { ...existingEntity };
+    
+    // Copy non-localized fields from DTO
+    for (const key in updateDto) {
+      if (updateDto.hasOwnProperty(key)) {
+        entityData[key] = (updateDto as any)[key];
+      }
+    }
+    
+    // Handle localized text fields before updating entity
+    await this.handleLocalizedTextFieldsForUpdate(updateDto, entityData);
+    
+    // Remove the string fields that were converted to reference IDs
+    if (this.EntityClass && LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
+      const fields = LocalizedTextHelper.getLocalizedTextFields(this.EntityClass);
+      fields.forEach(field => {
+        const dtoFieldName = field.propertyName.replace('TextRefId', '');
+        delete entityData[dtoFieldName];
+      });
+    }
+    
     const entity = await this.repository.update(id, entityData as any);
     if (!entity) {
       throw new AppError(`Failed to update ${this.entityName} with id ${id}`, 500);
     }
     await this.afterUpdate(entity);
-    return this.baseMapper.toResponseDto(entity);
+    
+    const entityWithLocalizedText = await this.fetchLocalizedTextForEntity(entity);
+    return this.baseMapper.toResponseDto(entityWithLocalizedText);
   }
 
   /**

@@ -4,12 +4,12 @@ import { IDto } from '../core/base/BaseDto';
 // CREATE
 export class CreateCityDto implements IDto {
   @IsNotEmpty()
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -28,19 +28,19 @@ export class CreateCityDto implements IDto {
   imageUrl?: string;
 
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
 }
 
 // UPDATE
 export class UpdateCityDto implements IDto {
   @IsOptional()
-  @IsInt()
-  nameTextRefId?: number;
+  @IsString()
+  name?: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()
@@ -59,8 +59,8 @@ export class UpdateCityDto implements IDto {
   imageUrl?: string;
 
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
 }
 
 // RESPONSE
@@ -71,12 +71,12 @@ export class CityResponseDto implements IDto {
   @IsInt()
   cityId!: number;
   
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
   
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
   
   @IsNumber()
   latitude!: number;
@@ -92,8 +92,8 @@ export class CityResponseDto implements IDto {
   imageUrl?: string;
   
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
   
   @IsDateString()
   createdAt!: Date;

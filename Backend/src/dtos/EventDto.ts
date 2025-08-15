@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsString, IsUrl } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 // CREATE
@@ -8,12 +8,12 @@ export class CreateEventDto implements IDto {
   cityId!: number;
 
   @IsNotEmpty()
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsNotEmpty()
   @IsDateString()
@@ -22,6 +22,10 @@ export class CreateEventDto implements IDto {
   @IsNotEmpty()
   @IsString()
   eventTime!: string;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // UPDATE
@@ -31,12 +35,12 @@ export class UpdateEventDto implements IDto {
   cityId?: number;
 
   @IsOptional()
-  @IsInt()
-  nameTextRefId?: number;
+  @IsString()
+  name?: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsDateString()
@@ -45,6 +49,10 @@ export class UpdateEventDto implements IDto {
   @IsOptional()
   @IsString()
   eventTime?: string;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // RESPONSE
@@ -58,18 +66,22 @@ export class EventResponseDto implements IDto {
   @IsInt()
   cityId!: number;
   
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
   
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
   
   @IsDateString()
   eventDate!: Date;
   
   @IsString()
   eventTime!: string;
+  
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
   
   @IsDateString()
   createdAt!: Date;

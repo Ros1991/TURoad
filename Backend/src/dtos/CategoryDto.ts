@@ -1,15 +1,23 @@
-import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsString } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 // CREATE
 export class CreateCategoryDto implements IDto {
   @IsNotEmpty()
+  @IsString()
+  name!: string;
+
+  @IsOptional()
   @IsInt()
-  nameTextRefId!: number;
+  nameTextRefId?: number;
 }
 
 // UPDATE
 export class UpdateCategoryDto implements IDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
   @IsOptional()
   @IsInt()
   nameTextRefId?: number;
@@ -23,8 +31,12 @@ export class CategoryResponseDto implements IDto {
   @IsInt()
   categoryId!: number;
   
+  @IsString()
+  name!: string;
+
+  @IsOptional()
   @IsInt()
-  nameTextRefId!: number;
+  nameTextRefId?: number;
   
   @IsDateString()
   createdAt!: Date;

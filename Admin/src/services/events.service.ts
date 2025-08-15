@@ -16,6 +16,7 @@ export interface Event {
   descriptionTextRefId?: number;
   eventDate: string;
   eventTime: string;
+  imageUrl?: string;
   city?: {
     cityId: number;
     nameTextRefId: number;
@@ -30,6 +31,7 @@ export interface CreateEventDto {
   descriptionTextRefId?: number;
   eventDate: string;
   eventTime: string;
+  imageUrl?: string;
 }
 
 export interface UpdateEventDto extends Partial<CreateEventDto> {}

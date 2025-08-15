@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { BaseService } from './BaseService';
 import { ObjectLiteral } from 'typeorm';
 import { BaseMapper } from './BaseMapper';
+import { RequestWithLanguage } from '../../middleware/languageMiddleware';
 
 export class BaseController<Entity extends ObjectLiteral> {
   
@@ -18,6 +19,10 @@ export class BaseController<Entity extends ObjectLiteral> {
    */
   list = async (req: Request, res: Response): Promise<void> => {
     try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
+      
       const sourceData = req.query;
       const filterData = { ...sourceData };
       delete filterData.page;
@@ -49,6 +54,10 @@ export class BaseController<Entity extends ObjectLiteral> {
    */
   getById = async (req: Request, res: Response): Promise<void> => {
     try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
+      
       const id = parseInt(req.params['id'] as string, 10);
 
       if (isNaN(id)) {
@@ -77,6 +86,10 @@ export class BaseController<Entity extends ObjectLiteral> {
    */
   create = async (req: Request, res: Response): Promise<void> => {
     try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
+      
       const sourceData = req.body;
       
       const result = await this.service.create(sourceData);
@@ -98,6 +111,9 @@ export class BaseController<Entity extends ObjectLiteral> {
    */
   update = async (req: Request, res: Response): Promise<void> => {
     try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
       const id = parseInt(req.params['id'] as string, 10);
       if (isNaN(id)) {
         res.status(400).json({

@@ -16,18 +16,13 @@ export enum LocationType {
 
 export interface Location {
   locationId: number;
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  addressTextRefId?: string;
-  locationType: LocationType;
-  latitude: number;
-  longitude: number;
-  altitude?: number;
-  phoneNumber?: string;
-  email?: string;
-  website?: string;
-  openingHours?: string;
-  priceRange?: string;
+  cityId: number;
+  nameTextRefId: number;
+  descriptionTextRefId?: number;
+  latitude?: number;
+  longitude?: number;
+  typeId?: number;
+  imageUrl?: string;
   rating?: number;
   reviewsCount?: number;
   photoUrls?: string[];
@@ -56,9 +51,10 @@ export interface StoryLocation {
 }
 
 export interface CreateLocationDto {
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  addressTextRefId?: string;
+  nameTextRefId: number;
+  descriptionTextRefId?: number;
+  cityId: number;
+  typeId?: number;
   locationType: LocationType;
   latitude: number;
   longitude: number;
@@ -73,6 +69,7 @@ export interface CreateLocationDto {
   isPetFriendly?: boolean;
   hasParking?: boolean;
   hasWifi?: boolean;
+  imageUrl?: string;
   isActive?: boolean;
   nameTranslations?: LocalizedText[];
   descriptionTranslations?: LocalizedText[];
@@ -80,9 +77,10 @@ export interface CreateLocationDto {
 }
 
 export interface UpdateLocationDto {
-  nameTextRefId?: string;
-  descriptionTextRefId?: string;
-  addressTextRefId?: string;
+  nameTextRefId?: number;
+  descriptionTextRefId?: number;
+  cityId?: number;
+  typeId?: number;
   locationType?: LocationType;
   latitude?: number;
   longitude?: number;
@@ -97,6 +95,7 @@ export interface UpdateLocationDto {
   isPetFriendly?: boolean;
   hasParking?: boolean;
   hasWifi?: boolean;
+  imageUrl?: string;
   isActive?: boolean;
   nameTranslations?: LocalizedText[];
   descriptionTranslations?: LocalizedText[];

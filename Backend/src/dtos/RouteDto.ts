@@ -1,34 +1,42 @@
-import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsString, IsUrl } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 // CREATE
 export class CreateRouteDto implements IDto {
   @IsNotEmpty()
-  @IsInt()
-  titleTextRefId!: number;
+  @IsString()
+  title!: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // UPDATE
 export class UpdateRouteDto implements IDto {
   @IsOptional()
-  @IsInt()
-  titleTextRefId?: number;
+  @IsString()
+  title?: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // RESPONSE
@@ -39,16 +47,20 @@ export class RouteResponseDto implements IDto {
   @IsInt()
   routeId!: number;
   
-  @IsInt()
-  titleTextRefId!: number;
+  @IsString()
+  title!: string;
   
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
   
   @IsOptional()
-  @IsInt()
-  whatToObserveTextRefId?: number;
+  @IsString()
+  whatToObserve?: string;
+  
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
   
   @IsDateString()
   createdAt!: Date;

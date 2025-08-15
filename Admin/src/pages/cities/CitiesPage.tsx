@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiSearch, FiFilter, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiMapPin, FiGlobe } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiMapPin, FiGlobe } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import citiesService, { City, CityFilters } from '../../services/cities.service';
 
@@ -14,7 +14,6 @@ const CitiesPage: React.FC = () => {
     page: 1,
     limit: 10
   });
-  const [showFilters, setShowFilters] = useState(false);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -22,11 +21,12 @@ const CitiesPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await citiesService.getAll(filters);
-      setCities(response.data);
-      setTotal(response.total);
+      setCities(response.items);
+      setTotal(response.pagination.total);
     } catch (error) {
       toast.error('Failed to load cities');
       console.error('Error loading cities:', error);
+      setCities([]); // Set empty array on error to prevent undefined access
     } finally {
       setLoading(false);
     }
@@ -89,49 +89,18 @@ const CitiesPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
-        <div className="flex gap-4">
-          <div className="flex-1 relative">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Pesquisar cidades..."
-              value={filters.search}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white hover:bg-gray-600/50 flex items-center gap-2"
-          >
-            <FiFilter size={20} />
-            Filters
-          </button>
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Pesquisar cidades..."
+            value={filters.search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+          />
         </div>
-
-        {/* Extended Filters */}
-        {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-700 grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">Status</label>
-              <select
-                value={filters.isActive === undefined ? '' : filters.isActive.toString()}
-                onChange={(e) => setFilters((prev: CityFilters) => ({ 
-                  ...prev, 
-                  isActive: e.target.value === '' ? undefined : e.target.value === 'true',
-                  page: 1 
-                }))}
-                className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
-              >
-                <option value="">All</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Cities Table */}
@@ -145,7 +114,7 @@ const CitiesPage: React.FC = () => {
           <div className="p-8 text-center">
             <FiMapPin size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-center py-8">Nenhuma cidade encontrada</p>
-            <p className="text-gray-500 text-sm mt-2">Tente ajustar os filtros ou adicionar uma nova cidade</p>
+            <p className="text-gray-500 text-sm mt-2">Tente ajustar a busca ou adicionar uma nova cidade</p>
           </div>
         ) : (
           <div className="overflow-x-auto">

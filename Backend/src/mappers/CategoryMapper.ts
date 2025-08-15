@@ -5,7 +5,9 @@ import { BaseMapper } from '@/core/base/BaseMapper';
 export class CategoryMapper extends BaseMapper<Category> {
   static toEntity(createDto: CreateCategoryDto): Category {
     const category = new Category();
-    category.nameTextRefId = createDto.nameTextRefId;
+    if (createDto.nameTextRefId) {
+      category.nameTextRefId = createDto.nameTextRefId;
+    }
     return category;
   }
 
@@ -17,6 +19,7 @@ export class CategoryMapper extends BaseMapper<Category> {
     return {
       id: entity.categoryId,
       categoryId: entity.categoryId,
+      name: '', // Will be populated by localized text system
       nameTextRefId: entity.nameTextRefId,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,

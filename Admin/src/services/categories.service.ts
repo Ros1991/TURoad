@@ -8,6 +8,7 @@ export interface LocalizedText {
 export interface Category {
   categoryId: number;
   name: string;
+  nameTextRefId?: number;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -17,10 +18,12 @@ export interface Category {
 
 export interface CreateCategoryDto {
   name: string;
+  nameTextRefId?: number;
 }
 
 export interface UpdateCategoryDto {
   name?: string;
+  nameTextRefId?: number;
 }
 
 class CategoriesService {

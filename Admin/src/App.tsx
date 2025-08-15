@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -29,6 +28,8 @@ import RoutesPage from './pages/routes/RoutesPage';
 import RouteDetailsPage from './pages/routes/RouteDetailsPage';
 import LocationsPage from './pages/locations/LocationsPage';
 import LocationDetailsPage from './pages/locations/LocationDetailsPage';
+import CreateLocationPage from './pages/locations/CreateLocationPage';
+import CreateRoutePage from './pages/routes/CreateRoutePage';
 import EventsPage from './pages/events/EventsPage';
 import EventDetailsPage from './pages/events/EventDetailsPage';
 import SettingsPage from './pages/SettingsPage';
@@ -74,10 +75,14 @@ function App() {
                 
                 {/* Routes */}
                 <Route path="/routes" element={<RoutesPage />} />
+                <Route path="/routes/new" element={<CreateRoutePage />} />
+                <Route path="/routes/:id/edit" element={<CreateRoutePage />} />
                 <Route path="/routes/:id" element={<RouteDetailsPage />} />
                 
                 {/* Locations */}
                 <Route path="/locations" element={<LocationsPage />} />
+                <Route path="/locations/new" element={<CreateLocationPage />} />
+                <Route path="/locations/:id/edit" element={<CreateLocationPage />} />
                 <Route path="/locations/:id" element={<LocationDetailsPage />} />
                 
                 {/* Events */}

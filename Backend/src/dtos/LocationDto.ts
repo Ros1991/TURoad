@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsNumber, IsString, IsUrl } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 // CREATE
@@ -8,12 +8,12 @@ export class CreateLocationDto implements IDto {
   cityId!: number;
 
   @IsNotEmpty()
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()
@@ -26,6 +26,10 @@ export class CreateLocationDto implements IDto {
   @IsOptional()
   @IsInt()
   typeId?: number;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // UPDATE
@@ -35,12 +39,12 @@ export class UpdateLocationDto implements IDto {
   cityId?: number;
 
   @IsOptional()
-  @IsInt()
-  nameTextRefId?: number;
+  @IsString()
+  name?: string;
 
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
 
   @IsOptional()
   @IsNumber()
@@ -53,6 +57,10 @@ export class UpdateLocationDto implements IDto {
   @IsOptional()
   @IsInt()
   typeId?: number;
+
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
 }
 
 // RESPONSE
@@ -66,12 +74,12 @@ export class LocationResponseDto implements IDto {
   @IsInt()
   cityId!: number;
   
-  @IsInt()
-  nameTextRefId!: number;
+  @IsString()
+  name!: string;
   
   @IsOptional()
-  @IsInt()
-  descriptionTextRefId?: number;
+  @IsString()
+  description?: string;
   
   @IsOptional()
   @IsNumber()
@@ -84,6 +92,10 @@ export class LocationResponseDto implements IDto {
   @IsOptional()
   @IsInt()
   typeId?: number;
+  
+  @IsOptional()
+  @IsUrl()
+  imageUrl?: string;
   
   @IsDateString()
   createdAt!: Date;

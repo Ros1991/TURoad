@@ -1,26 +1,26 @@
-import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional, IsBoolean, IsDateString, IsString } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 // CREATE
 export class CreateFAQDto implements IDto {
   @IsNotEmpty()
-  @IsInt()
-  questionTextRefId!: number;
+  @IsString()
+  question!: string;
 
   @IsNotEmpty()
-  @IsInt()
-  answerTextRefId!: number;
+  @IsString()
+  answer!: string;
 }
 
 // UPDATE
 export class UpdateFAQDto implements IDto {
   @IsOptional()
-  @IsInt()
-  questionTextRefId?: number;
+  @IsString()
+  question?: string;
 
   @IsOptional()
-  @IsInt()
-  answerTextRefId?: number;
+  @IsString()
+  answer?: string;
 }
 
 // RESPONSE
@@ -31,11 +31,11 @@ export class FAQResponseDto implements IDto {
   @IsInt()
   faqId!: number;
   
-  @IsInt()
-  questionTextRefId!: number;
+  @IsString()
+  question!: string;
   
-  @IsInt()
-  answerTextRefId!: number;
+  @IsString()
+  answer!: string;
   
   @IsDateString()
   createdAt!: Date;

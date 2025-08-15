@@ -31,6 +31,9 @@ export class Location extends SoftDeleteBaseEntity {
   @Column({ name: 'type_id', type: 'integer', nullable: true })
   typeId?: number;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
+  imageUrl?: string;
+
   // Relationships
   @ManyToOne(() => City, (city) => city.locations, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'city_id' })

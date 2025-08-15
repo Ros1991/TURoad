@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import categoriesService, { Category } from '../../services/categories.service';
+import LocalizedTextInput from '../../components/common/LocalizedTextInput';
 
 const CategoryDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -12,7 +13,8 @@ const CategoryDetailsPage: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: ''
+    name: '',
+    nameTextRefId: 0
   });
 
   useEffect(() => {
@@ -34,10 +36,23 @@ const CategoryDetailsPage: React.FC = () => {
         return;
       }
       const data = await categoriesService.getCategoryById(categoryId);
-      setCategory(data);
-      setEditForm({
-        name: data.name || ''
-      });
+      if (data) {
+        setCategory(data);
+        if (editMode) {
+          const form = {
+            name: data.name || '',
+            nameTextRefId: data.nameTextRefId || 0
+          };
+          setEditForm(form);
+        } else {
+          if (data && !editMode) {
+            setEditForm({
+              name: data.name || '',
+              nameTextRefId: data.nameTextRefId || 0
+            });
+          }
+        }
+      }
     } catch (error) {
       toast.error('Erro ao carregar categoria');
       navigate('/categories');
@@ -48,23 +63,23 @@ const CategoryDetailsPage: React.FC = () => {
 
   const handleSaveEdit = async () => {
     try {
+      const payload = {
+        name: editForm.name,
+        nameTextRefId: editForm.nameTextRefId
+      };
+      
       if (id === 'new') {
-        // Create new category
-        await categoriesService.createCategory({
-          name: editForm.name
-        });
+        await categoriesService.createCategory(payload);
         toast.success('Categoria criada com sucesso');
         navigate('/categories');
       } else {
-        // Update existing category
-        await categoriesService.updateCategory(Number(id), {
-          name: editForm.name
-        });
+        await categoriesService.updateCategory(Number(id), payload);
         toast.success('Categoria atualizada com sucesso');
         setEditMode(false);
         loadCategory();
       }
     } catch (error) {
+      console.error('Error saving category:', error);
       toast.error(id === 'new' ? 'Erro ao criar categoria' : 'Erro ao atualizar categoria');
     }
   };
@@ -76,7 +91,8 @@ const CategoryDetailsPage: React.FC = () => {
       setEditMode(false);
       if (category) {
         setEditForm({
-          name: category.name || ''
+          name: category.name || '',
+          nameTextRefId: category.nameTextRefId || 0
         });
       }
     }
@@ -177,12 +193,20 @@ const CategoryDetailsPage: React.FC = () => {
           <div className="col-span-2">
             <label className="text-white text-sm mb-2 block">Nome da Categoria</label>
             {editMode || id === 'new' ? (
-              <input
-                type="text"
+              <LocalizedTextInput
                 value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                onChange={(value) => {
+                  setEditForm(prev => ({ ...prev, name: value }));
+                }}
+                onBothChange={(value, referenceId) => {
+                  setEditForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
+                }}
+                onReferenceIdChange={(referenceId) => {
+                  setEditForm(prev => ({ ...prev, nameTextRefId: referenceId }));
+                }}
+                fieldName="Nome da Categoria"
                 placeholder="Digite o nome da categoria"
+                referenceId={editForm.nameTextRefId || category?.nameTextRefId || 0}
               />
             ) : (
               <p className="text-white">{category?.name}</p>

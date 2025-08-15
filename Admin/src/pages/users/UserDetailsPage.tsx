@@ -248,6 +248,22 @@ const UserDetailsPage: React.FC = () => {
               </p>
             )}
           </div>
+          <div>
+            <label className="text-gray-400 text-sm">URL da Foto de Perfil</label>
+            {editMode ? (
+              <input
+                type="url"
+                value={formData.profilePictureUrl}
+                onChange={(e) => setFormData({ ...formData, profilePictureUrl: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                placeholder="https://exemplo.com/foto.jpg"
+              />
+            ) : (
+              <p className="text-white">
+                {user.profilePictureUrl || 'Não informado'}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

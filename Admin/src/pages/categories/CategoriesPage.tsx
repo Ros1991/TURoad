@@ -100,9 +100,7 @@ const CategoriesPage: React.FC = () => {
 
 
   const getCategoryName = (category: Category) => {
-    return category.nameTranslations?.find(t => t.language === 'pt')?.text || 
-           category.nameTranslations?.[0]?.text || 
-           category.name;
+    return category.name;
   };
 
   return (

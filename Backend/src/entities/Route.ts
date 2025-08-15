@@ -24,6 +24,9 @@ export class Route extends SoftDeleteBaseEntity {
   @Column({ name: 'what_to_observe_text_ref_id', type: 'integer', nullable: true })
   whatToObserveTextRefId?: number;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
+  imageUrl?: string;
+
   // Relationships
   @OneToMany(() => RouteCity, (routeCity) => routeCity.route)
   routeCities!: RouteCity[];

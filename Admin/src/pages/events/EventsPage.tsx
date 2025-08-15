@@ -1,124 +1,131 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiCalendar, FiClock, FiMapPin, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiCalendar, FiMapPin, FiChevronLeft, FiChevronRight, FiImage } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import eventsService, { Event, EventFilters, CreateEventDto } from '../../services/events.service';
-import citiesService from '../../services/cities.service';
-import { PaginatedRequest } from '../../services/api';
+import eventsService, { Event } from '../../services/events.service';
+import citiesService, { City } from '../../services/cities.service';
 
-const EventsPage: React.FC = () => {
+const EventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [cities, setCities] = useState<any[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [filters, setFilters] = useState<EventFilters>({
-    page: 1,
-    limit: 10,
-    search: '',
-    cityId: undefined,
-    startDate: undefined,
-    endDate: undefined
-  });
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; event: Event | null }>({
-    open: false,
-    event: null
-  });
+  const [search, setSearch] = useState('');
+  const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [createModal, setCreateModal] = useState(false);
-  const [editModal, setEditModal] = useState<{ open: boolean; event: Event | null }>({
-    open: false,
-    event: null
-  });
-  const [formData, setFormData] = useState<CreateEventDto>({
+  const [editModal, setEditModal] = useState<{ open: boolean; event: Event | null }>({ open: false, event: null });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; event: Event | null }>({ open: false, event: null });
+  const [formData, setFormData] = useState({
     cityId: 0,
     nameTextRefId: 1,
     descriptionTextRefId: 1,
     eventDate: '',
-    eventTime: ''
+    eventTime: '',
+    imageUrl: ''
   });
-  const [searchDebounce, setSearchDebounce] = useState<ReturnType<typeof setTimeout> | null>(null);
-
-  const loadEvents = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await eventsService.getEvents(filters);
-      setEvents(response.data || []);
-      setTotal(response.total || 0);
-      setTotalPages(response.totalPages || 0);
-    } catch (error) {
-      toast.error('Failed to load events');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  const loadCities = async () => {
-    try {
-      const response = await citiesService.getCities({ limit: 100 });
-      setCities(response.data || []);
-    } catch (error) {
-      console.error('Failed to load cities:', error);
-    }
-  };
+  const pageSize = 10;
 
   useEffect(() => {
     loadEvents();
     loadCities();
-  }, [loadEvents]);
+  }, [currentPage, search, selectedCityId]);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: pageSize,
+        search: search || undefined,
+        cityId: selectedCityId || undefined,
+        sortBy: 'eventDate',
+        sortOrder: 'ASC' as const
+      };
+      
+      const response = await eventsService.getEvents(params);
+      setEvents(response.items);
+      setTotalPages(response.pagination.totalPages);
+      setTotalItems(response.pagination.total);
+    } catch (error) {
+      toast.error('Erro ao carregar eventos');
+      console.error('Failed to load events:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCities = async () => {
+    try {
+      const response = await citiesService.getCities({ limit: 100, sortBy: 'nameTextRefId', sortOrder: 'ASC' });
+      setCities(response.items);
+    } catch (error) {
+      toast.error('Erro ao carregar cidades');
+    }
+  };
 
   const handleSearch = (value: string) => {
-    if (searchDebounce) {
-      clearTimeout(searchDebounce);
-    }
-    const timeout = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: value, page: 1 }));
-    }, 500);
-    setSearchDebounce(timeout);
+    setSearch(value);
+    setCurrentPage(1);
   };
 
   const handleDelete = async () => {
-    if (!deleteModal.event) return;
-    try {
-      await eventsService.deleteEvent(deleteModal.event.eventId!);
-      toast.success('Event deleted successfully');
-      setDeleteModal({ open: false, event: null });
-      loadEvents();
-    } catch (error) {
-      toast.error('Failed to delete event');
-      console.error(error);
+    if (deleteModal.event) {
+      try {
+        await eventsService.deleteEvent(deleteModal.event.eventId!);
+        toast.success('Evento excluído com sucesso');
+        setDeleteModal({ open: false, event: null });
+        loadEvents();
+      } catch (error) {
+        toast.error('Erro ao excluir evento');
+      }
     }
   };
 
   const handleCreate = async () => {
     try {
-      await eventsService.createEvent(formData);
-      toast.success('Event created successfully');
+      await eventsService.createEvent({
+        cityId: formData.cityId,
+        nameTextRefId: formData.nameTextRefId,
+        descriptionTextRefId: formData.descriptionTextRefId || undefined,
+        eventDate: formData.eventDate,
+        eventTime: formData.eventTime,
+        imageUrl: formData.imageUrl || undefined
+      });
+      toast.success('Evento criado com sucesso');
       setCreateModal(false);
       setFormData({
         cityId: 0,
         nameTextRefId: 1,
         descriptionTextRefId: 1,
         eventDate: '',
-        eventTime: ''
+        eventTime: '',
+        imageUrl: ''
       });
       loadEvents();
     } catch (error) {
-      toast.error('Failed to create event');
-      console.error(error);
+      toast.error('Erro ao criar evento');
     }
   };
 
   const handleUpdate = async () => {
-    if (!editModal.event) return;
-    try {
-      await eventsService.updateEvent(editModal.event.eventId!, formData);
-      toast.success('Event updated successfully');
-      setEditModal({ open: false, event: null });
-      loadEvents();
-    } catch (error) {
-      toast.error('Failed to update event');
-      console.error(error);
+    if (editModal.event) {
+      try {
+        await eventsService.updateEvent(editModal.event.eventId!, {
+          cityId: formData.cityId,
+          nameTextRefId: formData.nameTextRefId,
+          descriptionTextRefId: formData.descriptionTextRefId || undefined,
+          eventDate: formData.eventDate,
+          eventTime: formData.eventTime,
+          imageUrl: formData.imageUrl || undefined
+        });
+        toast.success('Evento atualizado com sucesso');
+        setEditModal({ open: false, event: null });
+        loadEvents();
+      } catch (error) {
+        toast.error('Erro ao atualizar evento');
+      }
     }
   };
 
@@ -126,23 +133,27 @@ const EventsPage: React.FC = () => {
     setFormData({
       cityId: event.cityId,
       nameTextRefId: event.nameTextRefId,
-      descriptionTextRefId: event.descriptionTextRefId,
+      descriptionTextRefId: event.descriptionTextRefId || 1,
       eventDate: event.eventDate,
-      eventTime: event.eventTime
+      eventTime: event.eventTime,
+      imageUrl: event.imageUrl || ''
     });
     setEditModal({ open: true, event });
   };
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }));
+    setCurrentPage(page);
   };
+
 
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2">Eventos</h1>
-        <p className="text-gray-400">Descubra eventos e atividades próximas</p>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Eventos</h1>
+          <p className="text-gray-600 dark:text-gray-400">Gerenciar eventos e atividades</p>
+        </div>
         <button
           onClick={() => setCreateModal(true)}
           className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
@@ -165,8 +176,8 @@ const EventsPage: React.FC = () => {
             />
           </div>
           <select
-            value={filters.cityId || ''}
-            onChange={(e) => setFilters(prev => ({ ...prev, cityId: e.target.value ? Number(e.target.value) : undefined, page: 1 }))}
+            value={selectedCityId}
+            onChange={(e) => setSelectedCityId(e.target.value ? Number(e.target.value) : '')}
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
           >
             <option value="">Todas as Cidades</option>
@@ -176,20 +187,8 @@ const EventsPage: React.FC = () => {
               </option>
             ))}
           </select>
-          <input
-            type="date"
-            value={filters.startDate || ''}
-            onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value || undefined, page: 1 }))}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Data Inicial"
-          />
-          <input
-            type="date"
-            value={filters.endDate || ''}
-            onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value || undefined, page: 1 }))}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-            placeholder="Data Final"
-          />
+          <div></div>
+          <div></div>
         </div>
       </div>
 
@@ -224,7 +223,7 @@ const EventsPage: React.FC = () => {
                       {event.eventId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {event.name}
+                      Evento ID: {event.nameTextRefId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       <div className="flex items-center gap-1">
@@ -272,12 +271,12 @@ const EventsPage: React.FC = () => {
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-gray-600 dark:text-gray-400">
-            Mostrando {((filters.page - 1) * filters.limit) + 1} a {Math.min(filters.page * filters.limit, total)} de {total} resultados
+            Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, totalItems)} de {totalItems} resultados
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => handlePageChange(filters.page - 1)}
-              disabled={filters.page === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
               className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <FiChevronLeft />
@@ -287,7 +286,7 @@ const EventsPage: React.FC = () => {
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded ${
-                  page === filters.page
+                  page === currentPage
                     ? 'bg-indigo-600 text-white'
                     : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                 }`}
@@ -296,8 +295,8 @@ const EventsPage: React.FC = () => {
               </button>
             ))}
             <button
-              onClick={() => handlePageChange(filters.page + 1)}
-              disabled={filters.page === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
               className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               <FiChevronRight />
@@ -375,7 +374,7 @@ const EventsPage: React.FC = () => {
                 <input
                   type="number"
                   value={formData.descriptionTextRefId || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descriptionTextRefId: e.target.value ? Number(e.target.value) : undefined }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, descriptionTextRefId: e.target.value ? Number(e.target.value) : 1 }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
@@ -413,7 +412,8 @@ const EventsPage: React.FC = () => {
                     nameTextRefId: 1,
                     descriptionTextRefId: 1,
                     eventDate: '',
-                    eventTime: ''
+                    eventTime: '',
+                    imageUrl: ''
                   });
                 }}
                 className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -474,7 +474,7 @@ const EventsPage: React.FC = () => {
                 <input
                   type="number"
                   value={formData.descriptionTextRefId || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descriptionTextRefId: e.target.value ? Number(e.target.value) : undefined }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, descriptionTextRefId: e.target.value ? Number(e.target.value) : 1 }))}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>

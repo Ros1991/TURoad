@@ -9,6 +9,7 @@ import { config } from '@/config/environment';
 import { initializeDatabase } from '@/config/database';
 import { errorHandler } from '@/middleware/errorHandler';
 import { notFoundHandler } from '@/middleware/notFoundHandler';
+import { languageMiddleware } from '@/middleware/languageMiddleware';
 import { setupRoutes } from '@/utils/setupRoutes';
 
 class App {
@@ -30,7 +31,7 @@ class App {
       origin: config.server.corsOrigin,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-Language'],
     }));
 
     // Compression middleware
@@ -53,9 +54,12 @@ class App {
     });
     this.app.use(limiter);
 
-    // Body parsing middleware
+    // Body parser middleware
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    
+    // Language detection middleware
+    this.app.use(languageMiddleware);
 
     // Static files
     this.app.use('/uploads', express.static('uploads'));

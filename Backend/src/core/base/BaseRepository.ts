@@ -90,6 +90,7 @@ export class BaseRepository<T extends ObjectLiteral> {
       }
     }
     if (search) {
+      console.log(`[${this.constructor.name}] Calling applySearch with:`, JSON.stringify(search));
       this.applySearch(qb, search);
     }
     if (options?.order) {
@@ -111,7 +112,7 @@ export class BaseRepository<T extends ObjectLiteral> {
    * Apply search to query builder - override in child classes
    */
   protected applySearch(qb: SelectQueryBuilder<T>, search: any): void {
-    console.log(JSON.stringify(search));
+ 
   }
 
 

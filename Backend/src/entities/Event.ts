@@ -27,6 +27,9 @@ export class Event extends SoftDeleteBaseEntity {
   @Column({ name: 'event_time', type: 'time' })
   eventTime!: string;
 
+  @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
+  imageUrl?: string;
+
   // Relationships
   @ManyToOne(() => City, (city) => city.events, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'city_id' })

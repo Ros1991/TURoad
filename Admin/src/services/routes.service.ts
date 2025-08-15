@@ -10,33 +10,14 @@ export enum DifficultyLevel {
 
 export interface Route {
   routeId: number;
-  cityId: number;
-  categoryId?: number;
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  difficultyLevel: DifficultyLevel;
-  distance?: number;
-  estimatedDuration?: number;
-  elevationGain?: number;
-  maxAltitude?: number;
-  startLatitude?: number;
-  startLongitude?: number;
-  endLatitude?: number;
-  endLongitude?: number;
-  mapUrl?: string;
-  elevationProfileUrl?: string;
-  isActive: boolean;
-  isFeatured: boolean;
-  rating?: number;
-  reviewsCount?: number;
-  completionsCount?: number;
+  titleTextRefId: number;
+  descriptionTextRefId?: number;
+  whatToObserveTextRefId?: number;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   nameTranslations?: LocalizedText[];
   descriptionTranslations?: LocalizedText[];
-  city?: any;
-  category?: any;
-  locations?: any[];
   storiesCount?: number;
 }
 
@@ -50,47 +31,17 @@ export interface StoryRoute {
 }
 
 export interface CreateRouteDto {
-  cityId: number;
-  categoryId?: number;
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  difficultyLevel: DifficultyLevel;
-  distance?: number;
-  estimatedDuration?: number;
-  elevationGain?: number;
-  maxAltitude?: number;
-  startLatitude?: number;
-  startLongitude?: number;
-  endLatitude?: number;
-  endLongitude?: number;
-  mapUrl?: string;
-  elevationProfileUrl?: string;
-  isActive?: boolean;
-  isFeatured?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
+  titleTextRefId: number;
+  descriptionTextRefId?: number;
+  whatToObserveTextRefId?: number;
+  imageUrl?: string;
 }
 
 export interface UpdateRouteDto {
-  cityId?: number;
-  categoryId?: number;
-  nameTextRefId?: string;
-  descriptionTextRefId?: string;
-  difficultyLevel?: DifficultyLevel;
-  distance?: number;
-  estimatedDuration?: number;
-  elevationGain?: number;
-  maxAltitude?: number;
-  startLatitude?: number;
-  startLongitude?: number;
-  endLatitude?: number;
-  endLongitude?: number;
-  mapUrl?: string;
-  elevationProfileUrl?: string;
-  isActive?: boolean;
-  isFeatured?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
+  titleTextRefId?: number;
+  descriptionTextRefId?: number;
+  whatToObserveTextRefId?: number;
+  imageUrl?: string;
 }
 
 export interface RouteFilters extends PaginatedRequest {

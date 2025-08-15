@@ -10,17 +10,13 @@ export interface CityFilters extends PaginatedRequest {
 
 export interface City {
   cityId: number;
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  country: string;
-  state?: string;
+  nameTextRefId: number;
+  descriptionTextRefId?: number;
   latitude: number;
   longitude: number;
-  coverImageUrl?: string;
-  timezone?: string;
-  population?: number;
-  elevation?: number;
-  isActive: boolean;
+  state: string;
+  imageUrl?: string;
+  whatToObserveTextRefId?: number;
   createdAt: Date;
   updatedAt: Date;
   nameTranslations?: LocalizedText[];
@@ -39,35 +35,23 @@ export interface StoryCity {
 }
 
 export interface CreateCityDto {
-  nameTextRefId: string;
-  descriptionTextRefId?: string;
-  country: string;
-  state?: string;
+  nameTextRefId: number;
+  descriptionTextRefId?: number;
   latitude: number;
   longitude: number;
-  coverImageUrl?: string;
-  timezone?: string;
-  population?: number;
-  elevation?: number;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
+  state: string;
+  imageUrl?: string;
+  whatToObserveTextRefId?: number;
 }
 
 export interface UpdateCityDto {
-  nameTextRefId?: string;
-  descriptionTextRefId?: string;
-  country?: string;
-  state?: string;
+  nameTextRefId?: number;
+  descriptionTextRefId?: number;
   latitude?: number;
   longitude?: number;
-  coverImageUrl?: string;
-  timezone?: string;
-  population?: number;
-  elevation?: number;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
+  state?: string;
+  imageUrl?: string;
+  whatToObserveTextRefId?: number;
 }
 
 class CitiesService {
