@@ -1,28 +1,325 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiTag, FiSearch, FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import categoriesService, { Category } from '../../services/categories.service';
+import { PaginatedRequest } from '../../services/api';
+
+interface CategoryFilters extends PaginatedRequest {
+  search?: string;
+  sortBy?: string;
+  sortOrder?: 'ASC' | 'DESC';
+}
 
 const CategoriesPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [filters, setFilters] = useState<CategoryFilters>({
+    search: '',
+    sortBy: 'nameTextRefId',
+    sortOrder: 'ASC'
+  });
+  const [sortConfig, setSortConfig] = useState({ field: 'nameTextRefId', direction: 'asc' });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; category: Category | null }>({
+    open: false,
+    category: null
+  });
+  const [searchDebounce, setSearchDebounce] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSort = (field: string) => {
+    const newDirection = sortConfig.field === field && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    setSortConfig({ field, direction: newDirection });
+    setFilters(prev => ({
+      ...prev,
+      sortBy: field,
+      sortOrder: newDirection.toUpperCase() as 'ASC' | 'DESC',
+      page: 1
+    }));
+  };
+
+  const loadCategories = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await categoriesService.getCategories(filters);
+      setCategories(response.items);
+      setTotal(response.pagination.total);
+      setTotalPages(response.pagination.totalPages);
+    } catch (error) {
+      toast.error('Erro ao carregar categorias');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
+
+  useEffect(() => {
+    loadCategories();
+  }, [loadCategories]);
+
+  const handleSearch = (value: string) => {
+    if (searchDebounce) {
+      clearTimeout(searchDebounce);
+    }
+    const timeout = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: value, page: 1 }));
+    }, 300);
+    setSearchDebounce(timeout);
+  };
+
+  const handleToggleStatus = async (category: Category) => {
+    try {
+      await categoriesService.toggleCategoryStatus(category.categoryId);
+      toast.success('Status da categoria alterado com sucesso');
+      loadCategories();
+    } catch (error) {
+      toast.error('Falha ao alterar status da categoria');
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteModal.category) return;
+    
+    try {
+      await categoriesService.deleteCategory(deleteModal.category.categoryId);
+      toast.success('Categoria excluída com sucesso');
+      setDeleteModal({ open: false, category: null });
+      loadCategories();
+    } catch (error) {
+      toast.error('Falha ao excluir categoria');
+      console.error(error);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+  };
+
+
+  const getCategoryName = (category: Category) => {
+    return category.nameTranslations?.find(t => t.language === 'pt')?.text || 
+           category.nameTranslations?.[0]?.text || 
+           category.name;
+  };
+
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Categories</h1>
-        <p className="text-gray-400">Manage route categories</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Categorias</h1>
+        <p className="text-gray-400">Gerencie categorias de rotas turísticas</p>
       </div>
       
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-4 items-center">
+          {/* Search */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar categorias..."
+              className="pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all w-64"
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+          </div>
+        </div>
+
         <Link
           to="/categories/new"
           className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 flex items-center gap-2"
         >
           <FiPlus size={18} />
-          <span>Add Category</span>
+          <span>Adicionar Categoria</span>
         </Link>
       </div>
 
-      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
-        <p className="text-gray-400">Categories page - To be implemented</p>
+      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 overflow-hidden">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="flex items-center gap-3 text-gray-400">
+              <div className="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
+              Carregando categorias...
+            </div>
+          </div>
+        ) : categories.length === 0 ? (
+          <div className="text-center py-12">
+            <FiTag className="mx-auto text-6xl text-gray-600 mb-4" />
+            <p className="text-gray-500 text-center py-8">Nenhuma categoria encontrada</p>
+          </div>
+        ) : (
+          <>
+            <table className="w-full">
+              <thead className="bg-gray-900/50">
+                <tr>
+                  <th 
+                    className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider cursor-pointer hover:text-white transition-colors select-none"
+                    onClick={() => handleSort('nameTextRefId')}
+                  >
+                    <div className="flex items-center gap-2">
+                      Nome
+                      {sortConfig.field === 'nameTextRefId' && (
+                        <span className="text-blue-400">
+                          {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        </span>
+                      )}
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Data de Criação</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {categories.map((category: Category) => (
+                  <tr 
+                    key={category.categoryId} 
+                    className="hover:bg-gray-700/30 dark:hover:bg-gray-700/30 hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/categories/${category.categoryId}`)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="text-sm font-medium text-white">
+                          {getCategoryName(category)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-300">{new Date(category.createdAt).toLocaleDateString('pt-BR')}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(category);
+                        }}
+                        className={`px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full transition-colors border ${
+                          !category.isDeleted
+                            ? 'bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-500/30 hover:bg-green-200 dark:hover:bg-green-500/30'
+                            : 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-500/30'
+                        }`}
+                        title={!category.isDeleted ? 'Clique para desativar' : 'Clique para ativar'}
+                      >
+                        {!category.isDeleted ? (
+                          <FiToggleRight className="w-3 h-3" />
+                        ) : (
+                          <FiToggleLeft className="w-3 h-3" />
+                        )}
+                        {!category.isDeleted ? 'Ativa' : 'Inativa'}
+                      </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex justify-end gap-3">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/categories/${category.categoryId}`);
+                          }}
+                          className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          title="Editar Categoria"
+                        >
+                          <FiEdit2 size={16} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteModal({ open: true, category });
+                          }}
+                          className="p-2 text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                          title="Excluir Categoria"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="px-6 py-4 border-t border-gray-700">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-400">
+                    Mostrando {((filters.page || 1) - 1) * (filters.limit || 10) + 1} até {Math.min((filters.page || 1) * (filters.limit || 10), total)} de {total} categorias
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => goToPage((filters.page || 1) - 1)}
+                      disabled={(filters.page || 1) <= 1}
+                      className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+                    >
+                      <FiChevronLeft />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        Math.abs(page - (filters.page || 1)) <= 1
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            className={`px-3 py-1 rounded transition-colors ${
+                              page === (filters.page || 1)
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        page === (filters.page || 1) - 2 ||
+                        page === (filters.page || 1) + 2
+                      ) {
+                        return <span key={page}>...</span>;
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => goToPage((filters.page || 1) + 1)}
+                      disabled={(filters.page || 1) >= totalPages}
+                      className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600"
+                    >
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Delete Modal */}
+      {deleteModal.open && deleteModal.category && (
+        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirmar Exclusão</h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Tem certeza que deseja excluir a categoria <strong className="text-gray-900 dark:text-white">{getCategoryName(deleteModal.category)}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteModal({ open: false, category: null })}
+                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('user_push_settings')
-export class UserPushSettings {
+export class UserPushSettings extends BaseEntity {
   @PrimaryColumn({ name: 'user_id', type: 'integer' })
   userId!: number;
 

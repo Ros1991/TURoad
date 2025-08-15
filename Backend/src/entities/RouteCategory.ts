@@ -1,10 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Route } from './Route';
 import { Category } from './Category';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('route_categories')
 @Index(['routeId', 'categoryId'], { unique: true })
-export class RouteCategory {
+export class RouteCategory extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'route_category_id' })
   routeCategoryId!: number;
 

@@ -1,11 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { City } from './City';
 import { EventCategory } from './EventCategory';
 import { StoryEvent } from './StoryEvent';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('events')
-export class Event {
+export class Event extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'event_id' })
   eventId!: number;
 
@@ -25,20 +26,6 @@ export class Event {
 
   @Column({ name: 'event_time', type: 'time' })
   eventTime!: string;
-
-  // Audit fields
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: Date;
-
-  // Soft delete fields
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt!: Date | null;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted!: boolean;
 
   // Relationships
   @ManyToOne(() => City, (city) => city.events, { onDelete: 'CASCADE' })

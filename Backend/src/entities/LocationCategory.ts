@@ -1,10 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Location } from './Location';
 import { Category } from './Category';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('location_categories')
 @Index(['locationId', 'categoryId'], { unique: true })
-export class LocationCategory {
+export class LocationCategory extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'location_category_id' })
   locationCategoryId!: number;
 

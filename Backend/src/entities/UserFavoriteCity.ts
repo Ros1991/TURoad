@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { City } from './City';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('user_favorite_cities')
 @Index(['userId', 'cityId'], { unique: true })
-export class UserFavoriteCity {
+export class UserFavoriteCity extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'user_favorite_city_id' })
   userFavoriteCityId!: number;
 
@@ -13,9 +14,6 @@ export class UserFavoriteCity {
 
   @Column({ name: 'city_id', type: 'integer' })
   cityId!: number;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, (user) => user.favoriteCities, { onDelete: 'CASCADE' })

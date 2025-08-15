@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Route } from './Route';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('user_favorite_routes')
 @Index(['userId', 'routeId'], { unique: true })
-export class UserFavoriteRoute {
+export class UserFavoriteRoute extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'user_favorite_route_id' })
   userFavoriteRouteId!: number;
 
@@ -13,9 +14,6 @@ export class UserFavoriteRoute {
 
   @Column({ name: 'route_id', type: 'integer' })
   routeId!: number;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, (user) => user.favoriteRoutes, { onDelete: 'CASCADE' })

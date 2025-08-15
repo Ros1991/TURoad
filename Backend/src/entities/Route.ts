@@ -1,13 +1,14 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { RouteCity } from './RouteCity';
 import { RouteCategory } from './RouteCategory';
 import { StoryRoute } from './StoryRoute';
 import { UserFavoriteRoute } from './UserFavoriteRoute';
 import { UserVisitedRoute } from './UserVisitedRoute';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('routes')
-export class Route {
+export class Route extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'route_id' })
   routeId!: number;
 
@@ -22,20 +23,6 @@ export class Route {
   @LocalizedTextRef
   @Column({ name: 'what_to_observe_text_ref_id', type: 'integer', nullable: true })
   whatToObserveTextRefId?: number;
-
-  // Audit fields
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: Date;
-
-  // Soft delete fields
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt!: Date | null;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted!: boolean;
 
   // Relationships
   @OneToMany(() => RouteCity, (routeCity) => routeCity.route)

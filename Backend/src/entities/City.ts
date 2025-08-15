@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Location } from './Location';
 import { Event } from './Event';
 import { RouteCity } from './RouteCity';
@@ -9,7 +9,7 @@ import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
 import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('cities')
-export class City extends SoftDeleteBaseEntity{
+export class City extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'city_id' })
   cityId!: number;
 

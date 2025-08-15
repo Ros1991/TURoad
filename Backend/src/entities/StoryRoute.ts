@@ -1,9 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Route } from './Route';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('story_routes')
-export class StoryRoute {
+export class StoryRoute extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'story_route_id' })
   storyRouteId!: number;
 

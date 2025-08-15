@@ -1,8 +1,9 @@
 import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('localized_texts')
 @Index(['referenceId', 'languageCode'], { unique: true })
-export class LocalizedText {
+export class LocalizedText extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'text_id' })
   textId!: number;
 

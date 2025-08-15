@@ -1,12 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { City } from './City';
 import { Type } from './Type';
 import { LocationCategory } from './LocationCategory';
 import { StoryLocation } from './StoryLocation';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('locations')
-export class Location {
+export class Location extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'location_id' })
   locationId!: number;
 
@@ -29,20 +30,6 @@ export class Location {
 
   @Column({ name: 'type_id', type: 'integer', nullable: true })
   typeId?: number;
-
-  // Audit fields
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: Date;
-
-  // Soft delete fields
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt!: Date | null;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted!: boolean;
 
   // Relationships
   @ManyToOne(() => City, (city) => city.locations, { onDelete: 'CASCADE' })

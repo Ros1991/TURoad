@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { User } from './User';
 import { Route } from './Route';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('user_visited_routes')
 @Index(['userId', 'routeId'], { unique: true })
-export class UserVisitedRoute {
+export class UserVisitedRoute extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'user_visited_route_id' })
   userVisitedRouteId!: number;
 
@@ -14,7 +15,7 @@ export class UserVisitedRoute {
   @Column({ name: 'route_id', type: 'integer' })
   routeId!: number;
 
-  @CreateDateColumn({ name: 'visited_at', type: 'timestamp' })
+  @Column({ name: 'visited_at', type: 'timestamp' })
   visitedAt!: Date;
 
   // Relationships

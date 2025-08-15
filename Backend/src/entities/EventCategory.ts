@@ -1,10 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { Event } from './Event';
 import { Category } from './Category';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('event_categories')
 @Index(['eventId', 'categoryId'], { unique: true })
-export class EventCategory {
+export class EventCategory extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'event_category_id' })
   eventCategoryId!: number;
 

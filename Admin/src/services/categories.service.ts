@@ -7,29 +7,20 @@ export interface LocalizedText {
 
 export interface Category {
   categoryId: number;
-  nameTextRefId: string;
-  iconUrl?: string;
-  color?: string;
-  isActive: boolean;
+  name: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
+  isDeleted: boolean;
   nameTranslations?: LocalizedText[];
 }
 
 export interface CreateCategoryDto {
-  nameTextRefId: string;
-  iconUrl?: string;
-  color?: string;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
+  name: string;
 }
 
 export interface UpdateCategoryDto {
-  nameTextRefId?: string;
-  iconUrl?: string;
-  color?: string;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
+  name?: string;
 }
 
 class CategoriesService {

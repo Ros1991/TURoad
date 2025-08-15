@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('jwt_tokens')
-export class JwtToken {
+export class JwtToken extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'token_id' })
   tokenId!: number;
 
@@ -14,9 +15,6 @@ export class JwtToken {
 
   @Column({ name: 'expiration_date', type: 'timestamp' })
   expirationDate!: Date;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
 
   // Relationships
   @ManyToOne(() => User, (user) => user.tokens, { onDelete: 'CASCADE' })

@@ -12,31 +12,34 @@ const CategoryDetailsPage: React.FC = () => {
   const [editMode, setEditMode] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({
-    nameTextRefId: '',
-    iconUrl: '',
-    color: '',
-    isActive: true
+    name: ''
   });
 
   useEffect(() => {
-    if (id) {
+    if (id && id !== 'new') {
       loadCategory();
+    } else if (id === 'new') {
+      setEditMode(true);
+      setLoading(false);
     }
   }, [id]);
 
   const loadCategory = async () => {
     try {
       setLoading(true);
-      const data = await categoriesService.getCategoryById(Number(id));
+      const categoryId = Number(id);
+      if (isNaN(categoryId)) {
+        toast.error('ID de categoria inválido');
+        navigate('/categories');
+        return;
+      }
+      const data = await categoriesService.getCategoryById(categoryId);
       setCategory(data);
       setEditForm({
-        nameTextRefId: data.nameTextRefId || '',
-        iconUrl: data.iconUrl || '',
-        color: data.color || '',
-        isActive: data.isActive !== false
+        name: data.name || ''
       });
     } catch (error) {
-      toast.error('Failed to load category');
+      toast.error('Erro ao carregar categoria');
       navigate('/categories');
     } finally {
       setLoading(false);
@@ -45,29 +48,37 @@ const CategoryDetailsPage: React.FC = () => {
 
   const handleSaveEdit = async () => {
     try {
-      await categoriesService.updateCategory(Number(id), {
-        nameTextRefId: editForm.nameTextRefId,
-        iconUrl: editForm.iconUrl || undefined,
-        color: editForm.color || undefined,
-        isActive: editForm.isActive
-      });
-      toast.success('Category updated successfully');
-      setEditMode(false);
-      loadCategory();
+      if (id === 'new') {
+        // Create new category
+        await categoriesService.createCategory({
+          name: editForm.name
+        });
+        toast.success('Categoria criada com sucesso');
+        navigate('/categories');
+      } else {
+        // Update existing category
+        await categoriesService.updateCategory(Number(id), {
+          name: editForm.name
+        });
+        toast.success('Categoria atualizada com sucesso');
+        setEditMode(false);
+        loadCategory();
+      }
     } catch (error) {
-      toast.error('Failed to update category');
+      toast.error(id === 'new' ? 'Erro ao criar categoria' : 'Erro ao atualizar categoria');
     }
   };
 
   const handleCancelEdit = () => {
-    setEditMode(false);
-    if (category) {
-      setEditForm({
-        nameTextRefId: category.nameTextRefId || '',
-        iconUrl: category.iconUrl || '',
-        color: category.color || '',
-        isActive: category.isActive !== false
-      });
+    if (id === 'new') {
+      navigate('/categories');
+    } else {
+      setEditMode(false);
+      if (category) {
+        setEditForm({
+          name: category.name || ''
+        });
+      }
     }
   };
 
@@ -89,7 +100,7 @@ const CategoryDetailsPage: React.FC = () => {
     );
   }
 
-  if (!category) {
+  if (!category && id !== 'new') {
     return (
       <div className="text-center text-gray-400">
         Category not found
@@ -110,25 +121,29 @@ const CategoryDetailsPage: React.FC = () => {
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Category Details</h1>
-            <p className="text-gray-400">Manage category information</p>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {id === 'new' ? 'Nova Categoria' : 'Detalhes da Categoria'}
+            </h1>
+            <p className="text-gray-400">
+              {id === 'new' ? 'Criar nova categoria' : 'Gerenciar informações da categoria'}
+            </p>
           </div>
           <div className="flex gap-3">
-            {!editMode ? (
+            {!editMode && id !== 'new' ? (
               <>
                 <button
                   onClick={() => setEditMode(true)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
                 >
                   <FiEdit2 />
-                  Edit Category
+                  Editar Categoria
                 </button>
                 <button
                   onClick={() => setShowDeleteModal(true)}
                   className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
                 >
                   <FiTrash2 />
-                  Delete Category
+                  Excluir Categoria
                 </button>
               </>
             ) : (
@@ -138,14 +153,14 @@ const CategoryDetailsPage: React.FC = () => {
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
                 >
                   <FiCheck />
-                  Save Changes
+                  {id === 'new' ? 'Criar Categoria' : 'Salvar Alterações'}
                 </button>
                 <button
                   onClick={handleCancelEdit}
                   className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
                 >
                   <FiX />
-                  Cancel
+                  Cancelar
                 </button>
               </>
             )}
@@ -155,79 +170,36 @@ const CategoryDetailsPage: React.FC = () => {
 
       {/* Category Information */}
       <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Category Information</h2>
+        <h2 className="text-xl font-semibold text-white mb-4">
+          {id === 'new' ? 'Informações da Nova Categoria' : 'Informações da Categoria'}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-gray-400 text-sm">Name Text Ref ID</label>
-            {editMode ? (
+          <div className="col-span-2">
+            <label className="text-white text-sm mb-2 block">Nome da Categoria</label>
+            {editMode || id === 'new' ? (
               <input
                 type="text"
-                value={editForm.nameTextRefId}
-                onChange={(e) => setEditForm({ ...editForm, nameTextRefId: e.target.value })}
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                placeholder="Digite o nome da categoria"
               />
             ) : (
-              <p className="text-white">{category.nameTextRefId}</p>
+              <p className="text-white">{category?.name}</p>
             )}
           </div>
-          <div>
-            <label className="text-gray-400 text-sm">Icon URL</label>
-            {editMode ? (
-              <input
-                type="text"
-                value={editForm.iconUrl}
-                onChange={(e) => setEditForm({ ...editForm, iconUrl: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                placeholder="Optional"
-              />
-            ) : (
-              <p className="text-white">{category.iconUrl || 'N/A'}</p>
-            )}
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Color</label>
-            {editMode ? (
-              <input
-                type="text"
-                value={editForm.color}
-                onChange={(e) => setEditForm({ ...editForm, color: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                placeholder="#RRGGBB"
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                {category.color && (
-                  <div
-                    className="w-6 h-6 rounded"
-                    style={{ backgroundColor: category.color }}
-                  />
-                )}
-                <p className="text-white">{category.color || 'N/A'}</p>
+          {category && (
+            <>
+              <div>
+                <label className="text-gray-400 text-sm">Data de Criação</label>
+                <p className="text-white">{new Date(category.createdAt).toLocaleDateString('pt-BR')}</p>
               </div>
-            )}
-          </div>
-          <div>
-            <label className="text-gray-400 text-sm">Status</label>
-            {editMode ? (
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={editForm.isActive}
-                  onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })}
-                  className="rounded border-gray-700 bg-gray-800 text-blue-500 focus:ring-blue-500"
-                />
-                <span className="text-white">Active</span>
-              </label>
-            ) : (
-              <span className={`px-2 py-1 rounded-full text-xs ${
-                category.isActive 
-                  ? 'bg-green-500/20 text-green-400' 
-                  : 'bg-red-500/20 text-red-400'
-              }`}>
-                {category.isActive ? 'Active' : 'Inactive'}
-              </span>
-            )}
-          </div>
+              <div>
+                <label className="text-gray-400 text-sm">Última Atualização</label>
+                <p className="text-white">{new Date(category.updatedAt).toLocaleDateString('pt-BR')}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

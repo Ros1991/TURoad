@@ -1,9 +1,10 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Event } from './Event';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { BaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('story_events')
-export class StoryEvent {
+export class StoryEvent extends BaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'story_event_id' })
   storyEventId!: number;
 

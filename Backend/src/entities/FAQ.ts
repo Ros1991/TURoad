@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
+import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('faq')
-export class FAQ {
+export class FAQ extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'faq_id' })
   faqId!: number;
 
@@ -13,19 +14,5 @@ export class FAQ {
   @LocalizedTextRef
   @Column({ name: 'answer_text_ref_id', type: 'integer' })
   answerTextRefId!: number;
-
-  // Audit fields
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
-  createdAt!: Date;
-
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
-  updatedAt!: Date;
-
-  // Soft delete fields
-  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt!: Date | null;
-
-  @Column({ name: 'is_deleted', type: 'boolean', default: false })
-  isDeleted!: boolean;
 }
 

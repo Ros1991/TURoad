@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from 'typeorm';
 import { JwtToken } from './JwtToken';
 import { UserFavoriteRoute } from './UserFavoriteRoute';
 import { UserFavoriteCity } from './UserFavoriteCity';
@@ -8,7 +8,7 @@ import { PushNotificationLog } from './PushNotificationLog';
 import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
 @Entity('users')
-export class User extends SoftDeleteBaseEntity{
+export class User extends SoftDeleteBaseEntity {
   @PrimaryGeneratedColumn('increment', { name: 'user_id' })
   userId!: number;
 
