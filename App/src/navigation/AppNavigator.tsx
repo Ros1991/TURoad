@@ -19,6 +19,17 @@ import ProfileScreen from '../screens/ProfileScreen';
 import CityScreen from '../screens/CityScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import SelectCityScreen from '../screens/SelectCityScreen';
+
+// Profile internal screens
+import RouteHistoryScreen from '../screens/RouteHistoryScreen';
+import FavoritesScreen from '../screens/FavoritesScreen';
+import PersonalInfoScreen from '../screens/PersonalInfoScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import LanguageScreen from '../screens/LanguageScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import HelpCenterScreen from '../screens/HelpCenterScreen';
+import FAQScreen from '../screens/FAQScreen';
+import ContactScreen from '../screens/ContactScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Stack = createNativeStackNavigator();
@@ -142,6 +153,17 @@ function AppNavigator() {
         <Stack.Screen name="City" component={CityScreen} />
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         <Stack.Screen name="SelectCity" component={SelectCityScreen} />
+        
+        {/* Profile Internal Screens */}
+        <Stack.Screen name="RouteHistory" component={RouteHistoryScreen} />
+        <Stack.Screen name="Favorites" component={FavoritesScreen} />
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="Language" component={LanguageScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="HelpCenter" component={HelpCenterScreen} />
+        <Stack.Screen name="FAQ" component={FAQScreen} />
+        <Stack.Screen name="Contact" component={ContactScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

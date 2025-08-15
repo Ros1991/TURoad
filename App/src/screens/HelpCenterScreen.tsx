@@ -1,0 +1,136 @@
+import React from 'react';
+import { ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Box, Text } from '../components';
+
+const HelpCenterScreen: React.FC = () => {
+  const navigation = useNavigation();
+  const { t } = useTranslation();
+
+  const HelpItem = ({ title, description, onPress }: {
+    title: string;
+    description: string;
+    onPress?: () => void;
+  }) => (
+    <TouchableOpacity onPress={onPress}>
+      <Box
+        backgroundColor="white"
+        paddingHorizontal="m"
+        paddingVertical="m"
+        marginBottom="s"
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Box flex={1}>
+          <Text style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#1A1A1A',
+            marginBottom: 4,
+          }}>
+            {title}
+          </Text>
+          <Text style={{
+            fontSize: 14,
+            color: '#666666',
+            lineHeight: 18,
+          }}>
+            {description}
+          </Text>
+        </Box>
+        <Icon name="chevron-right" size={20} color="#C7C7CC" />
+      </Box>
+    </TouchableOpacity>
+  );
+
+  return (
+    <>
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
+      <Box flex={1} backgroundColor="light">
+        {/* Header */}
+        <Box
+          backgroundColor="white"
+          paddingBottom="m"
+          paddingHorizontal="m"
+          flexDirection="row"
+          alignItems="center"
+          style={{
+            paddingTop: 60,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+            elevation: 3,
+          }}
+        >
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon name="arrow-left" size={24} color="#1A1A1A" />
+          </TouchableOpacity>
+          <Text style={{
+            fontSize: 18,
+            fontWeight: '600',
+            color: '#1A1A1A',
+            marginLeft: 16,
+          }}>
+            Ajuda e contato
+          </Text>
+        </Box>
+
+        {/* Content */}
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+          <Box paddingTop="m">
+            <Box 
+              backgroundColor="white" 
+              marginHorizontal="m"
+              marginBottom="s"
+              borderRadius={12}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+                elevation: 1,
+              }}
+            >
+              <HelpItem
+                title="Fale com a equipe do TURoad"
+                description="Está com alguma dúvida, sugestão ou encontrou um problema no app?"
+                onPress={() => {
+                  (navigation as any).navigate('Contact');
+                }}
+              />
+            </Box>
+
+            <Box 
+              backgroundColor="white" 
+              marginHorizontal="m"
+              marginBottom="s"
+              borderRadius={12}
+              style={{
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+                elevation: 1,
+              }}
+            >
+              <HelpItem
+                title="Acessar FAQ"
+                description="Encontre respostas rápidas sobre como utilizar o TURoad"
+                onPress={() => {
+                  (navigation as any).navigate('FAQ');
+                }}
+              />
+            </Box>
+          </Box>
+          <Box height={20} />
+        </ScrollView>
+      </Box>
+    </>
+  );
+};
+
+export default HelpCenterScreen;

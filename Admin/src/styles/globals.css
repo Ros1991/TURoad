@@ -1,0 +1,1107 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom CSS Variables */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Dark theme variables */
+.dark {
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  --neumorphism-light: rgba(255, 255, 255, 0.1);
+  --neumorphism-dark: rgba(0, 0, 0, 0.3);
+  --bg-primary: #0f0f0f;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+}
+
+/* Light theme variables */
+.light {
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  --neumorphism-light: rgba(255, 255, 255, 0.9);
+  --neumorphism-dark: rgba(0, 0, 0, 0.05);
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme-specific backgrounds */
+.dark body {
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+}
+
+.light body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+/* Force body background in light mode */
+html.light {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+html.light body {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+}
+
+/* Glassmorphism utility classes */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+  transition: all 0.3s ease;
+}
+
+/* Neumorphism utility classes */
+.neomorph {
+  background: var(--bg-secondary);
+  box-shadow: 
+    8px 8px 16px var(--neumorphism-dark),
+    -8px -8px 16px var(--neumorphism-light);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+.neomorph-inset {
+  background: var(--bg-secondary);
+  box-shadow: 
+    inset 8px 8px 16px var(--neumorphism-dark),
+    inset -8px -8px 16px var(--neumorphism-light);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.7);
+}
+
+/* Modern typography */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+/* Button animations and styles */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 12px 24px;
+  position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(55, 65, 81, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(55, 65, 81, 0.8);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Input styles */
+.input-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: var(--text-primary);
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.input-glass:focus {
+  border-color: rgba(99, 102, 241, 0.7);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.input-glass::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading spinner */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade in animation */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Slide in animation */
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Toast notification styles */
+.Toastify__toast {
+  background: rgba(17, 24, 39, 0.95) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(55, 65, 81, 0.3);
+  border-radius: 12px !important;
+  color: white !important;
+}
+
+.Toastify__toast--success {
+  border-color: rgba(34, 197, 94, 0.3) !important;
+}
+
+.Toastify__toast--error {
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+.Toastify__toast--warning {
+  border-color: rgba(245, 158, 11, 0.3) !important;
+}
+
+.Toastify__toast--info {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+}
+
+/* Table styles */
+.table-glass {
+  background: rgba(17, 24, 39, 0.3);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(55, 65, 81, 0.3);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-glass th {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+.table-glass td {
+  border-bottom: 1px solid rgba(55, 65, 81, 0.2);
+}
+
+.table-glass tbody tr:hover {
+  background: rgba(55, 65, 81, 0.2);
+}
+
+/* Navigation transitions */
+.nav-link {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  color: rgba(99, 102, 241, 1);
+  transform: translateX(4px);
+}
+
+.nav-link.active {
+  background: rgba(99, 102, 241, 0.1);
+  border-right: 3px solid rgba(99, 102, 241, 1);
+  color: rgba(99, 102, 241, 1);
+}
+
+/* Microinteractions */
+.micro-bounce:hover {
+  animation: microBounce 0.6s ease;
+}
+
+@keyframes microBounce {
+  0%, 20%, 60%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  80% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Status indicators */
+.status-active {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-inactive {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Responsive design helpers */
+@media (max-width: 768px) {
+  .glass-card {
+    border-radius: 12px;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-visible:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.7);
+  outline-offset: 2px;
+}
+
+/* High contrast text for better readability */
+.text-high-contrast {
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Theme-specific utility classes */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+/* Light mode specific overrides */
+html.light,
+body.light,
+.light {
+  /* Body background for light theme */
+  body {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%) !important;
+  }
+  
+  /* Override gradient backgrounds */
+  .bg-gradient-to-br {
+    background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0, #cbd5e1) !important;
+  }
+  
+  /* Force override for auth layout */
+  .min-h-screen.bg-gradient-to-br {
+    background: linear-gradient(to bottom right, #f1f5f9, #e2e8f0, #cbd5e1) !important;
+  }
+  
+  /* Background overrides */
+  .bg-gray-800, .bg-gray-800\/50, .bg-gray-800\/30 {
+    background-color: #ffffff !important;
+  }
+  
+  .bg-gray-900, .bg-gray-900\/50, .bg-gray-900\/30 {
+    background-color: #f8fafc !important;
+  }
+  
+  .bg-gray-700, .bg-gray-700\/50, .bg-gray-700\/30 {
+    background-color: #f1f5f9 !important;
+  }
+  
+  .bg-gray-600, .bg-gray-600\/50 {
+    background-color: #e2e8f0 !important;
+  }
+  
+  /* Text color overrides */
+  .text-white {
+    color: #0f172a !important;
+  }
+  
+  /* Gradient text for title in light mode - more specific selectors */
+  h1.bg-gradient-to-r.from-blue-400.to-purple-500.bg-clip-text.text-transparent,
+  .bg-gradient-to-r.from-blue-400.to-purple-500.bg-clip-text.text-transparent {
+    background: linear-gradient(to right, #1e40af, #6b21a8) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+  }
+  
+  /* Keep auth links simple and clean - Force links to stay as links */
+  
+  /* All auth-related links must stay as links, never buttons */
+  a[class*="text-blue"], 
+  .text-blue-400 a,
+  a.text-blue-400,
+  .auth-link {
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    display: inline !important;
+    text-decoration: none !important;
+    font-weight: normal !important;
+    cursor: pointer !important;
+  }
+  
+  /* Link color overrides for light theme */
+  .text-blue-400 {
+    color: #2563eb !important;
+  }
+  
+  .text-blue-400:hover, .hover\:text-blue-300:hover {
+    color: #1d4ed8 !important;
+  }
+  
+  .text-gray-100 {
+    color: #1e293b !important;
+  }
+  
+  .text-gray-200 {
+    color: #334155 !important;
+  }
+  
+  .text-gray-300 {
+    color: #475569 !important;
+  }
+  
+  .text-gray-400 {
+    color: #64748b !important;
+  }
+  
+  .text-gray-500 {
+    color: #64748b !important;
+  }
+  
+  .text-gray-600 {
+    color: #475569 !important;
+  }
+  
+  /* Border color overrides */
+  .border-gray-700, .border-gray-800, .border-gray-900 {
+    border-color: #e2e8f0 !important;
+  }
+  
+  .border-gray-600, .border-gray-650 {
+    border-color: #cbd5e1 !important;
+  }
+  
+  .border-gray-500 {
+    border-color: #94a3b8 !important;
+  }
+  
+  .border-gray-400 {
+    border-color: #d1d5db !important;
+  }
+  
+  .border-gray-300 {
+    border-color: #e5e7eb !important;
+  }
+  
+  .border-black, .border-gray-950 {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Remove any black borders */
+  .border, .border-2, .border-4 {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Hover states */
+  .hover\:bg-gray-700:hover, .hover\:bg-gray-700\/30:hover {
+    background-color: #f1f5f9 !important;
+  }
+  
+  .hover\:bg-gray-600:hover {
+    background-color: #e2e8f0 !important;
+  }
+  
+  .hover\:text-white:hover {
+    color: #0f172a !important;
+  }
+  
+  /* Focus states */
+  .focus\:border-blue-500:focus {
+    border-color: #3b82f6 !important;
+  }
+  
+  /* Backdrop and glass effects for light mode */
+  .backdrop-blur-sm {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+  }
+  
+  /* Card and panel overrides */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  /* Sidebar specific overrides */
+  .fixed.inset-y-0.left-0 {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 1px solid #e2e8f0 !important;
+  }
+  
+  /* Header overrides */
+  .bg-gray-800\/50.backdrop-blur-sm {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  
+  /* Table overrides */
+  .table-glass {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  
+  .table-glass th {
+    background: rgba(248, 250, 252, 0.9) !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+  
+  .table-glass tbody tr:hover {
+    background: rgba(241, 245, 249, 0.8) !important;
+  }
+  
+  /* Enhanced button overrides for light theme - only actual buttons */
+  .light button:not(.link-button) {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border-color: #e2e8f0 !important;
+    color: #1a202c !important;
+  }
+  
+  .light button:not(.link-button):hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: #cbd5e0 !important;
+  }
+  
+  /* Specific fixes for primary/action buttons */
+  .light .bg-gradient-to-r,
+  .light .bg-blue-500,
+  .light .bg-blue-600,
+  .light .bg-purple-500,
+  .light .bg-purple-600 {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6) !important;
+    color: white !important;
+    border: none !important;
+  }
+
+  /* Fix for Add User and similar primary buttons */
+  .light .bg-gradient-to-r.from-blue-500.to-purple-600,
+  .light [class*="bg-gradient-to-r"][class*="from-blue-500"],
+  .light [class*="bg-gradient-to-r"][class*="to-purple"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border-color: transparent !important;
+  }
+  
+  .light [class*="bg-gradient-to-r"]:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  }
+
+  /* Force ALL primary buttons to be bright in light mode */
+  .light button[class*="bg-gradient"],
+  .light button[class*="from-blue"],
+  .light button[class*="to-purple"],
+  .light .btn-primary,
+  .light [class*="btn-primary"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: 1px solid transparent !important;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
+  }
+
+  /* Sidebar and layout specific overrides */
+  .light aside {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(226, 232, 240, 0.3) !important;
+    backdrop-filter: blur(20px) !important;
+  }
+  
+  /* Sidebar inner container - remove dark background */
+  .light aside .bg-gray-900\/50 {
+    background: rgba(255, 255, 255, 0.6) !important;
+    border-color: rgba(226, 232, 240, 0.2) !important;
+  }
+  
+  /* Header fixes */
+  .light header,
+  .light header.bg-gray-900\/50 {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-bottom-color: rgba(226, 232, 240, 0.5) !important;
+  }
+
+  /* Ultra-specific button fixes for light theme */
+  .light button[class*="bg-gradient-to-r"][class*="from-blue-500"][class*="to-purple-600"],
+  .light .bg-gradient-to-r.from-blue-500.to-purple-600,
+  .light [class~="bg-gradient-to-r"][class~="from-blue-500"][class~="to-purple-600"] {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    border: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Force all possible button variants to have correct colors */
+  .light .bg-gray-700,
+  .light .bg-gray-800,
+  .light .bg-gray-900,
+  .light .bg-slate-700,
+  .light .bg-slate-800,
+  .light .bg-slate-900 {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #1a202c !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Text colors for sidebar in light mode */
+  .light .text-white {
+    color: #1a202c !important;
+  }
+
+  .light .text-gray-300,
+  .light .text-gray-400 {
+    color: #64748b !important;
+  }
+
+  /* Main background for light theme */
+  .light .bg-gradient-to-br.from-gray-900.via-gray-800.to-gray-900 {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%) !important;
+  }
+
+  /* User dropdown menu in light theme */
+  .light .bg-gray-900\/95 {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border-color: rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Sidebar navigation links in light mode */
+  .light aside .text-gray-400 {
+    color: #64748b !important;
+  }
+  
+  .light aside .text-gray-400:hover {
+    color: #1e293b !important;
+    background-color: rgba(59, 130, 246, 0.1) !important;
+  }
+  
+  /* Active sidebar link in light mode */
+  .light aside .bg-gradient-to-r.from-blue-500\/20 {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)) !important;
+    color: #1e293b !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+  
+  .bg-green-500 {
+    background-color: #10b981 !important;
+  }
+  
+  /* Button overrides */
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  
+  .btn-secondary:hover {
+    background: rgba(241, 245, 249, 0.9) !important;
+    border-color: #cbd5e1 !important;
+  }
+  
+  /* Tailwind button classes */
+  .bg-blue-500 {
+    background-color: #3b82f6 !important;
+  }
+  
+  .bg-blue-600 {
+    background-color: #2563eb !important;
+  }
+  
+  .bg-green-500 {
+    background-color: #10b981 !important;
+  }
+  
+  .bg-red-500 {
+    background-color: #ef4444 !important;
+  }
+  
+  .bg-yellow-500 {
+    background-color: #f59e0b !important;
+  }
+  
+  .bg-purple-500 {
+    background-color: #8b5cf6 !important;
+  }
+  
+  /* Button hover states */
+  .hover\:bg-blue-600:hover {
+    background-color: #2563eb !important;
+  }
+  
+  .hover\:bg-green-600:hover {
+    background-color: #059669 !important;
+  }
+  
+  .hover\:bg-red-600:hover {
+    background-color: #dc2626 !important;
+  }
+  
+  .hover\:bg-yellow-600:hover {
+    background-color: #d97706 !important;
+  }
+  
+  .hover\:bg-purple-600:hover {
+    background-color: #7c3aed !important;
+  }
+  
+  /* Rounded buttons and components */
+  .rounded, .rounded-lg, .rounded-xl, .rounded-full {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Input overrides */
+  .input-glass {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  
+  .input-glass::placeholder {
+    color: #64748b !important;
+  }
+  
+  /* Modal overrides */
+  .modal-backdrop {
+    background: rgba(255, 255, 255, 0.8) !important;
+  }
+  
+  /* Toast overrides */
+  .Toastify__toast {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0f172a !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+  
+  /* Scrollbar overrides */
+  ::-webkit-scrollbar-track {
+    background: rgba(248, 250, 252, 0.8) !important;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.6) !important;
+  }
+  
+  /* Navigation link overrides */
+  .nav-link.active {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border-right: 3px solid #3b82f6 !important;
+    color: #1d4ed8 !important;
+  }
+  
+  /* Status indicator overrides */
+  .status-active {
+    background: rgba(34, 197, 94, 0.1) !important;
+    border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  }
+  
+  .status-inactive {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  }
+  
+  .status-pending {
+    background: rgba(245, 158, 11, 0.1) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  }
+  
+  /* Additional comprehensive overrides */
+  .bg-black {
+    background-color: #ffffff !important;
+  }
+  
+  .text-black {
+    color: #ffffff !important;
+  }
+  
+  /* Divide colors */
+  .divide-gray-700 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Ring colors for focus states */
+  .ring-blue-500\/20 {
+    --tw-ring-color: rgb(59 130 246 / 0.2) !important;
+  }
+  
+  /* Placeholder text colors */
+  .placeholder-gray-400::placeholder,
+  .placeholder-gray-500::placeholder {
+    color: #94a3b8 !important;
+  }
+  
+  /* Shadow overrides */
+  .shadow-lg, .shadow-xl {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+  
+  /* Force all main layout elements */
+  .min-h-screen {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+  }
+  
+  /* Main content area */
+  main, .main-content {
+    background: transparent !important;
+  }
+  
+  /* Sidebar navigation */
+  nav, .sidebar, .navigation {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border-right: 1px solid #e2e8f0 !important;
+  }
+  
+  /* Card components */
+  .card, .panel, .widget {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  /* Dropdown menus */
+  .dropdown, .menu {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+  }
+  
+  /* Text areas and selects */
+  textarea, select {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+  
+  /* Links */
+  a {
+    color: #1d4ed8 !important;
+  }
+  
+  a:hover {
+    color: #1e40af !important;
+  }
+  
+  /* Icons - make them darker in light mode */
+  svg, i, .icon {
+    color: #374151 !important;
+  }
+  
+  /* Override any specific dark colors */
+  .text-blue-400 {
+    color: #1d4ed8 !important;
+  }
+  
+  .text-green-400 {
+    color: #059669 !important;
+  }
+  
+  .text-red-400 {
+    color: #dc2626 !important;
+  }
+  
+  .text-yellow-400 {
+    color: #d97706 !important;
+  }
+  
+  .text-purple-400 {
+    color: #7c3aed !important;
+  }
+  
+  .text-orange-400 {
+    color: #ea580c !important;
+  }
+  
+  /* COMPREHENSIVE BORDER FIXES */
+  /* Remove all black/dark borders completely */
+  * {
+    border-color: #e2e8f0 !important;
+  }
+  
+  .border-0 {
+    border: none !important;
+  }
+  
+  /* Ring colors (focus outlines) */
+  .ring-1, .ring-2, .ring-4 {
+    --tw-ring-color: rgb(59 130 246 / 0.5) !important;
+  }
+  
+  .ring-gray-500, .ring-gray-600, .ring-gray-700 {
+    --tw-ring-color: rgb(226 232 240 / 0.5) !important;
+  }
+  
+  /* COMPREHENSIVE BUTTON IMPROVEMENTS */
+  button {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Primary buttons with gradients */
+  .bg-gradient-to-r {
+    border: none !important;
+  }
+  
+  /* Icon buttons */
+  .p-2, .p-3, .px-2, .px-3, .py-2, .py-3 {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Action buttons in tables */
+  .text-blue-400, .text-green-400, .text-red-400, .text-yellow-400, .text-purple-400 {
+    background: rgba(255, 255, 255, 0.8) !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    transition: all 0.2s ease !important;
+  }
+  
+  .text-blue-400:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    color: #1d4ed8 !important;
+  }
+  
+  .text-green-400:hover {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: #059669 !important;
+  }
+  
+  .text-red-400:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #dc2626 !important;
+  }
+  
+  .text-yellow-400:hover {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: #d97706 !important;
+  }
+  
+  .text-purple-400:hover {
+    background: rgba(139, 92, 246, 0.1) !important;
+    color: #7c3aed !important;
+  }
+  
+  /* Form elements comprehensive styling */
+  input, textarea, select {
+    border-color: #e2e8f0 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #0f172a !important;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    outline: none !important;
+  }
+  
+  /* Specific component overrides */
+  .fixed, .absolute, .relative {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Toggle switches and checkboxes */
+  .toggle, .checkbox, .radio {
+    border-color: #cbd5e1 !important;
+    background: #f8fafc !important;
+  }
+  
+  /* Pills and badges */
+  .inline-flex, .px-2, .rounded-full {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Override any remaining dark elements */
+  .bg-opacity-50, .bg-opacity-75, .bg-opacity-90 {
+    background-color: rgba(255, 255, 255, 0.9) !important;
+  }
+  
+  /* Ensure all dividers are light */
+  .divide-y > :not([hidden]) ~ :not([hidden]) {
+    border-color: #f1f5f9 !important;
+  }
+  
+  .border-t, .border-b, .border-l, .border-r {
+    border-color: #e2e8f0 !important;
+  }
+  
+  /* Loading spinners and animations */
+  .animate-spin {
+    border-color: #e2e8f0 #e2e8f0 #3b82f6 transparent !important;
+  }
+}
+
+/* Dark mode specific styles (keep existing behavior) */
+.dark .bg-gray-800 {
+  background-color: #1f2937;
+}
+
+.dark .bg-gray-900 {
+  background-color: #111827;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .glass,
+  .glass-card,
+  .neomorph,
+  .neomorph-inset {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+  }
+}
