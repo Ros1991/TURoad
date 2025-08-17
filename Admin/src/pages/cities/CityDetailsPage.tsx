@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiCheck, FiX, FiTrash2, FiPlus, FiPlay, FiMusic } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiCheck, FiX, FiTrash2, FiPlus, FiPlay, FiMusic, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import citiesService, { City, StoryCity } from '../../services/cities.service';
+import localizedTextsService from '../../services/localizedTexts.service';
 import LocalizedTextInput from '../../components/common/LocalizedTextInput';
+import LocationPickerDialog from '../../components/common/LocationPickerDialog';
 
 const CityDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -13,6 +15,7 @@ const CityDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showStoryModal, setShowStoryModal] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [deleteStoryId, setDeleteStoryId] = useState<number | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -51,12 +54,15 @@ const CityDetailsPage: React.FC = () => {
       const data = await citiesService.getCityById(Number(id));
       setCity(data);
       setEditForm({
+        name: '',
         nameTextRefId: data.nameTextRefId || 0,
+        description: '',
         descriptionTextRefId: data.descriptionTextRefId || 0,
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         state: data.state || '',
         imageUrl: data.imageUrl || '',
+        whatToObserve: '',
         whatToObserveTextRefId: data.whatToObserveTextRefId || 0
       });
     } catch (error) {
@@ -95,22 +101,86 @@ const CityDetailsPage: React.FC = () => {
   };
 
   const handleSaveEdit = async () => {
+    console.log('=== SALVANDO CIDADE ===');
+    console.log('editForm completo:', editForm);
+    console.log('editForm.name:', editForm.name);
+    console.log('editForm.description:', editForm.description);
     try {
-      await citiesService.updateCity(Number(id), {
-        ...city!,
-        nameTextRefId: editForm.nameTextRefId,
-        descriptionTextRefId: editForm.descriptionTextRefId,
-        latitude: editForm.latitude,
-        longitude: editForm.longitude,
-        state: editForm.state,
-        imageUrl: editForm.imageUrl,
-        whatToObserveTextRefId: editForm.whatToObserveTextRefId
-      });
-      toast.success('City updated successfully');
-      setEditMode(false);
-      loadCity();
+      // Check if it's a new city or existing one
+      if (id === 'new') {
+        // Auto-create text references for fields that have text but no referenceId
+        let nameRefId = editForm.nameTextRefId;
+        let descRefId = editForm.descriptionTextRefId;
+        let whatToObserveRefId = editForm.whatToObserveTextRefId;
+
+        // Create name reference if needed
+        if (editForm.name && editForm.name.trim() && (!nameRefId || nameRefId === 0)) {
+          console.log('Auto-creating name reference for:', editForm.name);
+          try {
+            nameRefId = await localizedTextsService.createReference(editForm.name.trim(), []);
+            console.log('Created name reference:', nameRefId);
+          } catch (error) {
+            console.error('Error creating name reference:', error);
+          }
+        }
+
+        // Create description reference if needed
+        if (editForm.description && editForm.description.trim() && (!descRefId || descRefId === 0)) {
+          console.log('Auto-creating description reference for:', editForm.description);
+          try {
+            descRefId = await localizedTextsService.createReference(editForm.description.trim(), []);
+            console.log('Created description reference:', descRefId);
+          } catch (error) {
+            console.error('Error creating description reference:', error);
+          }
+        }
+
+        // Create whatToObserve reference if needed
+        if (editForm.whatToObserve && editForm.whatToObserve.trim() && (!whatToObserveRefId || whatToObserveRefId === 0)) {
+          console.log('Auto-creating whatToObserve reference for:', editForm.whatToObserve);
+          try {
+            whatToObserveRefId = await localizedTextsService.createReference(editForm.whatToObserve.trim(), []);
+            console.log('Created whatToObserve reference:', whatToObserveRefId);
+          } catch (error) {
+            console.error('Error creating whatToObserve reference:', error);
+          }
+        }
+
+        const payload = {
+          nameTextRefId: nameRefId || 0,
+          descriptionTextRefId: descRefId || 0,
+          latitude: editForm.latitude,
+          longitude: editForm.longitude,
+          state: editForm.state,
+          imageUrl: editForm.imageUrl,
+          whatToObserveTextRefId: whatToObserveRefId || 0
+        };
+        console.log('Creating city with payload:', payload);
+        
+        await citiesService.createCity(payload);
+        toast.success('City created successfully');
+        navigate('/cities'); // Navigate to list instead of detail
+      } else {
+        // Update existing city
+        const payload = {
+          nameTextRefId: editForm.nameTextRefId,
+          descriptionTextRefId: editForm.descriptionTextRefId,
+          latitude: editForm.latitude,
+          longitude: editForm.longitude,
+          state: editForm.state,
+          imageUrl: editForm.imageUrl,
+          whatToObserveTextRefId: editForm.whatToObserveTextRefId
+        };
+        console.log('Updating city with payload:', payload);
+        
+        await citiesService.updateCity(Number(id), payload);
+        toast.success('City updated successfully');
+        setEditMode(false);
+        loadCity();
+      }
     } catch (error) {
-      toast.error('Failed to update city');
+      console.error('Error saving city:', error);
+      toast.error(id === 'new' ? 'Failed to create city' : 'Failed to update city');
     }
   };
 
@@ -226,7 +296,7 @@ const CityDetailsPage: React.FC = () => {
                   className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
                 >
                   <FiX />
-                  Cancelarar
+                  Cancelar
                 </button>
               </>
             )}
@@ -244,11 +314,16 @@ const CityDetailsPage: React.FC = () => {
             {editMode ? (
               <LocalizedTextInput
                 value={editForm.name || ''}
-                onChange={(value) => setEditForm(prev => ({ ...prev, name: value }))}
+                onChange={(value) => {
+                  console.log('Name field changed to:', value);
+                  setEditForm(prev => ({ ...prev, name: value }));
+                }}
                 onBothChange={(value, referenceId) => {
+                  console.log('Name onBothChange:', value, referenceId);
                   setEditForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
                 }}
                 onReferenceIdChange={(referenceId) => {
+                  console.log('Name onReferenceIdChange:', referenceId);
                   setEditForm(prev => ({ ...prev, nameTextRefId: referenceId }));
                 }}
                 fieldName="Nome da Cidade"
@@ -339,7 +414,18 @@ const CityDetailsPage: React.FC = () => {
       
       {/* Location Card */}
       <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6 mb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Localização</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-white">Localização</h2>
+          {editMode && (
+            <button
+              onClick={() => setShowLocationPicker(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm"
+            >
+              <FiMapPin size={16} />
+              Selecionar no Mapa
+            </button>
+          )}
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-gray-400 text-sm block mb-2">Latitude</label>
@@ -531,6 +617,24 @@ const CityDetailsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Location Picker Dialog */}
+      {showLocationPicker && (
+        <LocationPickerDialog
+          latitude={editForm.latitude || -14.235}
+          longitude={editForm.longitude || -51.9253}
+          onClose={() => setShowLocationPicker(false)}
+          onLocationSelect={(lat, lng) => {
+            console.log('Recebendo coordenadas do dialog:', lat, lng);
+            setEditForm(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng
+            }));
+            setShowLocationPicker(false);
+          }}
+        />
       )}
     </div>
   );

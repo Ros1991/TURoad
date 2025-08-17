@@ -19,6 +19,11 @@ export interface City {
   whatToObserveTextRefId?: number;
   createdAt: Date;
   updatedAt: Date;
+  // Localized text fields returned by backend
+  name?: string;
+  description?: string;
+  whatToObserve?: string;
+  // Legacy support for translations
   nameTranslations?: LocalizedText[];
   descriptionTranslations?: LocalizedText[];
   routesCount?: number;

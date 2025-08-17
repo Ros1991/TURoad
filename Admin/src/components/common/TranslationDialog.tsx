@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiX, FiSave } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { createPortal } from 'react-dom';
 import localizedTextsService from '../../services/localizedTexts.service';
 import FlagIcon from './FlagIcon';
 
@@ -102,9 +103,9 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6 max-w-md w-full">
+      <div className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 p-6 max-w-md w-full mx-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-semibold text-white">Gerenciar Traduções</h3>
           <button 
@@ -193,7 +194,8 @@ const TranslationDialog: React.FC<TranslationDialogProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

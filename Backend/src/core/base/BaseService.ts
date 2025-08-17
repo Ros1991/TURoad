@@ -59,7 +59,7 @@ export class BaseService<Entity extends ObjectLiteral> {
       if (existingReferenceId && existingReferenceId > 0) {
         entity[fieldName] = existingReferenceId;
         continue;
-      } else if (textContent) {
+      } else if (textContent && textContent.trim() !== '') {
         const referenceId = LocalizedTextHelper.generateReferenceId();
         await this.localizedTextRepository.create({
           referenceId,
@@ -67,6 +67,9 @@ export class BaseService<Entity extends ObjectLiteral> {
           textContent: textContent as string
         });
         entity[fieldName] = referenceId;
+      } else {
+        // If no text content and no reference ID, set to 0 (required fields should be validated elsewhere)
+        entity[fieldName] = 0;
       }
     }
   }

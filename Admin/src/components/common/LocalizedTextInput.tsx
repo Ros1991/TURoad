@@ -2,6 +2,7 @@ import React, { useState, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { FiGlobe } from 'react-icons/fi';
 import FlagIcon from './FlagIcon';
+import localizedTextsService from '../../services/localizedTexts.service';
 
 // Lazily load TranslationDialog to avoid circular references
 const TranslationDialog = lazy(() => import('./TranslationDialog'));
@@ -51,6 +52,27 @@ const LocalizedTextInput: React.FC<LocalizedTextInputProps> = ({
     }
   };
 
+  const handleInputBlur = async () => {
+    // Auto-create text reference when user types directly and field has value but no referenceId
+    if (value && value.trim() && (!referenceId || referenceId === 0)) {
+      console.log('Auto-creating text reference for:', value, 'Current referenceId:', referenceId);
+      try {
+        const newReferenceId = await localizedTextsService.createReference(value.trim(), []);
+        console.log('Created text reference:', newReferenceId);
+        
+        if (onBothChange) {
+          console.log('Calling onBothChange with:', value, newReferenceId);
+          onBothChange(value, newReferenceId);
+        } else if (onReferenceIdChange) {
+          console.log('Calling onReferenceIdChange with:', newReferenceId);
+          onReferenceIdChange(newReferenceId);
+        }
+      } catch (error) {
+        console.error('Error auto-creating text reference:', error);
+      }
+    }
+  };
+
   return (
     <>
       <div className="relative">
@@ -58,6 +80,7 @@ const LocalizedTextInput: React.FC<LocalizedTextInputProps> = ({
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={handleInputBlur}
           className={`w-full px-3 py-2 pr-20 bg-gray-800 border border-gray-700 rounded-lg text-white ${className}`}
           placeholder={placeholder}
           disabled={disabled}

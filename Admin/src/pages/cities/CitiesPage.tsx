@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiMapPin, FiGlobe } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import citiesService, { City, CityFilters } from '../../services/cities.service';
 
@@ -40,15 +40,6 @@ const CitiesPage: React.FC = () => {
     setFilters((prev: CityFilters) => ({ ...prev, search: value, page: 1 }));
   };
 
-  const handleToggleActive = async (city: City) => {
-    try {
-      await citiesService.toggleActive(city.cityId);
-      toast.success(`City ${city.isActive ? 'deactivated' : 'activated'} successfully`);
-      loadCities();
-    } catch (error) {
-      toast.error('Failed to toggle city status');
-    }
-  };
 
   const handleDelete = async () => {
     if (!selectedCity) return;
@@ -66,10 +57,10 @@ const CitiesPage: React.FC = () => {
 
   const getLocalizedName = (city: City): string => {
     if (city.nameTranslations && city.nameTranslations.length > 0) {
-      const enTranslation = city.nameTranslations.find(t => t.language === 'en');
-      return enTranslation?.text || city.nameTranslations[0].text || 'Unnamed';
+      const ptTranslation = city.nameTranslations.find(t => t.language === 'pt');
+      return ptTranslation?.text || city.nameTranslations[0].text || 'Sem nome';
     }
-    return 'Unnamed';
+    return 'Sem nome';
   };
 
   return (
@@ -123,67 +114,50 @@ const CitiesPage: React.FC = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Locais</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Eventos</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Coordenadas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rotas</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
                 {cities.map((city) => (
-                  <tr key={city.cityId} className="hover:bg-gray-700/30 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                          <FiMapPin className="text-white" size={20} />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-white">
-                            {getLocalizedName(city)}
-                          </div>
-                          {city.state && (
-                            <div className="text-sm text-gray-400">{city.state}</div>
-                          )}
-                        </div>
-                      </div>
+                  <tr key={city.cityId}>
+                    <td className="px-6 py-4">
+                      <span className="font-medium text-white">
+                        {city.name || ''}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-400">
-                        <FiGlobe className="mr-2" size={16} />
-                        {city.country}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {city.latitude.toFixed(4)}, {city.longitude.toFixed(4)}
-                      </div>
-                    </td>
+                    
+                    {/* Estado */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-300">
-                        {city.routesCount || 0} routes
+                        {city.state || 'Não informado'}
                       </span>
                     </td>
+                    
+                    {/* Coordenadas */}
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        city.isActive
-                          ? 'bg-green-100/20 text-green-400'
-                          : 'bg-red-100/20 text-red-400'
-                      }`}>
-                        {city.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                      <div className="text-xs text-gray-400">
+                        <div>Lat: {Number(city.latitude).toFixed(4)}</div>
+                        <div>Lng: {Number(city.longitude).toFixed(4)}</div>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleToggleActive(city)}
-                          className="text-gray-400 hover:text-white transition-colors"
-                          title={city.isActive ? 'Deactivate' : 'Activate'}
-                        >
-                          {city.isActive ? <FiToggleRight size={20} /> : <FiToggleLeft size={20} />}
-                        </button>
+                    
+                    {/* Rotas */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-300">
+                        <div>{city.routesCount || 0} rotas</div>
+                        <div className="text-xs text-gray-500">{city.storiesCount || 0} histórias</div>
+                      </div>
+                    </td>
+                    
+                    {/* Ações */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
                         <Link
-                          to={`/cities/${city.cityId}/edit`}
+                          to={`/cities/${city.cityId}`}
                           className="text-blue-400 hover:text-blue-300 transition-colors"
+                          title="Ver detalhes"
                         >
                           <FiEdit2 size={18} />
                         </Link>
@@ -193,6 +167,7 @@ const CitiesPage: React.FC = () => {
                             setShowDeleteModal(true);
                           }}
                           className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Excluir cidade"
                         >
                           <FiTrash2 size={18} />
                         </button>

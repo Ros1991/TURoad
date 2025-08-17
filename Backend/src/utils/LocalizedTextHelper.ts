@@ -89,8 +89,8 @@ export class LocalizedTextHelper {
         const dtoFieldName = field.propertyName.replace(/TextRefId$/, '');
         dto[dtoFieldName] = localizedTexts.get(refId);
         
-        // Remove the original TextRefId field from the DTO
-        delete dto[field.propertyName];
+        // Keep the original TextRefId field in the DTO for frontend use
+        // delete dto[field.propertyName]; // REMOVED: Frontend needs reference IDs
       }
     });
     
