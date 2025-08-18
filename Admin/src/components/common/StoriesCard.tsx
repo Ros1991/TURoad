@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FiPlus, FiTrash2, FiPlay, FiMusic } from 'react-icons/fi';
 import ConfirmDialog from './ConfirmDialog';
+import LocalizedTextInput from './LocalizedTextInput';
 
 export interface Story {
   storyCityId: number;
@@ -12,8 +13,11 @@ export interface Story {
 }
 
 export interface StoryForm {
+  name: string;
   nameTextRefId: number;
+  description: string;
   descriptionTextRefId: number;
+  audioUrl: string;
   audioUrlRefId: number;
 }
 
@@ -35,8 +39,11 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [deleteStoryId, setDeleteStoryId] = useState<number | null>(null);
   const [storyForm, setStoryForm] = useState<StoryForm>({
+    name: '',
     nameTextRefId: 0,
+    description: '',
     descriptionTextRefId: 0,
+    audioUrl: '',
     audioUrlRefId: 0
   });
 
@@ -44,8 +51,11 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
     if (onAddStory) {
       await onAddStory(storyForm);
       setStoryForm({
+        name: '',
         nameTextRefId: 0,
+        description: '',
         descriptionTextRefId: 0,
+        audioUrl: '',
         audioUrlRefId: 0
       });
       setShowStoryModal(false);
@@ -125,30 +135,51 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
             <h3 className="text-xl font-semibold text-white mb-4">Adicionar História</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência Nome</label>
-                <input
-                  type="number"
-                  value={storyForm.nameTextRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, nameTextRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                <label className="text-white text-sm block mb-2">Nome da História</label>
+                <LocalizedTextInput
+                  value={storyForm.name}
+                  onChange={(value) => setStoryForm(prev => ({ ...prev, name: value }))}
+                  onBothChange={(value, referenceId) => {
+                    setStoryForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
+                  }}
+                  onReferenceIdChange={(referenceId) => {
+                    setStoryForm(prev => ({ ...prev, nameTextRefId: referenceId }));
+                  }}
+                  fieldName="Nome da História"
+                  placeholder="Digite o nome da história"
+                  referenceId={storyForm.nameTextRefId || 0}
                 />
               </div>
               <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência Descrição</label>
-                <input
-                  type="number"
-                  value={storyForm.descriptionTextRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, descriptionTextRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                <label className="text-white text-sm block mb-2">Descrição da História</label>
+                <LocalizedTextInput
+                  value={storyForm.description}
+                  onChange={(value) => setStoryForm(prev => ({ ...prev, description: value }))}
+                  onBothChange={(value, referenceId) => {
+                    setStoryForm(prev => ({ ...prev, description: value, descriptionTextRefId: referenceId }));
+                  }}
+                  onReferenceIdChange={(referenceId) => {
+                    setStoryForm(prev => ({ ...prev, descriptionTextRefId: referenceId }));
+                  }}
+                  fieldName="Descrição da História"
+                  placeholder="Digite a descrição da história"
+                  referenceId={storyForm.descriptionTextRefId || 0}
                 />
               </div>
               <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência URL Áudio</label>
-                <input
-                  type="number"
-                  value={storyForm.audioUrlRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, audioUrlRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                <label className="text-white text-sm block mb-2">URL do Áudio</label>
+                <LocalizedTextInput
+                  value={storyForm.audioUrl}
+                  onChange={(value) => setStoryForm(prev => ({ ...prev, audioUrl: value }))}
+                  onBothChange={(value, referenceId) => {
+                    setStoryForm(prev => ({ ...prev, audioUrl: value, audioUrlRefId: referenceId }));
+                  }}
+                  onReferenceIdChange={(referenceId) => {
+                    setStoryForm(prev => ({ ...prev, audioUrlRefId: referenceId }));
+                  }}
+                  fieldName="URL do Áudio"
+                  placeholder="Digite a URL do arquivo de áudio"
+                  referenceId={storyForm.audioUrlRefId || 0}
                 />
               </div>
             </div>

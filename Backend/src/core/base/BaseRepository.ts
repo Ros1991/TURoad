@@ -90,7 +90,6 @@ export class BaseRepository<T extends ObjectLiteral> {
       }
     }
     if (search) {
-      console.log(`[${this.constructor.name}] Calling applySearch with:`, JSON.stringify(search));
       this.applySearch(qb, search);
     }
     if (options?.order) {
