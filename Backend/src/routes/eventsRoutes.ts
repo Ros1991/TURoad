@@ -14,4 +14,11 @@ router.post('/', authenticate, controller.create.bind(controller));
 router.put('/:id', authenticate, controller.update.bind(controller));
 router.delete('/:id', authenticate, controller.delete.bind(controller));
 
+// Story routes (nested under events)
+router.get('/:id/stories', controller.getStories.bind(controller));
+router.get('/:id/stories/:storyId', controller.getStory.bind(controller));
+router.post('/:id/stories', authenticate, controller.createStory.bind(controller));
+router.put('/:id/stories/:storyId', authenticate, controller.updateStory.bind(controller));
+router.delete('/:id/stories/:storyId', authenticate, controller.deleteStory.bind(controller));
+
 export default router;

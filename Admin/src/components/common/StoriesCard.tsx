@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { FiPlus, FiTrash2, FiPlay, FiMusic } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiEdit, FiMusic } from 'react-icons/fi';
 import ConfirmDialog from './ConfirmDialog';
 import LocalizedTextInput from './LocalizedTextInput';
 
 export interface Story {
   storyCityId: number;
+  name: string;
   nameTextRefId: number;
+  description?: string;
   descriptionTextRefId?: number;
-  playCount: number;
+  audioUrl?: string;
   audioUrlRefId?: number;
   cityId?: number;
 }
@@ -24,6 +26,7 @@ export interface StoryForm {
 interface StoriesCardProps {
   stories: Story[];
   onAddStory?: (storyData: StoryForm) => Promise<void>;
+  onEditStory?: (storyId: number, storyData: StoryForm) => Promise<void>;
   onDeleteStory?: (storyId: number) => Promise<void>;
   title?: string;
   showAddButton?: boolean;
@@ -32,11 +35,13 @@ interface StoriesCardProps {
 const StoriesCard: React.FC<StoriesCardProps> = ({
   stories,
   onAddStory,
+  onEditStory,
   onDeleteStory,
   title = "Histórias",
   showAddButton = true
 }) => {
   const [showStoryModal, setShowStoryModal] = useState(false);
+  const [editingStoryId, setEditingStoryId] = useState<number | null>(null);
   const [deleteStoryId, setDeleteStoryId] = useState<number | null>(null);
   const [storyForm, setStoryForm] = useState<StoryForm>({
     name: '',
@@ -48,18 +53,21 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
   });
 
   const handleAddStory = async () => {
-    if (onAddStory) {
+    if (editingStoryId && onEditStory) {
+      await onEditStory(editingStoryId, storyForm);
+    } else if (onAddStory) {
       await onAddStory(storyForm);
-      setStoryForm({
-        name: '',
-        nameTextRefId: 0,
-        description: '',
-        descriptionTextRefId: 0,
-        audioUrl: '',
-        audioUrlRefId: 0
-      });
-      setShowStoryModal(false);
     }
+    setStoryForm({
+      name: '',
+      nameTextRefId: 0,
+      description: '',
+      descriptionTextRefId: 0,
+      audioUrl: '',
+      audioUrlRefId: 0
+    });
+    setShowStoryModal(false);
+    setEditingStoryId(null);
   };
 
   const handleDeleteStory = async () => {
@@ -98,29 +106,49 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-white font-medium mb-2">
-                    Ref. Nome: {story.nameTextRefId}
+                    {story.name || `Nome não encontrado (ID: ${story.nameTextRefId})`}
                   </h3>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <FiPlay />
-                      {story.playCount} reproduções
-                    </span>
-                    {story.audioUrlRefId && (
+                    {story.description && (
+                      <span>{story.description}</span>
+                    )}
+                    {story.audioUrl && (
                       <span className="flex items-center gap-1">
                         <FiMusic />
-                        Áudio: {story.audioUrlRefId}
+                        Áudio disponível
                       </span>
                     )}
                   </div>
                 </div>
-                {onDeleteStory && (
-                  <button
-                    onClick={() => setDeleteStoryId(story.storyCityId)}
-                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                  >
-                    <FiTrash2 />
-                  </button>
-                )}
+                <div className="flex gap-2">
+                  {onEditStory && (
+                    <button
+                      onClick={() => {
+                        setEditingStoryId(story.storyCityId);
+                        setStoryForm({
+                          name: story.name || '',
+                          nameTextRefId: story.nameTextRefId,
+                          description: story.description || '',
+                          descriptionTextRefId: story.descriptionTextRefId || 0,
+                          audioUrl: story.audioUrl || '',
+                          audioUrlRefId: story.audioUrlRefId || 0
+                        });
+                        setShowStoryModal(true);
+                      }}
+                      className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                    >
+                      <FiEdit />
+                    </button>
+                  )}
+                  {onDeleteStory && (
+                    <button
+                      onClick={() => setDeleteStoryId(story.storyCityId)}
+                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                    >
+                      <FiTrash2 />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))
@@ -132,7 +160,9 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
       {showStoryModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Adicionar História</h3>
+            <h3 className="text-xl font-semibold text-white mb-4">
+              {editingStoryId ? 'Editar História' : 'Adicionar História'}
+            </h3>
             <div className="space-y-4">
               <div>
                 <label className="text-white text-sm block mb-2">Nome da História</label>
@@ -185,7 +215,10 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
             </div>
             <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setShowStoryModal(false)}
+                onClick={() => {
+                  setShowStoryModal(false);
+                  setEditingStoryId(null);
+                }}
                 className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
               >
                 Cancelar
@@ -194,7 +227,7 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
                 onClick={handleAddStory}
                 className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
-                Adicionar História
+                {editingStoryId ? 'Atualizar História' : 'Adicionar História'}
               </button>
             </div>
           </div>
