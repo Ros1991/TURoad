@@ -83,11 +83,9 @@ export class BaseService<Entity extends ObjectLiteral> {
     }
 
     const localizedFields = LocalizedTextHelper.extractLocalizedFieldsFromDto(dto, this.EntityClass);
-    console.log('[BaseService] Localized fields to update:', Array.from(localizedFields.entries()));
     
     for (const [fieldName, textContent] of localizedFields.entries()) {
       const referenceId = entity[fieldName];
-      console.log(`[BaseService] Processing ${fieldName}: refId=${referenceId}, text="${textContent}"`);
       
       if (referenceId) {
         // Update existing localized text
@@ -98,15 +96,12 @@ export class BaseService<Entity extends ObjectLiteral> {
           } as any
         });
         const existingText = existingTexts.length > 0 ? existingTexts[0] : null;
-        console.log(`[BaseService] Found existing text for ${fieldName}:`, existingText?.textContent);
         
         if (existingText) {
-          console.log(`[BaseService] Updating existing text ${referenceId}: "${existingText.textContent}" → "${textContent}"`);
           await this.localizedTextRepository.update(existingText.textId, {
             textContent: textContent as string
           });
         } else {
-          console.log(`[BaseService] Creating new text for existing refId ${referenceId}: "${textContent}"`);
           // Create new localized text for this language
           await this.localizedTextRepository.create({
             referenceId,
@@ -117,7 +112,6 @@ export class BaseService<Entity extends ObjectLiteral> {
       } else {
         // Create new localized text with new reference ID
         const newReferenceId = LocalizedTextHelper.generateReferenceId();
-        console.log(`[BaseService] Creating new text with new refId ${newReferenceId}: "${textContent}"`);
         await this.localizedTextRepository.create({
           referenceId: newReferenceId,
           languageCode: this.currentLanguage,

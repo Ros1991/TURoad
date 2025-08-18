@@ -8,6 +8,7 @@ import localizedTextsService from '../../services/localizedTexts.service';
 import LocalizedTextInput from '../../components/common/LocalizedTextInput';
 import LocationPickerDialog from '../../components/common/LocationPickerDialog';
 import StoriesCard from '../../components/common/StoriesCard';
+import { CategoryAssociationCard } from '../../components/common/CategoryAssociationCard';
 
 const CityDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -473,26 +474,39 @@ const CityDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Stories Section - Only show when viewing existing city */}
+      {/* Content sections - Only show when viewing existing city */}
       {id !== 'new' && (
-        <StoriesCard
-          stories={stories.map(story => ({
-            storyCityId: story.storyCityId,
-            nameTextRefId: story.nameTextRefId,
-            descriptionTextRefId: story.descriptionTextRefId,
-            playCount: story.playCount,
-            audioUrlRefId: story.audioUrlRefId,
-            cityId: story.cityId,
-            name: (story as any).name || '',
-            description: (story as any).description || '',
-            audioUrl: (story as any).audioUrl || ''
-          }))}
-          onAddStory={handleAddStory}
-          onEditStory={handleEditStory}
-          onDeleteStory={handleDeleteStory}
-          title="Histórias"
-          showAddButton={true}
-        />
+        <>
+          {/* Stories Section */}
+          <StoriesCard
+            stories={stories.map(story => ({
+              storyCityId: story.storyCityId,
+              nameTextRefId: story.nameTextRefId,
+              descriptionTextRefId: story.descriptionTextRefId,
+              playCount: story.playCount,
+              audioUrlRefId: story.audioUrlRefId,
+              cityId: story.cityId,
+              name: (story as any).name || '',
+              description: (story as any).description || '',
+              audioUrl: (story as any).audioUrl || ''
+            }))}
+            onAddStory={handleAddStory}
+            onEditStory={handleEditStory}
+            onDeleteStory={handleDeleteStory}
+            title="Histórias"
+            showAddButton={true}
+          />
+
+          {/* Categories Section */}
+          <div className="mt-6">
+            <CategoryAssociationCard
+              entityType="cities"
+              entityId={Number(id)}
+              entityName={city?.name || 'Cidade'}
+              title="Categorias"
+            />
+          </div>
+        </>
       )}
 
       {/* Confirm Delete Dialog */}
