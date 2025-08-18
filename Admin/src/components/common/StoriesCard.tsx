@@ -58,6 +58,7 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
     } else if (onAddStory) {
       await onAddStory(storyForm);
     }
+    
     setStoryForm({
       name: '',
       nameTextRefId: 0,

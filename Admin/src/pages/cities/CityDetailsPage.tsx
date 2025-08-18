@@ -213,6 +213,26 @@ const CityDetailsPage: React.FC = () => {
     }
   };
 
+  const handleEditStory = async (storyId: number, storyData: { name: string; nameTextRefId: number; description: string; descriptionTextRefId: number; audioUrl: string; audioUrlRefId: number; }) => {
+    if (!city) return;
+    
+    try {
+      await citiesService.updateStory(city.cityId, storyId, {
+        name: storyData.name,
+        nameTextRefId: storyData.nameTextRefId,
+        description: storyData.description,
+        descriptionTextRefId: storyData.descriptionTextRefId,
+        audioUrl: storyData.audioUrl,
+        audioUrlRefId: storyData.audioUrlRefId,
+        playCount: 0
+      });
+      toast.success('Story updated successfully');
+      loadStories();
+    } catch (error) {
+      toast.error('Failed to update story');
+    }
+  };
+
   const handleDeleteStory = async (storyId: number) => {
     if (!city) return;
     
@@ -462,9 +482,13 @@ const CityDetailsPage: React.FC = () => {
             descriptionTextRefId: story.descriptionTextRefId,
             playCount: story.playCount,
             audioUrlRefId: story.audioUrlRefId,
-            cityId: story.cityId
+            cityId: story.cityId,
+            name: (story as any).name || '',
+            description: (story as any).description || '',
+            audioUrl: (story as any).audioUrl || ''
           }))}
           onAddStory={handleAddStory}
+          onEditStory={handleEditStory}
           onDeleteStory={handleDeleteStory}
           title="Histórias"
           showAddButton={true}

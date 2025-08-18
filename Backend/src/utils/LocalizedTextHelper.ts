@@ -49,8 +49,8 @@ export class LocalizedTextHelper {
     
     fields.forEach(field => {
       // Convert entity field name to DTO field name
-      // e.g., "nameTextRefId" -> "name"
-      const dtoFieldName = field.propertyName.replace('TextRefId', '');
+      // e.g., "nameTextRefId" -> "name", "audioUrlRefId" -> "audioUrl"
+      const dtoFieldName = field.propertyName.replace(/(Text)?RefId$/, '');
       
       if (dto[dtoFieldName] !== undefined && dto[dtoFieldName] !== null) {
         localizedFields.set(field.propertyName, dto[dtoFieldName]);
@@ -84,13 +84,19 @@ export class LocalizedTextHelper {
     
     entityFields.forEach(field => {
       const refId = entity[field.propertyName];
-      if (refId && localizedTexts.has(refId)) {
-        // Convert from entity field name (e.g., "nameTextRefId") to DTO field name (e.g., "name")
-        const dtoFieldName = field.propertyName.replace(/TextRefId$/, '');
-        dto[dtoFieldName] = localizedTexts.get(refId);
+      
+      if (refId && typeof refId === 'number' && localizedTexts.has(refId)) {
+        // Convert from entity field name (e.g., "nameTextRefId" or "audioUrlRefId") to DTO field name (e.g., "name" or "audioUrl")
+        const dtoFieldName = field.propertyName.replace(/(Text)?RefId$/, '');
+        const localizedText = localizedTexts.get(refId);
         
-        // Keep the original TextRefId field in the DTO for frontend use
-        // delete dto[field.propertyName]; // REMOVED: Frontend needs reference IDs
+        dto[dtoFieldName] = localizedText;
+        
+        // Ensure the original TextRefId field remains as number
+        dto[field.propertyName] = refId;
+      } else if (refId && typeof refId !== 'number') {
+        // If refId is not a number, it might be corrupted data - log and skip
+        console.warn(`[LocalizedTextHelper] Invalid reference ID for ${field.propertyName}: ${refId} (type: ${typeof refId})`);
       }
     });
     

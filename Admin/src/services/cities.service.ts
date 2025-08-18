@@ -37,6 +37,10 @@ export interface StoryCity {
   playCount: number;
   audioUrlRefId?: number;
   cityId: number;
+  // Localized text fields returned by backend
+  name?: string;
+  description?: string;
+  audioUrl?: string;
 }
 
 export interface CreateCityDto {

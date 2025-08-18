@@ -72,8 +72,9 @@ export class CityService extends BaseService<City> {
       throw new Error('Story not found');
     }
 
-    const updatedStory = await this.storyCityRepository.update(storyId, storyData);
-    return this.fetchLocalizedTextForStory(updatedStory);
+    // Use StoryCityService to handle localized text fields properly
+    const storyCityService = new StoryCityService();
+    return await storyCityService.update(storyId, storyData);
   }
 
   async deleteStory(cityId: number, storyId: number) {
