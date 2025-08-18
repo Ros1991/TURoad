@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiCheck, FiX, FiTrash2, FiPlus, FiPlay, FiMusic, FiMapPin } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import citiesService, { City, StoryCity } from '../../services/cities.service';
 import localizedTextsService from '../../services/localizedTexts.service';
 import LocalizedTextInput from '../../components/common/LocalizedTextInput';
 import LocationPickerDialog from '../../components/common/LocationPickerDialog';
+import StoriesCard from '../../components/common/StoriesCard';
 
 const CityDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -14,9 +16,7 @@ const CityDetailsPage: React.FC = () => {
   const [stories, setStories] = useState<StoryCity[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showStoryModal, setShowStoryModal] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
-  const [deleteStoryId, setDeleteStoryId] = useState<number | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
@@ -29,12 +29,6 @@ const CityDetailsPage: React.FC = () => {
     imageUrl: '',
     whatToObserve: '',
     whatToObserveTextRefId: 0
-  });
-  const [storyForm, setStoryForm] = useState({
-    nameTextRefId: 0,
-    descriptionTextRefId: 0,
-    playCount: 0,
-    audioUrlRefId: 0
   });
 
   useEffect(() => {
@@ -54,15 +48,15 @@ const CityDetailsPage: React.FC = () => {
       const data = await citiesService.getCityById(Number(id));
       setCity(data);
       setEditForm({
-        name: '',
+        name: data.name || '',
         nameTextRefId: data.nameTextRefId || 0,
-        description: '',
+        description: data.description || '',
         descriptionTextRefId: data.descriptionTextRefId || 0,
         latitude: data.latitude || 0,
         longitude: data.longitude || 0,
         state: data.state || '',
         imageUrl: data.imageUrl || '',
-        whatToObserve: '',
+        whatToObserve: data.whatToObserve || '',
         whatToObserveTextRefId: data.whatToObserveTextRefId || 0
       });
     } catch (error) {
@@ -188,44 +182,43 @@ const CityDetailsPage: React.FC = () => {
     setEditMode(false);
     if (city) {
       setEditForm({
-        name: '',
+        name: city.name || '',
         nameTextRefId: city.nameTextRefId || 0,
-        description: '',
+        description: city.description || '',
         descriptionTextRefId: city.descriptionTextRefId || 0,
         latitude: city.latitude || 0,
         longitude: city.longitude || 0,
         state: city.state || '',
         imageUrl: city.imageUrl || '',
-        whatToObserve: '',
+        whatToObserve: city.whatToObserve || '',
         whatToObserveTextRefId: city.whatToObserveTextRefId || 0
       });
     }
   };
 
-  const handleAddStory = async () => {
+  const handleAddStory = async (storyData: { nameTextRefId: number; descriptionTextRefId: number; audioUrlRefId: number; }) => {
+    if (!city) return;
+    
     try {
-      await citiesService.addStory(Number(id), storyForm);
-      toast.success('Story added successfully');
-      setShowStoryModal(false);
-      setStoryForm({
-        nameTextRefId: 0,
-        descriptionTextRefId: 0,
+      await citiesService.addStory(city.cityId, {
+        nameTextRefId: storyData.nameTextRefId,
+        descriptionTextRefId: storyData.descriptionTextRefId,
         playCount: 0,
-        audioUrlRefId: 0
+        audioUrlRefId: storyData.audioUrlRefId
       });
+      toast.success('Story added successfully');
       loadStories();
     } catch (error) {
       toast.error('Failed to add story');
     }
   };
 
-  const handleDeleteStory = async () => {
-    if (!deleteStoryId) return;
+  const handleDeleteStory = async (storyId: number) => {
+    if (!city) return;
     
     try {
-      await citiesService.deleteStory(Number(id), deleteStoryId);
+      await citiesService.deleteStory(city.cityId, storyId);
       toast.success('Story deleted successfully');
-      setDeleteStoryId(null);
       loadStories();
     } catch (error) {
       toast.error('Failed to delete story');
@@ -331,7 +324,7 @@ const CityDetailsPage: React.FC = () => {
                 referenceId={editForm.nameTextRefId || city?.nameTextRefId || 0}
               />
             ) : (
-              <p className="text-white">{city?.nameTextRefId || 'N/A'}</p>
+              <p className="text-white">{city?.name || 'N/A'}</p>
             )}
           </div>
           
@@ -370,7 +363,7 @@ const CityDetailsPage: React.FC = () => {
               referenceId={editForm.descriptionTextRefId || city?.descriptionTextRefId || 0}
             />
           ) : (
-            <p className="text-white">{city?.descriptionTextRefId || 'N/A'}</p>
+            <p className="text-white">{city?.description || 'N/A'}</p>
           )}
         </div>
         
@@ -392,7 +385,7 @@ const CityDetailsPage: React.FC = () => {
               referenceId={editForm.whatToObserveTextRefId || city?.whatToObserveTextRefId || 0}
             />
           ) : (
-            <p className="text-white">{city?.whatToObserveTextRefId || 'N/A'}</p>
+            <p className="text-white">{city?.whatToObserve || 'N/A'}</p>
           )}
         </div>
         {/* URL da Imagem */}
@@ -462,162 +455,34 @@ const CityDetailsPage: React.FC = () => {
 
       {/* Stories Section - Only show when viewing existing city */}
       {id !== 'new' && (
-        <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-white">Histórias ({stories.length})</h2>
-            <button
-              onClick={() => setShowStoryModal(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-            >
-              <FiPlus />
-              Adicionar História
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            {stories.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">Nenhuma história disponível</p>
-            ) : (
-              stories.map((story) => (
-                <div
-                  key={story.storyCityId}
-                  className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="text-white font-medium mb-2">
-                        Ref. Nome: {story.nameTextRefId}
-                      </h3>
-                      <div className="flex items-center gap-4 text-sm text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <FiPlay />
-                          {story.playCount} reproduções
-                        </span>
-                        {story.audioUrlRefId && (
-                          <span className="flex items-center gap-1">
-                            <FiMusic />
-                            Áudio: {story.audioUrlRefId}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setDeleteStoryId(story.storyCityId)}
-                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <StoriesCard
+          stories={stories.map(story => ({
+            storyCityId: story.storyCityId,
+            nameTextRefId: story.nameTextRefId,
+            descriptionTextRefId: story.descriptionTextRefId,
+            playCount: story.playCount,
+            audioUrlRefId: story.audioUrlRefId,
+            cityId: story.cityId
+          }))}
+          onAddStory={handleAddStory}
+          onDeleteStory={handleDeleteStory}
+          title="Histórias"
+          showAddButton={true}
+        />
       )}
 
-      {/* Delete City Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Excluir Cidade</h3>
-            <p className="text-gray-400 mb-6">
-              Tem certeza que deseja excluir esta cidade? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add Story Modal */}
-      {showStoryModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Adicionar História</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência Nome</label>
-                <input
-                  type="number"
-                  value={storyForm.nameTextRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, nameTextRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência Descrição</label>
-                <input
-                  type="number"
-                  value={storyForm.descriptionTextRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, descriptionTextRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="text-gray-400 text-sm block mb-2">ID Referência URL Áudio</label>
-                <input
-                  type="number"
-                  value={storyForm.audioUrlRefId}
-                  onChange={(e) => setStoryForm({ ...storyForm, audioUrlRefId: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowStoryModal(false)}
-                className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleAddStory}
-                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Adicionar História
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Story Modal */}
-      {deleteStoryId && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-semibold text-white mb-4">Excluir História</h3>
-            <p className="text-gray-400 mb-6">
-              Tem certeza que deseja excluir esta história? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteStoryId(null)}
-                className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteStory}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteModal}
+        title="Excluir Cidade"
+        message="Tem certeza que deseja excluir esta cidade"
+        itemName={city?.name || ''}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmColor="red"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
 
       {/* Location Picker Dialog */}
       {showLocationPicker && (

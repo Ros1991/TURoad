@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiTag, FiSearch, FiPlus, FiEdit2, FiTrash2, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiTag, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import categoriesService, { Category } from '../../services/categories.service';
 import { PaginatedRequest } from '../../services/api';
@@ -293,31 +294,18 @@ const CategoriesPage: React.FC = () => {
         )}
       </div>
 
-      {/* Delete Modal */}
-      {deleteModal.open && deleteModal.category && (
-        <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Confirmar Exclusão</h3>
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
-              Tem certeza que deseja excluir a categoria <strong className="text-gray-900 dark:text-white">{getCategoryName(deleteModal.category)}</strong>? Esta ação não pode ser desfeita.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteModal({ open: false, category: null })}
-                className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors border border-gray-300 dark:border-gray-600"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-              >
-                Excluir
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={deleteModal.open}
+        title="Confirmar Exclusão"
+        message="Tem certeza que deseja excluir a categoria"
+        itemName={deleteModal.category ? getCategoryName(deleteModal.category) : ''}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmColor="red"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteModal({ open: false, category: null })}
+      />
     </div>
   );
 };
