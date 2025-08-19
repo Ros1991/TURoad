@@ -27,4 +27,11 @@ router.get('/:id/available-categories', controller.getAvailableCategories.bind(c
 router.post('/:id/categories', authenticate, controller.addCategory.bind(controller));
 router.delete('/:id/categories/:categoryId', authenticate, controller.removeCategory.bind(controller));
 
+// City routes (nested under routes)
+router.get('/:id/cities', controller.getCities.bind(controller));
+router.get('/:id/available-cities', controller.getAvailableCities.bind(controller));
+router.post('/:id/cities', authenticate, controller.addCity.bind(controller));
+router.delete('/:id/cities/:cityId', authenticate, controller.removeCity.bind(controller));
+router.put('/:id/cities/reorder', authenticate, controller.reorderCities.bind(controller));
+
 export default router;

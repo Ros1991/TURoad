@@ -71,6 +71,68 @@ export class LocationRepository extends BaseRepository<Location> {
     return result;
   }
 
+  // Override findById to include city and type relations with localized text
+  override async findById(id: number): Promise<Location | null> {
+    const whereCondition = {} as any;
+    whereCondition[this.primaryKeyFieldName] = id;
+    if (this.isSoftDelete()) {
+      whereCondition.isDeleted = false;
+    }
+
+    const location = await this.repository.findOne({
+      where: whereCondition,
+      relations: {
+        city: true,
+        type: true
+      }
+    });
+
+    if (!location) {
+      return null;
+    }
+
+    // Collect text reference IDs
+    const textRefIds: number[] = [];
+    if (location.city?.nameTextRefId) {
+      textRefIds.push(location.city.nameTextRefId);
+    }
+    if (location.type?.nameTextRefId) {
+      textRefIds.push(location.type.nameTextRefId);
+    }
+
+    if (textRefIds.length > 0) {
+      const localizedTexts = await this.repository.manager.query(
+        `SELECT reference_id, text_content 
+         FROM localized_texts 
+         WHERE reference_id = ANY($1) AND language_code = $2`,
+        [textRefIds, 'pt']
+      );
+
+      // Map localized texts
+      const textMap = new Map<number, string>();
+      localizedTexts.forEach((lt: any) => {
+        textMap.set(lt.reference_id, lt.text_content);
+      });
+
+      // Add localized names to city and type objects
+      if (location.city?.nameTextRefId) {
+        const localizedName = textMap.get(location.city.nameTextRefId);
+        if (localizedName) {
+          (location.city as any).name = localizedName;
+        }
+      }
+
+      if (location.type?.nameTextRefId) {
+        const localizedName = textMap.get(location.type.nameTextRefId);
+        if (localizedName) {
+          (location.type as any).name = localizedName;
+        }
+      }
+    }
+
+    return location;
+  }
+
   protected override applySearch(qb: SelectQueryBuilder<Location>, search: any): void {
     if(search && search.search && search.search.length > 0) {
       qb.distinct(true)
@@ -79,6 +141,12 @@ export class LocationRepository extends BaseRepository<Location> {
           search: `%${search.search}%`,
           language: 'pt'
         });
+    }
+    if(search && search.cityId) {
+      qb.andWhere('entity.city_id = :cityId', { cityId: search.cityId });
+    }
+    if(search && search.typeId) {
+      qb.andWhere('entity.type_id = :typeId', { typeId: search.typeId });
     }
   }
 }

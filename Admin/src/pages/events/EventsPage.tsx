@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiCalendar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import eventsService, { Event, EventFilters } from '../../services/events.service';
+import CitySelector from '../../components/common/CitySelector';
 
 const EventsPage: React.FC = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -60,6 +61,10 @@ const EventsPage: React.FC = () => {
 
   const handleSearch = (value: string) => {
     setFilters((prev: EventFilters) => ({ ...prev, search: value, page: 1 }));
+  };
+
+  const handleCityFilter = (cityId: number | null) => {
+    setFilters((prev: EventFilters) => ({ ...prev, cityId: cityId || undefined, page: 1 }));
   };
 
   const handleDelete = async () => {
@@ -129,22 +134,33 @@ const EventsPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* Search */}
-      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Pesquisar eventos..."
-            value={filters.search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-          />
+      {/* Search and Filters */}
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6" style={{ position: 'relative', zIndex: 10000 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4" style={{ position: 'relative', zIndex: 10000 }}>
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Pesquisar eventos..."
+              value={filters.search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <CitySelector
+              value={filters.cityId || null}
+              onChange={(cityId) => handleCityFilter(cityId)}
+              placeholder="Filtrar por cidade..."
+              className="w-full"
+              isFilter={true}
+            />
+          </div>
         </div>
       </div>
 
       {/* Events Table */}
-      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden">
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden" style={{ position: 'relative', zIndex: 0 }}>
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>

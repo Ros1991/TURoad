@@ -4,15 +4,18 @@ import { Route } from '@/entities/Route';
 import { RouteMapper } from '@/mappers/RouteMapper';
 import { RouteService } from '@/services/RouteService';
 import { RouteCategoryService } from '@/services/RouteCategoryService';
+import { RouteCityService } from '@/services/RouteCityService';
 
 export class RoutesController extends BaseController<Route> {
   public override service: RouteService;
   private routeCategoryService: RouteCategoryService;
+  private routeCityService: RouteCityService;
 
   constructor() {
     super(Route, RouteMapper);
     this.service = new RouteService();
     this.routeCategoryService = new RouteCategoryService();
+    this.routeCityService = new RouteCityService();
   }
 
   // Story CRUD endpoints
@@ -203,6 +206,108 @@ export class RoutesController extends BaseController<Route> {
       return res.status(error.statusCode || 500).json({
         success: false,
         message: error.message || 'Failed to retrieve available categories',
+        data: null
+      });
+    }
+  }
+
+  // City CRUD endpoints
+  async getCities(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const cities = await this.routeCityService.findByRouteId(routeId);
+      
+      return res.json({
+        success: true,
+        message: 'Cities retrieved successfully',
+        data: cities
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to retrieve cities',
+        data: null
+      });
+    }
+  }
+
+  async addCity(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const { cityId, order } = req.body;
+      
+      const routeCity = await this.routeCityService.addCityToRoute(routeId, cityId, order);
+      
+      return res.status(201).json({
+        success: true,
+        message: 'City added successfully',
+        data: routeCity
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to add city',
+        data: null
+      });
+    }
+  }
+
+  async removeCity(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const cityId = parseInt(req.params.cityId!);
+      
+      await this.routeCityService.removeCityFromRoute(routeId, cityId);
+      
+      return res.json({
+        success: true,
+        message: 'City removed successfully',
+        data: null
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to remove city',
+        data: null
+      });
+    }
+  }
+
+  async reorderCities(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const { cities } = req.body; // Array of { cityId, order }
+      
+      await this.routeCityService.reorderCities(routeId, cities);
+      
+      return res.json({
+        success: true,
+        message: 'Cities reordered successfully',
+        data: null
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to reorder cities',
+        data: null
+      });
+    }
+  }
+
+  async getAvailableCities(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const cities = await this.routeCityService.getAvailableCitiesForRoute(routeId);
+      
+      return res.json({
+        success: true,
+        message: 'Available cities retrieved successfully',
+        data: cities
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to retrieve available cities',
         data: null
       });
     }

@@ -23,7 +23,7 @@ router.delete('/:id/stories/:storyId', authenticate, controller.deleteStory.bind
 
 // Category association routes (nested under cities)
 router.get('/:id/categories', controller.getCategories.bind(controller));
-router.get('/:id/categories/available', controller.getAvailableCategories.bind(controller));
+router.get('/:id/available-categories', controller.getAvailableCategories.bind(controller));
 router.post('/:id/categories', authenticate, controller.addCategory.bind(controller));
 router.delete('/:id/categories/:categoryId', authenticate, controller.removeCategory.bind(controller));
 

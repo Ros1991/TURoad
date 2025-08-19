@@ -1,5 +1,4 @@
 import React, { useState, lazy, Suspense } from 'react';
-import { createPortal } from 'react-dom';
 import { FiGlobe } from 'react-icons/fi';
 import FlagIcon from './FlagIcon';
 import localizedTextsService from '../../services/localizedTexts.service';
@@ -53,22 +52,35 @@ const LocalizedTextInput: React.FC<LocalizedTextInputProps> = ({
   };
 
   const handleInputBlur = async () => {
-    // Auto-create text reference when user types directly and field has value but no referenceId
-    if (value && value.trim() && (!referenceId || referenceId === 0)) {
-      console.log('Auto-creating text reference for:', value, 'Current referenceId:', referenceId);
-      try {
-        const newReferenceId = await localizedTextsService.createReference(value.trim(), []);
-        console.log('Created text reference:', newReferenceId);
-        
-        if (onBothChange) {
-          console.log('Calling onBothChange with:', value, newReferenceId);
-          onBothChange(value, newReferenceId);
-        } else if (onReferenceIdChange) {
-          console.log('Calling onReferenceIdChange with:', newReferenceId);
-          onReferenceIdChange(newReferenceId);
+    if (value && value.trim()) {
+      if (!referenceId || referenceId === 0) {
+        // Auto-create text reference when user types directly and field has no referenceId
+        console.log('Auto-creating text reference for:', value, 'Current referenceId:', referenceId);
+        try {
+          const newReferenceId = await localizedTextsService.createReference(value.trim(), []);
+          console.log('Created text reference:', newReferenceId);
+          
+          if (onBothChange) {
+            console.log('Calling onBothChange with:', value, newReferenceId);
+            onBothChange(value, newReferenceId);
+          } else if (onReferenceIdChange) {
+            console.log('Calling onReferenceIdChange with:', newReferenceId);
+            onReferenceIdChange(newReferenceId);
+          }
+        } catch (error) {
+          console.error('Error auto-creating text reference:', error);
         }
-      } catch (error) {
-        console.error('Error auto-creating text reference:', error);
+      } else {
+        // Update existing text reference with new Portuguese text
+        console.log('Updating existing text reference:', referenceId, 'with value:', value);
+        try {
+          await localizedTextsService.saveTranslations(referenceId, [
+            { languageCode: 'pt', textContent: value.trim() }
+          ]);
+          console.log('Updated text reference successfully');
+        } catch (error) {
+          console.error('Error updating text reference:', error);
+        }
       }
     }
   };

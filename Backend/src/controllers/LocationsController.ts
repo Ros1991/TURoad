@@ -15,6 +15,7 @@ export class LocationsController extends BaseController<Location> {
     this.locationCategoryService = new LocationCategoryService();
   }
 
+
   // Story CRUD endpoints
   async getStories(req: Request, res: Response): Promise<Response> {
     try {

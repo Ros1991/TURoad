@@ -8,6 +8,34 @@ export class EventRepository extends BaseRepository<Event> {
     super(Event, 'eventId');
   }
 
+  // Override findById to include city relations with localized text
+  override async findById(id: number): Promise<Event | null> {
+    const event = await this.repository.findOne({
+      where: { eventId: id },
+      relations: {
+        city: true
+      }
+    });
+
+    if (!event) return null;
+
+    // Fetch localized text for city if it exists
+    if (event.city?.nameTextRefId) {
+      const localizedText = await this.repository.manager.query(
+        `SELECT text_content 
+         FROM localized_texts 
+         WHERE reference_id = $1 AND language_code = $2`,
+        [event.city.nameTextRefId, 'pt']
+      );
+      
+      if (localizedText.length > 0) {
+        (event.city as any).name = localizedText[0].text_content;
+      }
+    }
+
+    return event;
+  }
+
   // Override findWithPagination to always include city relations with localized text
   override async findWithPagination(
     pagination: PaginationRequestVO & { search?: any }, 
@@ -65,6 +93,9 @@ export class EventRepository extends BaseRepository<Event> {
           search: `%${search.search}%`,
           language: 'pt'
         });
+    }
+    if(search && search.cityId) {
+      qb.andWhere('entity.city_id = :cityId', { cityId: search.cityId });
     }
   }
 }

@@ -24,7 +24,7 @@ class CategoryAssociationService {
    * Get available categories for an entity (not already associated)
    */
   async getAvailableCategories(entityType: 'cities' | 'routes' | 'locations' | 'events', entityId: number): Promise<Category[]> {
-    return api.get<Category[]>(`/${entityType}/${entityId}/categories/available`);
+    return api.get<Category[]>(`/${entityType}/${entityId}/available-categories`);
   }
 
   /**

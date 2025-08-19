@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom';
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import locationsService, { Location, LocationFilters } from '../../services/locations.service';
-import typesService, { Type } from '../../services/types.service';
+import CitySelector from '../../components/common/CitySelector';
+import TypeSelector from '../../components/common/TypeSelector';
 
 const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [types, setTypes] = useState<Type[]>([]);
   const [filters, setFilters] = useState<LocationFilters>({
     search: '',
     isActive: undefined,
@@ -34,19 +34,9 @@ const LocationsPage: React.FC = () => {
     }
   }, [filters]);
 
-  const loadTypes = useCallback(async () => {
-    try {
-      const response = await typesService.getActiveTypes();
-      setTypes(response);
-    } catch (error) {
-      console.error('Error loading types:', error);
-    }
-  }, []);
-
   useEffect(() => {
     loadLocations();
-    loadTypes();
-  }, [loadLocations, loadTypes]);
+  }, [loadLocations]);
 
   const handleSearch = (value: string) => {
     setFilters((prev: LocationFilters) => ({ ...prev, search: value, page: 1 }));
@@ -93,6 +83,10 @@ const LocationsPage: React.FC = () => {
     setFilters((prev: LocationFilters) => ({ ...prev, typeId: typeIdNumber, page: 1 }));
   };
 
+  const handleCityFilter = (cityId: number | null) => {
+    setFilters((prev: LocationFilters) => ({ ...prev, cityId: cityId || undefined, page: 1 }));
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -111,8 +105,8 @@ const LocationsPage: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6" style={{ position: 'relative', zIndex: 10000 }}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ position: 'relative', zIndex: 10000 }}>
           <div className="relative">
             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -124,24 +118,28 @@ const LocationsPage: React.FC = () => {
             />
           </div>
           <div>
-            <select
-              value={filters.typeId || ''}
-              onChange={(e) => handleTypeFilter(e.target.value)}
-              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
-            >
-              <option value="">Todos os tipos</option>
-              {types.map((type) => (
-                <option key={type.typeId} value={type.typeId}>
-                  {type.name || `Tipo ${type.typeId}`}
-                </option>
-              ))}
-            </select>
+            <CitySelector
+              value={filters.cityId || null}
+              onChange={(cityId) => handleCityFilter(cityId)}
+              placeholder="Filtrar por cidade..."
+              className="w-full"
+              isFilter={true}
+            />
+          </div>
+          <div>
+            <TypeSelector
+              value={filters.typeId || null}
+              onChange={(typeId) => handleTypeFilter(typeId ? typeId.toString() : '')}
+              placeholder="Filtrar por tipo..."
+              className="w-full"
+              isFilter={true}
+            />
           </div>
         </div>
       </div>
 
       {/* Locations Table */}
-      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden">
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden" style={{ position: 'relative', zIndex: 0 }}>
         {loading ? (
           <div className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>

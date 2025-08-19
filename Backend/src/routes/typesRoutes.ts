@@ -7,6 +7,7 @@ const controller = new TypesController();
 
 // Public routes
 router.get('/', controller.list.bind(controller));
+router.get('/active', controller.getActive.bind(controller));
 router.get('/:id', controller.getById.bind(controller));
 
 // Protected routes

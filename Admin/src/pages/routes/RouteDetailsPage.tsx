@@ -1,23 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiTrash2, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import routesService, { Route, StoryRoute } from '../../services/routes.service';
 import localizedTextsService from '../../services/localizedTexts.service';
+import routeCitiesService, { RouteCity } from '../../services/routeCities.service';
 import LocalizedTextInput from '../../components/common/LocalizedTextInput';
-import LocationPickerDialog from '../../components/common/LocationPickerDialog';
 import StoriesCard from '../../components/common/StoriesCard';
 import { CategoryAssociationCard } from '../../components/common/CategoryAssociationCard';
+import RouteCitiesCard from '../../components/common/RouteCitiesCard';
 
 const RouteDetailsPage: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [route, setRoute] = useState<Route | null>(null);
   const [stories, setStories] = useState<StoryRoute[]>([]);
+  const [cities, setCities] = useState<RouteCity[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
     title: '',
@@ -38,6 +39,12 @@ const RouteDetailsPage: React.FC = () => {
       setEditMode(true);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (route) {
+      loadCities();
+    }
+  }, [route]);
 
   const loadRoute = async () => {
     if (!id || id === 'new') return;
@@ -225,6 +232,66 @@ const RouteDetailsPage: React.FC = () => {
       loadStories();
     } catch (error) {
       toast.error('Failed to delete story');
+    }
+  };
+
+  // Load cities for the route
+  const loadCities = async () => {
+    if (!route) return;
+    
+    try {
+      const routeCities = await routeCitiesService.getCitiesByRoute(route.routeId);
+      setCities(routeCities);
+    } catch (error) {
+      console.error('Failed to load cities:', error);
+    }
+  };
+
+  // City management handlers
+  const handleAddCity = async (cityId: number) => {
+    if (!route) return;
+    
+    try {
+      await routeCitiesService.addCityToRoute(route.routeId, { 
+        cityId, 
+        order: cities.length + 1 
+      });
+      toast.success('Cidade adicionada à rota');
+      loadCities(); // Reload cities to get updated data
+    } catch (error) {
+      toast.error('Falha ao adicionar cidade');
+    }
+  };
+
+  const handleRemoveCity = async (routeCityId: number) => {
+    if (!route) return;
+    
+    try {
+      const city = cities.find(c => c.routeCityId === routeCityId);
+      if (city) {
+        await routeCitiesService.removeCityFromRoute(route.routeId, city.cityId);
+        toast.success('Cidade removida da rota');
+        loadCities(); // Reload cities to get updated data
+      }
+    } catch (error) {
+      toast.error('Falha ao remover cidade');
+    }
+  };
+
+  const handleReorderCities = async (reorderedCities: RouteCity[]) => {
+    if (!route) return;
+    
+    try {
+      const cityOrders = reorderedCities.map((city, index) => ({
+        cityId: city.cityId,
+        order: index + 1
+      }));
+      
+      await routeCitiesService.reorderCities(route.routeId, { cities: cityOrders });
+      toast.success('Ordem das cidades atualizada');
+      loadCities(); // Reload cities to get updated data
+    } catch (error) {
+      toast.error('Falha ao reordenar cidades');
     }
   };
 
@@ -419,6 +486,17 @@ const RouteDetailsPage: React.FC = () => {
       {/* Content sections - Only show when viewing existing route */}
       {id !== 'new' && (
         <>
+          {/* Cities Section */}
+          <div className="mt-6">
+            <RouteCitiesCard
+              routeId={route?.routeId || 0}
+              cities={cities}
+              onAddCity={handleAddCity}
+              onRemoveCity={handleRemoveCity}
+              onReorderCities={handleReorderCities}
+            />
+          </div>
+
           {/* Stories Section */}
           <StoriesCard
             stories={stories.map(story => ({

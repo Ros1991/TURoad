@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiTrash2, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import eventsService, { Event, StoryEvent } from '../../services/events.service';
@@ -373,12 +373,12 @@ const EventDetailsPage: React.FC = () => {
             <label className="text-gray-400 text-sm block mb-2">Cidade</label>
             {editMode ? (
               <CitySelector
-                value={editForm.cityId}
-                onChange={(cityId) => setEditForm({ ...editForm, cityId })}
+                value={editForm.cityId || null}
+                onChange={(cityId) => setEditForm({ ...editForm, cityId: cityId || 0 })}
                 placeholder="Selecione uma cidade"
               />
             ) : (
-              <p className="text-white">Cidade ID: {event?.cityId || 'N/A'}</p>
+              <p className="text-white">{event?.city?.name || `Cidade ${event?.cityId}` || 'N/A'}</p>
             )}
           </div>
         </div>

@@ -1,66 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiChevronDown, FiSearch } from 'react-icons/fi';
-import citiesService from '../../services/cities.service';
+import typesService from '../../services/types.service';
 
-interface CityWithName {
-  cityId: number;
+interface TypeWithName {
+  typeId: number;
   nameTextRefId: number;
-  state: string;
   name: string;
   translatedName?: string;
 }
 
-interface CitySelectorProps {
+interface TypeSelectorProps {
   value: number | null;
-  onChange: (cityId: number | null) => void;
+  onChange: (typeId: number | null) => void;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
   isFilter?: boolean;
 }
 
-const CitySelector: React.FC<CitySelectorProps> = ({
+const TypeSelector: React.FC<TypeSelectorProps> = ({
   value,
   onChange,
   disabled = false,
-  placeholder = "Selecione uma cidade",
+  placeholder = "Selecione um tipo",
   className = "",
   isFilter = false
 }) => {
-  const [cities, setCities] = useState<CityWithName[]>([]);
-  const [filteredCities, setFilteredCities] = useState<CityWithName[]>([]);
+  const [types, setTypes] = useState<TypeWithName[]>([]);
+  const [filteredTypes, setFilteredTypes] = useState<TypeWithName[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<CityWithName | null>(null);
+  const [selectedType, setSelectedType] = useState<TypeWithName | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    loadCities();
+    loadTypes();
   }, []);
 
   useEffect(() => {
-    // Find selected city when value changes
-    if (value && cities.length > 0) {
-      const city = cities.find(c => c.cityId === value);
-      setSelectedCity(city || null);
+    // Find selected type when value changes
+    if (value && types.length > 0) {
+      const type = types.find(t => t.typeId === value);
+      setSelectedType(type || null);
     } else {
-      setSelectedCity(null);
+      setSelectedType(null);
     }
-  }, [value, cities]);
+  }, [value, types]);
 
   useEffect(() => {
-    // Filter cities based on search term
+    // Filter types based on search term
     if (searchTerm) {
-      const filtered = cities.filter(city => 
-        city.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        city.cityId.toString().includes(searchTerm)
+      const filtered = types.filter(type => 
+        type.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        type.typeId.toString().includes(searchTerm)
       );
-      setFilteredCities(filtered);
+      setFilteredTypes(filtered);
     } else {
-      setFilteredCities(cities);
+      setFilteredTypes(types);
     }
-  }, [searchTerm, cities]);
+  }, [searchTerm, types]);
 
   useEffect(() => {
     // Close dropdown when clicking outside
@@ -74,45 +73,55 @@ const CitySelector: React.FC<CitySelectorProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const loadCities = async () => {
+  const loadTypes = async () => {
     setLoading(true);
     try {
-      // Load cities with pagination
-      const response = await citiesService.getCities({ page: 1, limit: 1000 });
-      // Use the name field from backend (already localized) or fallback to state
-      const citiesWithNames = response.items.map(city => {
+      // Try to load active types first, fallback to paginated if needed
+      let response;
+      try {
+        response = await typesService.getActiveTypes();
+      } catch (error) {
+        console.warn('getActiveTypes failed, trying paginated:', error);
+        const paginatedResponse = await typesService.getTypes({ page: 1, limit: 1000 });
+        response = paginatedResponse.items;
+      }
+      
+      console.log('Types loaded:', response); // Debug log
+      
+      // Use the name field from backend (already localized) or fallback to type ID
+      const typesWithNames = response.map(type => {
         // Backend already returns localized name field
-        let displayName = city.name || city.state || `Cidade ${city.cityId}`;
+        let displayName = type.name || `Tipo ${type.typeId}`;
         
         // If name is empty, try translations as fallback
-        if (!city.name && city.nameTranslations && city.nameTranslations.length > 0) {
-          const ptTranslation = city.nameTranslations.find(t => t.language === 'pt');
+        if (!type.name && type.nameTranslations && type.nameTranslations.length > 0) {
+          const ptTranslation = type.nameTranslations.find(t => t.language === 'pt');
           if (ptTranslation && ptTranslation.text) {
             displayName = ptTranslation.text;
           }
         }
         
         return {
-          ...city,
+          ...type,
           name: displayName,
           translatedName: displayName
         };
       });
       
-      setCities(citiesWithNames);
-      setFilteredCities(citiesWithNames);
+      setTypes(typesWithNames);
+      setFilteredTypes(typesWithNames);
     } catch (error) {
-      console.error('Failed to load cities:', error);
-      setCities([]);
-      setFilteredCities([]);
+      console.error('Failed to load types:', error);
+      setTypes([]);
+      setFilteredTypes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelect = (city: CityWithName | null) => {
-    setSelectedCity(city);
-    onChange(city ? city.cityId : null);
+  const handleSelect = (type: TypeWithName | null) => {
+    setSelectedType(type);
+    onChange(type ? type.typeId : null);
     setIsOpen(false);
     setSearchTerm('');
   };
@@ -126,8 +135,8 @@ const CitySelector: React.FC<CitySelectorProps> = ({
         className={`w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white text-left flex items-center justify-between
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-500 focus:outline-none focus:border-blue-500'}`}
       >
-        <span className={selectedCity ? 'text-white' : 'text-gray-400'}>
-          {selectedCity ? selectedCity.name : placeholder}
+        <span className={selectedType ? 'text-white' : 'text-gray-400'}>
+          {selectedType ? selectedType.name : placeholder}
         </span>
         <FiChevronDown className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -142,14 +151,14 @@ const CitySelector: React.FC<CitySelectorProps> = ({
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar cidade..."
+                placeholder="Buscar tipo..."
                 className="w-full pl-10 pr-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
 
-          {/* Cities List */}
+          {/* Types List */}
           <div className="max-h-60 overflow-y-auto">
             {/* Clear selection option - only show for filters */}
             {isFilter && (
@@ -157,25 +166,25 @@ const CitySelector: React.FC<CitySelectorProps> = ({
                 onClick={() => handleSelect(null)}
                 className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors text-gray-400 border-b border-gray-700"
               >
-                <span>Todas as cidades</span>
+                <span>Todos os tipos</span>
               </button>
             )}
             
             {loading ? (
-              <div className="p-4 text-center text-gray-400">Carregando cidades...</div>
-            ) : filteredCities.length === 0 ? (
+              <div className="p-4 text-center text-gray-400">Carregando tipos...</div>
+            ) : filteredTypes.length === 0 ? (
               <div className="p-4 text-center text-gray-400">
-                {searchTerm ? 'Nenhuma cidade encontrada' : 'Nenhuma cidade disponível'}
+                {searchTerm ? 'Nenhum tipo encontrado' : 'Nenhum tipo disponível'}
               </div>
             ) : (
-              filteredCities.map(city => (
+              filteredTypes.map(type => (
                 <button
-                  key={city.cityId}
-                  onClick={() => handleSelect(city)}
+                  key={type.typeId}
+                  onClick={() => handleSelect(type)}
                   className={`w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors
-                    ${city.cityId === value ? 'bg-gray-700 text-blue-400' : 'text-white'}`}
+                    ${type.typeId === value ? 'bg-gray-700 text-blue-400' : 'text-white'}`}
                 >
-                  <span>{city.name}</span>
+                  <span>{type.name}</span>
                 </button>
               ))
             )}
@@ -186,4 +195,4 @@ const CitySelector: React.FC<CitySelectorProps> = ({
   );
 };
 
-export default CitySelector;
+export default TypeSelector;

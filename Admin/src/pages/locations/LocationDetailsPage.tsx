@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiEdit2, FiTrash2, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2, FiCheck, FiX } from 'react-icons/fi';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import locationsService, { Location, StoryLocation } from '../../services/locations.service';
@@ -9,6 +9,7 @@ import LocalizedTextInput from '../../components/common/LocalizedTextInput';
 import StoriesCard from '../../components/common/StoriesCard';
 import { CategoryAssociationCard } from '../../components/common/CategoryAssociationCard';
 import CitySelector from '../../components/common/CitySelector';
+import TypeSelector from '../../components/common/TypeSelector';
 
 const LocationDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -45,6 +46,9 @@ const LocationDetailsPage: React.FC = () => {
     
     try {
       const data = await locationsService.getLocationById(Number(id));
+      console.log('Location data loaded:', data); // Debug log
+      console.log('City data:', data.city); // Debug log
+      console.log('Type data:', data.type); // Debug log
       setLocation(data);
       setEditForm({
         name: data.name || '',
@@ -138,6 +142,9 @@ const LocationDetailsPage: React.FC = () => {
           imageUrl: editForm.imageUrl
         };
         
+        console.log('Update payload being sent:', payload);
+        console.log('Current editForm:', editForm);
+        
         await locationsService.updateLocation(Number(id), payload);
         toast.success('Location updated successfully');
         setEditMode(false);
@@ -213,6 +220,35 @@ const LocationDetailsPage: React.FC = () => {
     } catch (error) {
       toast.error('Failed to delete story');
     }
+  };
+
+  const getCityDisplayName = (location: Location | null): string => {
+    if (!location) return 'N/A';
+    
+    // Try to get city name from the city object
+    if (location.city?.name) {
+      return location.city.name;
+    }
+    
+    // Try to get from city state
+    if (location.city?.state) {
+      return location.city.state;
+    }
+    
+    // Fallback to cityId
+    return location.cityId ? `Cidade ${location.cityId}` : 'N/A';
+  };
+
+  const getTypeDisplayName = (location: Location | null): string => {
+    if (!location) return 'N/A';
+    
+    // Try to get type name from the type object
+    if (location.type?.name) {
+      return location.type.name;
+    }
+    
+    // Fallback to typeId
+    return location.typeId ? `Tipo ${location.typeId}` : 'N/A';
   };
 
   if (loading) {
@@ -313,7 +349,7 @@ const LocationDetailsPage: React.FC = () => {
       {/* Location Information */}
       <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6 mb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Informações do Local</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Nome */}
           <div>
             <label className="text-white text-sm mb-2 block">Nome do Local</label>
@@ -343,12 +379,26 @@ const LocationDetailsPage: React.FC = () => {
             <label className="text-gray-400 text-sm block mb-2">Cidade</label>
             {editMode ? (
               <CitySelector
-                value={editForm.cityId}
-                onChange={(cityId) => setEditForm({ ...editForm, cityId })}
+                value={editForm.cityId || null}
+                onChange={(cityId) => setEditForm({ ...editForm, cityId: cityId || 0 })}
                 placeholder="Selecione uma cidade"
               />
             ) : (
-              <p className="text-white">Cidade ID: {location?.cityId || 'N/A'}</p>
+              <p className="text-white">{getCityDisplayName(location)}</p>
+            )}
+          </div>
+
+          {/* Tipo */}
+          <div>
+            <label className="text-gray-400 text-sm block mb-2">Tipo</label>
+            {editMode ? (
+              <TypeSelector
+                value={editForm.typeId}
+                onChange={(typeId) => setEditForm({ ...editForm, typeId })}
+                placeholder="Selecione um tipo"
+              />
+            ) : (
+              <p className="text-white">{getTypeDisplayName(location)}</p>
             )}
           </div>
         </div>
