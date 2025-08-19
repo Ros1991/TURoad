@@ -23,6 +23,8 @@ export interface Event {
     state: string;
   };
   stories?: StoryEvent[];
+
+  
 }
 
 export interface CreateEventDto {

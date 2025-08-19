@@ -21,4 +21,10 @@ router.post('/:id/stories', authenticate, controller.createStory.bind(controller
 router.put('/:id/stories/:storyId', authenticate, controller.updateStory.bind(controller));
 router.delete('/:id/stories/:storyId', authenticate, controller.deleteStory.bind(controller));
 
+// Category routes (nested under routes)
+router.get('/:id/categories', controller.getCategories.bind(controller));
+router.get('/:id/available-categories', controller.getAvailableCategories.bind(controller));
+router.post('/:id/categories', authenticate, controller.addCategory.bind(controller));
+router.delete('/:id/categories/:categoryId', authenticate, controller.removeCategory.bind(controller));
+
 export default router;

@@ -1,292 +1,238 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin, FiChevronLeft, FiChevronRight, FiToggleLeft, FiToggleRight } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import locationsService, { Location, LocationType } from '../../services/locations.service';
+import locationsService, { Location, LocationFilters } from '../../services/locations.service';
 
-const LocationsPage = () => {
-  const navigate = useNavigate();
+const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [locationType, setLocationType] = useState<LocationType | ''>('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 10;
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<LocationFilters>({
+    search: '',
+    isActive: undefined,
+    page: 1,
+    limit: 10
+  });
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
-    loadLocations();
-  }, [currentPage, search, locationType]);
-
-  const loadLocations = async () => {
+  const loadLocations = useCallback(async () => {
     try {
       setLoading(true);
-      const params = {
-        page: currentPage,
-        limit: pageSize,
-        search: search || undefined,
-        locationType: locationType || undefined,
-        sortBy: 'createdAt',
-        sortOrder: 'DESC' as const
-      };
-      
-      const response = await locationsService.getLocations(params);
+      const response = await locationsService.getAll(filters);
       setLocations(response.items);
-      setTotalPages(response.pagination.totalPages);
-      setTotalItems(response.pagination.total);
+      setTotal(response.pagination.total);
     } catch (error) {
-      toast.error('Erro ao carregar locais');
-      console.error('Failed to load locations:', error);
+      toast.error('Failed to load locations');
+      console.error('Error loading locations:', error);
+      setLocations([]); // Set empty array on error to prevent undefined access
     } finally {
       setLoading(false);
     }
+  }, [filters]);
+
+  useEffect(() => {
+    loadLocations();
+  }, [loadLocations]);
+
+  const handleSearch = (value: string) => {
+    setFilters((prev: LocationFilters) => ({ ...prev, search: value, page: 1 }));
   };
 
-  const handleToggleStatus = async (id: number) => {
+  const handleDelete = async () => {
+    if (!selectedLocation) return;
+    
     try {
-      await locationsService.toggleLocationStatus(id);
-      toast.success('Status atualizado com sucesso');
+      await locationsService.deleteLocation(selectedLocation.locationId);
+      toast.success('Location deleted successfully');
+      setShowDeleteModal(false);
+      setSelectedLocation(null);
       loadLocations();
     } catch (error) {
-      toast.error('Erro ao atualizar status');
+      toast.error('Failed to delete location');
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir este local?')) {
-      try {
-        await locationsService.deleteLocation(id);
-        toast.success('Local excluído com sucesso');
-        loadLocations();
-      } catch (error) {
-        toast.error('Erro ao excluir local');
-      }
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    loadLocations();
-  };
-
-  const getLocationTypeLabel = (type: LocationType) => {
-    const labels: Record<LocationType, string> = {
-      [LocationType.VIEWPOINT]: 'Mirante',
-      [LocationType.RESTAURANT]: 'Restaurante',
-      [LocationType.HOTEL]: 'Hotel',
-      [LocationType.ATTRACTION]: 'Atração',
-      [LocationType.PARKING]: 'Estacionamento',
-      [LocationType.RESTROOM]: 'Banheiro',
-      [LocationType.GAS_STATION]: 'Posto',
-      [LocationType.HOSPITAL]: 'Hospital',
-      [LocationType.SHOPPING]: 'Shopping',
-      [LocationType.OTHER]: 'Outro'
-    };
-    return labels[type] || type;
-  };
-
-  const getLocationName = (location: Location) => {
+  const getLocalizedName = (location: Location): string => {
     if (location.nameTranslations && location.nameTranslations.length > 0) {
       const ptTranslation = location.nameTranslations.find(t => t.language === 'pt');
-      if (ptTranslation) return ptTranslation.text;
-      const enTranslation = location.nameTranslations.find(t => t.language === 'en');
-      if (enTranslation) return enTranslation.text;
-      return location.nameTranslations[0].text;
+      return ptTranslation?.text || location.nameTranslations[0].text || 'Sem nome';
     }
-    return location.nameTextRefId;
+    return location.name || 'Sem nome';
   };
 
   return (
-    <div>
-      <div className="mb-8 flex justify-between items-start">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Locais</h1>
-          <p className="text-gray-400">Gerencie locais e pontos de interesse</p>
+          <p className="text-gray-400">Gerencie locais e suas informações</p>
         </div>
         <Link
           to="/locations/new"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
         >
-          <FiPlus />
-          Novo Local
-        </Link>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-lg">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar locais..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <select
-            value={locationType}
-            onChange={(e) => {
-              setLocationType(e.target.value as LocationType | '');
-              setCurrentPage(1);
-            }}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Todos os tipos</option>
-            {Object.values(LocationType).map(type => (
-              <option key={type} value={type}>{getLocationTypeLabel(type)}</option>
-            ))}
-          </select>
-        </form>
-        
-        <Link
-          to="/locations/new"
-          className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 flex items-center gap-2"
-        >
-          <FiPlus size={18} />
-          <span>Adicionar Local</span>
+          <FiPlus size={20} />
+          Adicionar Local
         </Link>
       </div>
 
-      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 overflow-hidden">
+      {/* Search */}
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Pesquisar locais..."
+            value={filters.search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+      </div>
+
+      {/* Locations Table */}
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-gray-400">Carregando...</div>
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="text-gray-400 mt-4">Loading locations...</p>
           </div>
         ) : locations.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            Nenhum local encontrado
+          <div className="p-8 text-center">
+            <FiMapPin size={48} className="text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-500 text-center py-8">Nenhum local encontrado</p>
+            <p className="text-gray-500 text-sm mt-2">Tente ajustar a busca ou adicionar um novo local</p>
           </div>
         ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Nome</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Tipo</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Localização</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Avaliação</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Status</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-400">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {locations.map((location) => (
-                    <tr key={location.locationId} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="text-white font-medium">{getLocationName(location)}</div>
-                        {location.addressTranslations && location.addressTranslations.length > 0 && (
-                          <div className="text-sm text-gray-400 mt-1">
-                            {location.addressTranslations.find(t => t.language === 'pt')?.text || 
-                             location.addressTranslations[0].text}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm">
-                          {getLocationTypeLabel(location.locationType)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <FiMapPin size={14} />
-                          <span className="text-sm">
-                            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {location.rating ? (
-                          <div className="flex items-center gap-1">
-                            <span className="text-yellow-400">★</span>
-                            <span className="text-white">{location.rating.toFixed(1)}</span>
-                            <span className="text-gray-400 text-sm">({location.reviewsCount || 0})</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-500">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
-                          onClick={() => handleToggleStatus(location.locationId)}
-                          className="text-gray-400 hover:text-white transition-colors"
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-900/50 border-b border-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cidade</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Coordenadas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Histórias</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {locations.map((location) => (
+                  <tr key={location.locationId}>
+                    <td className="px-6 py-4">
+                      <span className="font-medium text-white">
+                        {getLocalizedName(location)}
+                      </span>
+                    </td>
+                    
+                    {/* Cidade */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-300">
+                        {location.cityId ? `Cidade ID: ${location.cityId}` : 'Não informado'}
+                      </span>
+                    </td>
+                    
+                    {/* Coordenadas */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-xs text-gray-400">
+                        <div>Lat: {Number(location.latitude || 0).toFixed(4)}</div>
+                        <div>Lng: {Number(location.longitude || 0).toFixed(4)}</div>
+                      </div>
+                    </td>
+                    
+                    {/* Histórias */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-300">
+                        <div>{location.storiesCount || 0} histórias</div>
+                        <div className="text-xs text-gray-500">{location.categoriesCount || 0} categorias</div>
+                      </div>
+                    </td>
+                    
+                    {/* Ações */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        <Link
+                          to={`/locations/${location.locationId}`}
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                          title="Ver detalhes"
                         >
-                          {location.isActive ? (
-                            <FiToggleRight className="text-green-400" size={24} />
-                          ) : (
-                            <FiToggleLeft className="text-gray-400" size={24} />
-                          )}
+                          <FiEdit2 size={18} />
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setSelectedLocation(location);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Excluir local"
+                        >
+                          <FiTrash2 size={18} />
                         </button>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => navigate(`/locations/${location.locationId}/edit`)}
-                            className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-                          >
-                            <FiEdit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(location.locationId)}
-                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800">
-                <div className="text-sm text-gray-400">
-                  Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, totalItems)} de {totalItems} locais
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronLeft />
-                  </button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = currentPage - 2 + i;
-                    if (page < 1 || page > totalPages) return null;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded-lg transition-colors ${
-                          page === currentPage
-                            ? 'bg-blue-500 text-white'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  }).filter(Boolean)}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronRight />
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+        {/* Pagination */}
+        {!loading && locations.length > 0 && (
+          <div className="px-6 py-4 bg-gray-900/30 border-t border-gray-700 flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Showing {((filters.page! - 1) * filters.limit!) + 1} to {Math.min(filters.page! * filters.limit!, total)} of {total} locations
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilters((prev: LocationFilters) => ({ ...prev, page: Math.max(1, prev.page! - 1) }))}
+                disabled={filters.page === 1}
+                className="px-3 py-1 bg-gray-700/50 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setFilters((prev: LocationFilters) => ({ ...prev, page: prev.page! + 1 }))}
+                disabled={filters.page! * filters.limit! >= total}
+                className="px-3 py-1 bg-gray-700/50 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedLocation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Confirm Delete</h3>
+            <p className="text-gray-400 mb-6">
+              Are you sure you want to delete "{getLocalizedName(selectedLocation)}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedLocation(null);
+                }}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

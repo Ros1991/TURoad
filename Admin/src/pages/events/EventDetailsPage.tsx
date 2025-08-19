@@ -1,26 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiTrash2, FiPlus, FiCalendar, FiMusic, FiPlay, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiEdit2, FiTrash2, FiMapPin, FiCheck, FiX } from 'react-icons/fi';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
 import eventsService, { Event, StoryEvent } from '../../services/events.service';
+import localizedTextsService from '../../services/localizedTexts.service';
 import LocalizedTextInput from '../../components/common/LocalizedTextInput';
+import StoriesCard from '../../components/common/StoriesCard';
+import { CategoryAssociationCard } from '../../components/common/CategoryAssociationCard';
+import CitySelector from '../../components/common/CitySelector';
 
 const EventDetailsPage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [stories, setStories] = useState<StoryEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [storyModal, setStoryModal] = useState<{ open: boolean; story: StoryEvent | null }>({
-    open: false,
-    story: null
-  });
-  const [storyFormData, setStoryFormData] = useState<Omit<StoryEvent, 'eventId'>>({
-    nameTextRefId: 1,
-    descriptionTextRefId: 1,
-    playCount: 0,
-    audioUrlRefId: undefined
-  });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
@@ -47,13 +43,12 @@ const EventDetailsPage: React.FC = () => {
     if (!id || id === 'new') return;
     
     try {
-      setLoading(true);
       const data = await eventsService.getEvent(Number(id));
       setEvent(data);
       setEditForm({
-        name: '',
+        name: data.name || '',
         nameTextRefId: data.nameTextRefId || 0,
-        description: '',
+        description: data.description || '',
         descriptionTextRefId: data.descriptionTextRefId || 0,
         eventDate: data.eventDate || '',
         eventTime: data.eventTime || '',
@@ -62,7 +57,7 @@ const EventDetailsPage: React.FC = () => {
       });
     } catch (error) {
       toast.error('Failed to load event');
-      console.error(error);
+      navigate('/events');
     } finally {
       setLoading(false);
     }
@@ -83,7 +78,7 @@ const EventDetailsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteEvent = async () => {
+  const handleDelete = async () => {
     if (!id || id === 'new') return;
     
     try {
@@ -96,20 +91,72 @@ const EventDetailsPage: React.FC = () => {
   };
 
   const handleSaveEdit = async () => {
+    console.log('=== SALVANDO EVENTO ===');
+    console.log('editForm completo:', editForm);
+    console.log('editForm.name:', editForm.name);
+    console.log('editForm.description:', editForm.description);
     try {
-      await eventsService.updateEvent(Number(id), {
-        nameTextRefId: editForm.nameTextRefId,
-        descriptionTextRefId: editForm.descriptionTextRefId || undefined,
-        eventDate: editForm.eventDate,
-        eventTime: editForm.eventTime,
-        cityId: editForm.cityId,
-        imageUrl: editForm.imageUrl || undefined
-      });
-      toast.success('Event updated successfully');
-      setEditMode(false);
-      loadEvent();
+      // Check if it's a new event or existing one
+      if (id === 'new') {
+        // Auto-create text references for fields that have text but no referenceId
+        let nameRefId = editForm.nameTextRefId;
+        let descRefId = editForm.descriptionTextRefId;
+
+        // Create name reference if needed
+        if (editForm.name && editForm.name.trim() && (!nameRefId || nameRefId === 0)) {
+          console.log('Auto-creating name reference for:', editForm.name);
+          try {
+            nameRefId = await localizedTextsService.createReference(editForm.name.trim(), []);
+            console.log('Created name reference:', nameRefId);
+          } catch (error) {
+            console.error('Error creating name reference:', error);
+          }
+        }
+
+        // Create description reference if needed
+        if (editForm.description && editForm.description.trim() && (!descRefId || descRefId === 0)) {
+          console.log('Auto-creating description reference for:', editForm.description);
+          try {
+            descRefId = await localizedTextsService.createReference(editForm.description.trim(), []);
+            console.log('Created description reference:', descRefId);
+          } catch (error) {
+            console.error('Error creating description reference:', error);
+          }
+        }
+
+        const payload = {
+          nameTextRefId: nameRefId || 0,
+          descriptionTextRefId: descRefId || 0,
+          eventDate: editForm.eventDate,
+          eventTime: editForm.eventTime,
+          cityId: editForm.cityId,
+          imageUrl: editForm.imageUrl
+        };
+        console.log('Creating event with payload:', payload);
+        
+        await eventsService.createEvent(payload);
+        toast.success('Event created successfully');
+        navigate('/events'); // Navigate to list instead of detail
+      } else {
+        // Update existing event
+        const payload = {
+          nameTextRefId: editForm.nameTextRefId,
+          descriptionTextRefId: editForm.descriptionTextRefId,
+          eventDate: editForm.eventDate,
+          eventTime: editForm.eventTime,
+          cityId: editForm.cityId,
+          imageUrl: editForm.imageUrl
+        };
+        console.log('Updating event with payload:', payload);
+        
+        await eventsService.updateEvent(Number(id), payload);
+        toast.success('Event updated successfully');
+        setEditMode(false);
+        loadEvent();
+      }
     } catch (error) {
-      toast.error('Failed to update event');
+      console.error('Error saving event:', error);
+      toast.error(id === 'new' ? 'Failed to create event' : 'Failed to update event');
     }
   };
 
@@ -117,9 +164,9 @@ const EventDetailsPage: React.FC = () => {
     setEditMode(false);
     if (event) {
       setEditForm({
-        name: '',
+        name: event.name || '',
         nameTextRefId: event.nameTextRefId || 0,
-        description: '',
+        description: event.description || '',
         descriptionTextRefId: event.descriptionTextRefId || 0,
         eventDate: event.eventDate || '',
         eventTime: event.eventTime || '',
@@ -129,42 +176,71 @@ const EventDetailsPage: React.FC = () => {
     }
   };
 
-  const handleCreateStory = async () => {
+  const handleAddStory = async (storyData: { nameTextRefId: number; descriptionTextRefId: number; audioUrlRefId: number; }) => {
+    if (!event) return;
+    
     try {
-      await eventsService.createEventStory(Number(id), storyFormData);
-      toast.success('Story created successfully');
-      setStoryModal({ open: false, story: null });
-      setStoryFormData({ nameTextRefId: 1, descriptionTextRefId: 1, playCount: 0, audioUrlRefId: undefined });
+      await eventsService.createEventStory(event.eventId!, {
+        nameTextRefId: storyData.nameTextRefId,
+        descriptionTextRefId: storyData.descriptionTextRefId,
+        playCount: 0,
+        audioUrlRefId: storyData.audioUrlRefId
+      });
+      toast.success('Story added successfully');
       loadStories();
     } catch (error) {
-      toast.error('Failed to create story');
+      toast.error('Failed to add story');
+    }
+  };
+
+  const handleEditStory = async (storyId: number, storyData: { name: string; nameTextRefId: number; description: string; descriptionTextRefId: number; audioUrl: string; audioUrlRefId: number; }) => {
+    if (!event) return;
+    
+    try {
+      await eventsService.updateEventStory(event.eventId!, storyId, {
+        nameTextRefId: storyData.nameTextRefId,
+        descriptionTextRefId: storyData.descriptionTextRefId,
+        playCount: 0,
+        audioUrlRefId: storyData.audioUrlRefId
+      });
+      toast.success('Story updated successfully');
+      loadStories();
+    } catch (error) {
+      toast.error('Failed to update story');
     }
   };
 
   const handleDeleteStory = async (storyId: number) => {
-    if (window.confirm('Delete this story?')) {
-      try {
-        await eventsService.deleteEventStory(Number(id), storyId);
-        toast.success('Story deleted successfully');
-        loadStories();
-      } catch (error) {
-        toast.error('Failed to delete story');
-      }
+    if (!event) return;
+    
+    try {
+      await eventsService.deleteEventStory(event.eventId!, storyId);
+      toast.success('Story deleted successfully');
+      loadStories();
+    } catch (error) {
+      toast.error('Failed to delete story');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-400">Loading...</div>
       </div>
     );
   }
 
-  if (!event) return <div className="text-center py-12">Event not found</div>;
+  if (!event && id !== 'new') {
+    return (
+      <div className="text-center text-gray-400">
+        Event not found
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div>
+      {/* Header */}
       <div className="mb-6">
         <Link
           to="/events"
@@ -175,68 +251,120 @@ const EventDetailsPage: React.FC = () => {
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Detalhes do Evento</h1>
-            <p className="text-gray-400">Gerenciar informações do evento e histórias</p>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {id === 'new' ? 'Novo Evento' : 'Detalhes do Evento'}
+            </h1>
+            <p className="text-gray-400">
+              {id === 'new' ? 'Criar um novo evento' : 'Gerenciar informações do evento e histórias'}
+            </p>
           </div>
           <div className="flex gap-3">
-            {!editMode ? (
-              <>
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-                >
-                  <FiEdit2 /> Editar
-                </button>
-                <button onClick={handleDeleteEvent} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                  <FiTrash2 /> Excluir
-                </button>
-              </>
-            ) : (
+            {id === 'new' ? (
               <>
                 <button
                   onClick={handleSaveEdit}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
                 >
-                  <FiCheck /> Salvar
+                  <FiCheck />
+                  Criar Evento
                 </button>
                 <button
-                  onClick={handleCancelEdit}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                  onClick={() => navigate('/events')}
+                  className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
                 >
-                  <FiX /> Cancelar
+                  <FiX />
+                  Cancelar
                 </button>
               </>
+            ) : (
+              !editMode ? (
+                <>
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                  >
+                    <FiEdit2 />
+                    Editar Evento
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                  >
+                    <FiTrash2 />
+                    Excluir Evento
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSaveEdit}
+                    className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                  >
+                    <FiCheck />
+                    Salvar Alterações
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
+                  >
+                    <FiX />
+                    Cancelar
+                  </button>
+                </>
+              )
             )}
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Informações do Evento</h2>
-        {/* Nome do Evento - Coluna inteira */}
-        <div className="mb-4">
-          <label className="text-white text-sm mb-2 block">Nome do Evento</label>
-          {editMode ? (
-            <LocalizedTextInput
-              value={editForm.name || ''}
-              onChange={(value) => setEditForm(prev => ({ ...prev, name: value }))}
-              onBothChange={(value, referenceId) => {
-                setEditForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
-              }}
-              onReferenceIdChange={(referenceId) => {
-                setEditForm(prev => ({ ...prev, nameTextRefId: referenceId }));
-              }}
-              fieldName="Nome do Evento"
-              placeholder="Digite o nome do evento"
-              referenceId={editForm.nameTextRefId || event?.nameTextRefId || 0}
-            />
-          ) : (
-            <p className="text-white">{event?.nameTextRefId || 'N/A'}</p>
-          )}
+      {/* Event Information */}
+      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6 mb-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Informações do Evento</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Nome */}
+          <div>
+            <label className="text-white text-sm mb-2 block">Nome do Evento</label>
+            {editMode ? (
+              <LocalizedTextInput
+                value={editForm.name || ''}
+                onChange={(value) => {
+                  console.log('Name field changed to:', value);
+                  setEditForm(prev => ({ ...prev, name: value }));
+                }}
+                onBothChange={(value, referenceId) => {
+                  console.log('Name onBothChange:', value, referenceId);
+                  setEditForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
+                }}
+                onReferenceIdChange={(referenceId) => {
+                  console.log('Name onReferenceIdChange:', referenceId);
+                  setEditForm(prev => ({ ...prev, nameTextRefId: referenceId }));
+                }}
+                fieldName="Nome do Evento"
+                placeholder="Digite o nome do evento"
+                referenceId={editForm.nameTextRefId || event?.nameTextRefId || 0}
+              />
+            ) : (
+              <p className="text-white">{event?.name || 'N/A'}</p>
+            )}
+          </div>
+          
+          {/* Cidade */}
+          <div>
+            <label className="text-gray-400 text-sm block mb-2">Cidade</label>
+            {editMode ? (
+              <CitySelector
+                value={editForm.cityId}
+                onChange={(cityId) => setEditForm({ ...editForm, cityId })}
+                placeholder="Selecione uma cidade"
+              />
+            ) : (
+              <p className="text-white">Cidade ID: {event?.cityId || 'N/A'}</p>
+            )}
+          </div>
         </div>
         
         {/* Descrição - Coluna inteira */}
-        <div className="mb-4">
+        <div className="mt-4">
           <label className="text-white text-sm mb-2 block">Descrição</label>
           {editMode ? (
             <LocalizedTextInput
@@ -253,11 +381,12 @@ const EventDetailsPage: React.FC = () => {
               referenceId={editForm.descriptionTextRefId || event?.descriptionTextRefId || 0}
             />
           ) : (
-            <p className="text-white">{event?.descriptionTextRefId || 'N/A'}</p>
+            <p className="text-white">{event?.description || 'N/A'}</p>
           )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Data e Hora do Evento */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div>
             <label className="text-gray-400 text-sm block mb-2">Data do Evento</label>
             {editMode ? (
@@ -268,97 +397,88 @@ const EventDetailsPage: React.FC = () => {
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             ) : (
-              <p className="text-white flex items-center gap-2">
-                <FiCalendar className="text-gray-400" />
-                {event?.eventDate || 'N/A'}
-              </p>
+              <p className="text-white">{event?.eventDate || 'N/A'}</p>
             )}
           </div>
           <div>
-            <label className="text-gray-400 text-sm block mb-2">URL da Imagem</label>
+            <label className="text-gray-400 text-sm block mb-2">Hora do Evento</label>
             {editMode ? (
               <input
-                type="url"
-                value={editForm.imageUrl}
-                onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
-                placeholder="https://exemplo.com/imagem.jpg"
+                type="time"
+                value={editForm.eventTime}
+                onChange={(e) => setEditForm({ ...editForm, eventTime: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             ) : (
-              <p className="text-white">{event?.imageUrl || 'N/A'}</p>
+              <p className="text-white">{event?.eventTime || 'N/A'}</p>
             )}
           </div>
         </div>
-      </div>
-
-      {id !== 'new' && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Histórias do Evento</h2>
-            <button onClick={() => setStoryModal({ open: true, story: null })} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-              <FiPlus /> Adicionar História
-            </button>
-          </div>
-
-          {stories.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">Nenhuma história adicionada ainda</p>
+        
+        {/* URL da Imagem */}
+        <div className="mt-4">
+          <label className="text-gray-400 text-sm block mb-2">URL da Imagem</label>
+          {editMode ? (
+            <input
+              type="url"
+              value={editForm.imageUrl}
+              onChange={(e) => setEditForm({ ...editForm, imageUrl: e.target.value })}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              placeholder="https://exemplo.com/imagem.jpg"
+            />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stories.map((story) => (
-                <div key={story.storyEventId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-medium text-gray-900 dark:text-white">ID da História: {story.storyEventId}</h3>
-                    <button onClick={() => handleDeleteStory(story.storyEventId!)} className="text-red-600 hover:text-red-700">
-                      <FiTrash2 size={16} />
-                    </button>
-                  </div>
-                  <div className="space-y-2 text-sm">
-                    <p className="text-gray-600 dark:text-gray-400">
-                      <FiPlay className="inline mr-1" size={14} />
-                      Reproduções: {story.playCount || 0}
-                    </p>
-                    {story.audioUrlRefId && (
-                      <p className="text-gray-600 dark:text-gray-400">
-                        <FiMusic className="inline mr-1" size={14} />
-                        Áudio: Ref {story.audioUrlRefId}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p className="text-white">{event?.imageUrl || 'N/A'}</p>
           )}
         </div>
+      </div>
+
+      {/* Content sections - Only show when viewing existing event */}
+      {id !== 'new' && (
+        <>
+          {/* Stories Section */}
+          <StoriesCard
+            stories={stories.map(story => ({
+              storyEventId: story.storyEventId,
+              nameTextRefId: story.nameTextRefId,
+              descriptionTextRefId: story.descriptionTextRefId,
+              playCount: story.playCount,
+              audioUrlRefId: story.audioUrlRefId,
+              eventId: story.eventId,
+              name: (story as any).name || '',
+              description: (story as any).description || '',
+              audioUrl: (story as any).audioUrl || ''
+            }))}
+            onAddStory={handleAddStory}
+            onEditStory={handleEditStory}
+            onDeleteStory={handleDeleteStory}
+            title="Histórias"
+            showAddButton={true}
+          />
+
+          {/* Categories Section */}
+          <div className="mt-6">
+            <CategoryAssociationCard
+              entityType="events"
+              entityId={Number(id)}
+              entityName={event?.name || 'Evento'}
+              title="Categorias"
+            />
+          </div>
+        </>
       )}
 
-      {storyModal.open && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Adicionar História</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Referência Nome *</label>
-                <input type="number" value={storyFormData.nameTextRefId} onChange={(e) => setStoryFormData(prev => ({ ...prev, nameTextRefId: Number(e.target.value) }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Referência Descrição</label>
-                <input type="number" value={storyFormData.descriptionTextRefId || ''} onChange={(e) => setStoryFormData(prev => ({ ...prev, descriptionTextRefId: e.target.value ? Number(e.target.value) : undefined }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Referência URL Áudio</label>
-                <input type="number" value={storyFormData.audioUrlRefId || ''} onChange={(e) => setStoryFormData(prev => ({ ...prev, audioUrlRefId: e.target.value ? Number(e.target.value) : undefined }))}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setStoryModal({ open: false, story: null })} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg">Cancelar</button>
-              <button onClick={handleCreateStory} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">Criar</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={showDeleteModal}
+        title="Excluir Evento"
+        message="Tem certeza que deseja excluir este evento"
+        itemName={event?.name || ''}
+        confirmText="Excluir"
+        cancelText="Cancelar"
+        confirmColor="red"
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 };

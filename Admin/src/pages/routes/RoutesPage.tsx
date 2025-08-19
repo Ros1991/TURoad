@@ -1,354 +1,238 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin, FiClock, FiChevronLeft, FiChevronRight, FiToggleLeft, FiToggleRight, FiStar } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiRoute } from 'react-icons/fi';
 import { toast } from 'react-toastify';
-import routesService, { Route, DifficultyLevel } from '../../services/routes.service';
-import citiesService, { City } from '../../services/cities.service';
+import routesService, { Route, RouteFilters } from '../../services/routes.service';
 
-const RoutesPage = () => {
-  const navigate = useNavigate();
+const RoutesPage: React.FC = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [selectedCityId, setSelectedCityId] = useState<number | ''>('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | ''>('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 10;
+  const [total, setTotal] = useState(0);
+  const [filters, setFilters] = useState<RouteFilters>({
+    search: '',
+    isActive: undefined,
+    page: 1,
+    limit: 10
+  });
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
-    loadRoutes();
-    loadCities();
-  }, [currentPage, search, selectedCityId, selectedDifficulty]);
-
-  const loadRoutes = async () => {
+  const loadRoutes = useCallback(async () => {
     try {
       setLoading(true);
-      const params = {
-        page: currentPage,
-        limit: pageSize,
-        search: search || undefined,
-        cityId: selectedCityId || undefined,
-        difficultyLevel: selectedDifficulty || undefined,
-        sortBy: 'createdAt',
-        sortOrder: 'DESC' as const
-      };
-      
-      const response = await routesService.getRoutes(params);
+      const response = await routesService.getAll(filters);
       setRoutes(response.items);
-      setTotalPages(response.pagination.totalPages);
-      setTotalItems(response.pagination.total);
+      setTotal(response.pagination.total);
     } catch (error) {
-      toast.error('Erro ao carregar rotas');
-      console.error('Failed to load routes:', error);
+      toast.error('Failed to load routes');
+      console.error('Error loading routes:', error);
+      setRoutes([]); // Set empty array on error to prevent undefined access
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const loadCities = async () => {
-    try {
-      const response = await citiesService.getCities({ limit: 100, sortBy: 'nameTextRefId', sortOrder: 'ASC' });
-      setCities(response.items);
-    } catch (error) {
-      toast.error('Erro ao carregar cidades');
-    }
-  };
-
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
+  useEffect(() => {
     loadRoutes();
+  }, [loadRoutes]);
+
+  const handleSearch = (value: string) => {
+    setFilters((prev: RouteFilters) => ({ ...prev, search: value, page: 1 }));
   };
 
-  const handleToggleStatus = async (id: number) => {
+  const handleDelete = async () => {
+    if (!selectedRoute) return;
+    
     try {
-      await routesService.toggleRouteStatus(id);
-      toast.success('Status atualizado com sucesso');
+      await routesService.deleteRoute(selectedRoute.routeId);
+      toast.success('Route deleted successfully');
+      setShowDeleteModal(false);
+      setSelectedRoute(null);
       loadRoutes();
     } catch (error) {
-      toast.error('Erro ao atualizar status');
+      toast.error('Failed to delete route');
     }
   };
 
-  const handleToggleFeatured = async (id: number) => {
-    try {
-      await routesService.toggleFeaturedStatus(id);
-      toast.success('Status de destaque atualizado com sucesso');
-      loadRoutes();
-    } catch (error) {
-      toast.error('Erro ao atualizar status de destaque');
+  const getLocalizedTitle = (route: Route): string => {
+    if (route.titleTranslations && route.titleTranslations.length > 0) {
+      const ptTranslation = route.titleTranslations.find(t => t.language === 'pt');
+      return ptTranslation?.text || route.titleTranslations[0].text || 'Sem título';
     }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta rota?')) {
-      try {
-        await routesService.deleteRoute(id);
-        toast.success('Rota excluída com sucesso');
-        loadRoutes();
-      } catch (error) {
-        toast.error('Erro ao excluir rota');
-      }
-    }
-  };
-
-  const getCityName = (city: City) => {
-    if (city.nameTranslations && city.nameTranslations.length > 0) {
-      const ptTranslation = city.nameTranslations.find(t => t.language === 'pt');
-      if (ptTranslation) return ptTranslation.text;
-      const enTranslation = city.nameTranslations.find(t => t.language === 'en');
-      if (enTranslation) return enTranslation.text;
-      return city.nameTranslations[0].text;
-    }
-    return city.nameTextRefId;
-  };
-
-  const getRouteName = (route: Route) => {
-    if (route.nameTranslations && route.nameTranslations.length > 0) {
-      const ptTranslation = route.nameTranslations.find(t => t.language === 'pt');
-      if (ptTranslation) return ptTranslation.text;
-      const enTranslation = route.nameTranslations.find(t => t.language === 'en');
-      if (enTranslation) return enTranslation.text;
-      return route.nameTranslations[0].text;
-    }
-    return route.nameTextRefId;
-  };
-
-  const getDifficultyLabel = (difficulty: DifficultyLevel) => {
-    const labels: Record<DifficultyLevel, string> = {
-      [DifficultyLevel.EASY]: 'Fácil',
-      [DifficultyLevel.MODERATE]: 'Moderada',
-      [DifficultyLevel.HARD]: 'Difícil',
-      [DifficultyLevel.EXTREME]: 'Extrema'
-    };
-    return labels[difficulty] || difficulty;
-  };
-
-  const getDifficultyColor = (difficulty: DifficultyLevel) => {
-    const colors: Record<DifficultyLevel, string> = {
-      [DifficultyLevel.EASY]: 'bg-green-500/20 text-green-400',
-      [DifficultyLevel.MODERATE]: 'bg-yellow-500/20 text-yellow-400',
-      [DifficultyLevel.HARD]: 'bg-orange-500/20 text-orange-400',
-      [DifficultyLevel.EXTREME]: 'bg-red-500/20 text-red-400'
-    };
-    return colors[difficulty] || 'bg-gray-500/20 text-gray-400';
+    return route.title || 'Sem título';
   };
 
   return (
-    <div>
-      <div className="mb-8 flex justify-between items-start">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Rotas</h1>
-          <p className="text-gray-400">Gerencie rotas turísticas</p>
+          <p className="text-gray-400">Gerencie rotas e suas informações</p>
         </div>
         <Link
           to="/routes/new"
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+          className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center gap-2"
         >
-          <FiPlus />
-          Nova Rota
+          <FiPlus size={20} />
+          Adicionar Rota
         </Link>
       </div>
-      
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-lg">
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar rotas..."
-              className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-            />
-          </div>
-          <select
-            value={selectedCityId}
-            onChange={(e) => {
-              setSelectedCityId(e.target.value ? Number(e.target.value) : '');
-              setCurrentPage(1);
-            }}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Todas as cidades</option>
-            {cities.map(city => (
-              <option key={city.cityId} value={city.cityId}>
-                {getCityName(city)}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedDifficulty}
-            onChange={(e) => {
-              setSelectedDifficulty(e.target.value as DifficultyLevel | '');
-              setCurrentPage(1);
-            }}
-            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
-          >
-            <option value="">Todas as dificuldades</option>
-            {Object.values(DifficultyLevel).map(difficulty => (
-              <option key={difficulty} value={difficulty}>
-                {getDifficultyLabel(difficulty)}
-              </option>
-            ))}
-          </select>
-        </form>
+
+      {/* Search */}
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
+        <div className="relative">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            placeholder="Pesquisar rotas..."
+            value={filters.search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+          />
+        </div>
       </div>
 
-      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 overflow-hidden">
+      {/* Routes Table */}
+      <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-gray-400">Carregando...</div>
+          <div className="p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="text-gray-400 mt-4">Loading routes...</p>
           </div>
         ) : routes.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            Nenhuma rota encontrada
+          <div className="p-8 text-center">
+            <FiRoute size={48} className="text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-500 text-center py-8">Nenhuma rota encontrada</p>
+            <p className="text-gray-500 text-sm mt-2">Tente ajustar a busca ou adicionar uma nova rota</p>
           </div>
         ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Nome</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Dificuldade</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Distância</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Cidade</th>
-                    <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Status</th>
-                    <th className="px-6 py-4 text-right text-sm font-medium text-gray-400">Ações</th>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-900/50 border-b border-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Título</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Descrição</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cidades</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Histórias</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-700">
+                {routes.map((route) => (
+                  <tr key={route.routeId}>
+                    <td className="px-6 py-4">
+                      <span className="font-medium text-white">
+                        {getLocalizedTitle(route)}
+                      </span>
+                    </td>
+                    
+                    {/* Descrição */}
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-300 line-clamp-2">
+                        {route.description ? (route.description.length > 50 ? route.description.substring(0, 50) + '...' : route.description) : 'Sem descrição'}
+                      </span>
+                    </td>
+                    
+                    {/* Cidades */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-300">
+                        <div>{route.citiesCount || 0} cidades</div>
+                        <div className="text-xs text-gray-500">{route.locationsCount || 0} locais</div>
+                      </div>
+                    </td>
+                    
+                    {/* Histórias */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-300">
+                        <div>{route.storiesCount || 0} histórias</div>
+                        <div className="text-xs text-gray-500">{route.categoriesCount || 0} categorias</div>
+                      </div>
+                    </td>
+                    
+                    {/* Ações */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-2">
+                        <Link
+                          to={`/routes/${route.routeId}`}
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                          title="Ver detalhes"
+                        >
+                          <FiEdit2 size={18} />
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setSelectedRoute(route);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Excluir rota"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {routes.map((route) => (
-                    <tr key={route.routeId} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="text-white font-medium">{getRouteName(route)}</div>
-                          {route.isFeatured && (
-                            <FiStar className="text-yellow-400" size={16} />
-                          )}
-                        </div>
-                        {route.descriptionTranslations && route.descriptionTranslations.length > 0 && (
-                          <div className="text-sm text-gray-400 mt-1">
-                            {route.descriptionTranslations.find(t => t.language === 'pt')?.text || 
-                             route.descriptionTranslations[0].text}
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded-lg text-sm ${getDifficultyColor(route.difficultyLevel)}`}>
-                          {getDifficultyLabel(route.difficultyLevel)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-gray-400">
-                          <FiMapPin size={14} />
-                          <span className="text-sm">
-                            {route.distance ? `${route.distance.toFixed(1)} km` : '-'}
-                          </span>
-                        </div>
-                        {route.estimatedDuration && (
-                          <div className="flex items-center gap-1 text-gray-400 mt-1">
-                            <FiClock size={14} />
-                            <span className="text-sm">{Math.round(route.estimatedDuration / 60)}h</span>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-400 text-sm">
-                          {route.city ? getCityName(route.city) : `Cidade ID: ${route.cityId}`}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1">
-                          <button
-                            onClick={() => handleToggleStatus(route.routeId)}
-                            className="text-gray-400 hover:text-white transition-colors text-left"
-                          >
-                            {route.isActive ? (
-                              <FiToggleRight className="text-green-400" size={24} />
-                            ) : (
-                              <FiToggleLeft className="text-gray-400" size={24} />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleToggleFeatured(route.routeId)}
-                            className={`text-sm ${route.isFeatured ? 'text-yellow-400' : 'text-gray-500'} hover:text-yellow-300 transition-colors text-left`}
-                          >
-                            {route.isFeatured ? '★ Destaque' : '☆ Destacar'}
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => navigate(`/routes/${route.routeId}/edit`)}
-                            className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
-                          >
-                            <FiEdit2 size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(route.routeId)}
-                            className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                          >
-                            <FiTrash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && routes.length > 0 && (
+          <div className="px-6 py-4 bg-gray-900/30 border-t border-gray-700 flex items-center justify-between">
+            <div className="text-sm text-gray-400">
+              Showing {((filters.page! - 1) * filters.limit!) + 1} to {Math.min(filters.page! * filters.limit!, total)} of {total} routes
             </div>
-            
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800">
-                <div className="text-sm text-gray-400">
-                  Mostrando {((currentPage - 1) * pageSize) + 1} a {Math.min(currentPage * pageSize, totalItems)} de {totalItems} rotas
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronLeft />
-                  </button>
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const page = currentPage - 2 + i;
-                    if (page < 1 || page > totalPages) return null;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1 rounded-lg transition-colors ${
-                          page === currentPage
-                            ? 'bg-blue-500 text-white'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  }).filter(Boolean)}
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <FiChevronRight />
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFilters((prev: RouteFilters) => ({ ...prev, page: Math.max(1, prev.page! - 1) }))}
+                disabled={filters.page === 1}
+                className="px-3 py-1 bg-gray-700/50 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setFilters((prev: RouteFilters) => ({ ...prev, page: prev.page! + 1 }))}
+                disabled={filters.page! * filters.limit! >= total}
+                className="px-3 py-1 bg-gray-700/50 border border-gray-600 rounded text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600/50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedRoute && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-white mb-4">Confirm Delete</h3>
+            <p className="text-gray-400 mb-6">
+              Are you sure you want to delete "{getLocalizedTitle(selectedRoute)}"? This action cannot be undone.
+            </p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedRoute(null);
+                }}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

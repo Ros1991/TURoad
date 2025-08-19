@@ -3,13 +3,16 @@ import { BaseController } from '@/core/base/BaseController';
 import { Route } from '@/entities/Route';
 import { RouteMapper } from '@/mappers/RouteMapper';
 import { RouteService } from '@/services/RouteService';
+import { RouteCategoryService } from '@/services/RouteCategoryService';
 
 export class RoutesController extends BaseController<Route> {
   public override service: RouteService;
+  private routeCategoryService: RouteCategoryService;
 
   constructor() {
     super(Route, RouteMapper);
     this.service = new RouteService();
+    this.routeCategoryService = new RouteCategoryService();
   }
 
   // Story CRUD endpoints
@@ -119,6 +122,87 @@ export class RoutesController extends BaseController<Route> {
       return res.status(error.statusCode || 500).json({
         success: false,
         message: error.message || 'Failed to delete story',
+        data: null
+      });
+    }
+  }
+
+  // Category endpoints
+  async getCategories(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const categories = await this.routeCategoryService.getCategoriesByRoute(routeId);
+      
+      return res.json({
+        success: true,
+        message: 'Categories retrieved successfully',
+        data: categories
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to retrieve categories',
+        data: null
+      });
+    }
+  }
+
+  async addCategory(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const { categoryId } = req.body;
+      
+      const association = await this.routeCategoryService.addCategoryToRoute(routeId, categoryId);
+      
+      return res.status(201).json({
+        success: true,
+        message: 'Category added successfully',
+        data: association
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to add category',
+        data: null
+      });
+    }
+  }
+
+  async removeCategory(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const categoryId = parseInt(req.params.categoryId!);
+      
+      await this.routeCategoryService.removeCategoryFromRoute(routeId, categoryId);
+      
+      return res.json({
+        success: true,
+        message: 'Category removed successfully',
+        data: null
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to remove category',
+        data: null
+      });
+    }
+  }
+
+  async getAvailableCategories(req: Request, res: Response): Promise<Response> {
+    try {
+      const routeId = parseInt(req.params.id!);
+      const categories = await this.routeCategoryService.getAvailableCategoriesForRoute(routeId);
+      
+      return res.json({
+        success: true,
+        message: 'Available categories retrieved successfully',
+        data: categories
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to retrieve available categories',
         data: null
       });
     }
