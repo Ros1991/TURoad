@@ -22,6 +22,10 @@ import UserDetailsPage from './pages/users/UserDetailsPage';
 import CreateUserPage from './pages/users/CreateUserPage';
 import CategoriesPage from './pages/categories/CategoriesPage';
 import CategoryDetailsPage from './pages/categories/CategoryDetailsPage';
+import TypesPage from './pages/types/TypesPage';
+import TypeDetailsPage from './pages/types/TypeDetailsPage';
+import FaqsPage from './pages/faqs/FaqsPage';
+import FaqDetailsPage from './pages/faqs/FaqDetailsPage';
 import CitiesPage from './pages/cities/CitiesPage';
 import CityDetailsPage from './pages/cities/CityDetailsPage';
 import RoutesPage from './pages/routes/RoutesPage';
@@ -66,6 +70,14 @@ function App() {
                 {/* Categories */}
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/categories/:id" element={<CategoryDetailsPage />} />
+                
+                {/* Types */}
+                <Route path="/types" element={<TypesPage />} />
+                <Route path="/types/:id" element={<TypeDetailsPage />} />
+                
+                {/* FAQs */}
+                <Route path="/faqs" element={<FaqsPage />} />
+                <Route path="/faqs/:id" element={<FaqDetailsPage />} />
                 
                 {/* Cities */}
                 <Route path="/cities" element={<CitiesPage />} />

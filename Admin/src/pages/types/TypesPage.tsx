@@ -3,30 +3,30 @@ import { Link, useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiTag, FiToggleLeft, FiToggleRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { toast } from 'react-toastify';
-import categoriesService, { Category } from '../../services/categories.service';
+import typesService, { Type } from '../../services/types.service';
 import { PaginatedRequest } from '../../services/api';
 
-interface CategoryFilters extends PaginatedRequest {
+interface TypeFilters extends PaginatedRequest {
   search?: string;
   sortBy?: string;
   sortOrder?: 'ASC' | 'DESC';
 }
 
-const CategoriesPage: React.FC = () => {
+const TypesPage: React.FC = () => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [types, setTypes] = useState<Type[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [filters, setFilters] = useState<CategoryFilters>({
+  const [filters, setFilters] = useState<TypeFilters>({
     search: '',
     sortBy: 'nameTextRefId',
     sortOrder: 'ASC'
   });
   const [sortConfig, setSortConfig] = useState({ field: 'nameTextRefId', direction: 'asc' });
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; category: Category | null }>({
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; type: Type | null }>({
     open: false,
-    category: null
+    type: null
   });
   const [searchDebounce, setSearchDebounce] = useState<ReturnType<typeof setTimeout> | null>(null);
 
@@ -41,15 +41,15 @@ const CategoriesPage: React.FC = () => {
     }));
   };
 
-  const loadCategories = useCallback(async () => {
+  const loadTypes = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await categoriesService.getCategories(filters);
-      setCategories(response.items);
+      const response = await typesService.getTypes(filters);
+      setTypes(response.items);
       setTotal(response.pagination.total);
       setTotalPages(response.pagination.totalPages);
     } catch (error) {
-      toast.error('Erro ao carregar categorias');
+      toast.error('Erro ao carregar tipos');
       console.error(error);
     } finally {
       setLoading(false);
@@ -57,8 +57,8 @@ const CategoriesPage: React.FC = () => {
   }, [filters]);
 
   useEffect(() => {
-    loadCategories();
-  }, [loadCategories]);
+    loadTypes();
+  }, [loadTypes]);
 
   const handleSearch = (value: string) => {
     if (searchDebounce) {
@@ -70,27 +70,27 @@ const CategoriesPage: React.FC = () => {
     setSearchDebounce(timeout);
   };
 
-  const handleToggleStatus = async (category: Category) => {
+  const handleToggleStatus = async (type: Type) => {
     try {
-      await categoriesService.toggleCategoryStatus(category.categoryId);
-      toast.success('Status da categoria alterado com sucesso');
-      loadCategories();
+      await typesService.toggleTypeStatus(type.typeId);
+      toast.success('Status do tipo alterado com sucesso');
+      loadTypes();
     } catch (error) {
-      toast.error('Falha ao alterar status da categoria');
+      toast.error('Falha ao alterar status do tipo');
       console.error(error);
     }
   };
 
   const handleDelete = async () => {
-    if (!deleteModal.category) return;
+    if (!deleteModal.type) return;
     
     try {
-      await categoriesService.deleteCategory(deleteModal.category.categoryId);
-      toast.success('Categoria excluída com sucesso');
-      setDeleteModal({ open: false, category: null });
-      loadCategories();
+      await typesService.deleteType(deleteModal.type.typeId);
+      toast.success('Tipo excluído com sucesso');
+      setDeleteModal({ open: false, type: null });
+      loadTypes();
     } catch (error) {
-      toast.error('Falha ao excluir categoria');
+      toast.error('Falha ao excluir tipo');
       console.error(error);
     }
   };
@@ -99,16 +99,19 @@ const CategoriesPage: React.FC = () => {
     setFilters(prev => ({ ...prev, page }));
   };
 
-
-  const getCategoryName = (category: Category) => {
-    return category.name;
+  const getTypeName = (type: Type) => {
+    if (type.nameTranslations && type.nameTranslations.length > 0) {
+      const ptTranslation = type.nameTranslations.find(t => t.language === 'pt');
+      return ptTranslation?.text || type.nameTranslations[0].text || 'Sem nome';
+    }
+    return type.name || 'Sem nome';
   };
 
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Categorias</h1>
-        <p className="text-gray-400">Gerencie categorias de rotas turísticas</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Tipos</h1>
+        <p className="text-gray-400">Gerencie tipos de locais</p>
       </div>
       
       <div className="flex justify-between items-center mb-6">
@@ -117,7 +120,7 @@ const CategoriesPage: React.FC = () => {
           <div className="relative">
             <input
               type="text"
-              placeholder="Buscar categorias..."
+              placeholder="Buscar tipos..."
               className="pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all w-64"
               onChange={(e) => handleSearch(e.target.value)}
             />
@@ -126,11 +129,11 @@ const CategoriesPage: React.FC = () => {
         </div>
 
         <Link
-          to="/categories/new"
+          to="/types/new"
           className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 flex items-center gap-2"
         >
           <FiPlus size={18} />
-          <span>Adicionar Categoria</span>
+          <span>Adicionar Tipo</span>
         </Link>
       </div>
 
@@ -139,13 +142,13 @@ const CategoriesPage: React.FC = () => {
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center gap-3 text-gray-400">
               <div className="w-6 h-6 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin"></div>
-              Carregando categorias...
+              Carregando tipos...
             </div>
           </div>
-        ) : categories.length === 0 ? (
+        ) : types.length === 0 ? (
           <div className="text-center py-12">
             <FiTag className="mx-auto text-6xl text-gray-600 mb-4" />
-            <p className="text-gray-500 text-center py-8">Nenhuma categoria encontrada</p>
+            <p className="text-gray-500 text-center py-8">Nenhum tipo encontrado</p>
           </div>
         ) : (
           <>
@@ -171,41 +174,41 @@ const CategoriesPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">
-                {categories.map((category: Category) => (
+                {types.map((type: Type) => (
                   <tr 
-                    key={category.categoryId} 
+                    key={type.typeId} 
                     className="hover:bg-gray-700/30 dark:hover:bg-gray-700/30 hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/categories/${category.categoryId}`)}
+                    onClick={() => navigate(`/types/${type.typeId}`)}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="text-sm font-medium text-white">
-                          {getCategoryName(category)}
+                          {getTypeName(type)}
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-300">{new Date(category.createdAt).toLocaleDateString('pt-BR')}</span>
+                      <span className="text-sm text-gray-300">{new Date(type.createdAt).toLocaleDateString('pt-BR')}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleToggleStatus(category);
+                          handleToggleStatus(type);
                         }}
                         className={`px-3 py-1 inline-flex items-center gap-1 text-xs font-semibold rounded-full transition-colors border ${
-                          !category.isDeleted
+                          !type.isDeleted
                             ? 'bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-400 border-green-200 dark:border-green-500/30 hover:bg-green-200 dark:hover:bg-green-500/30'
                             : 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-400 border-red-200 dark:border-red-500/30 hover:bg-red-200 dark:hover:bg-red-500/30'
                         }`}
-                        title={!category.isDeleted ? 'Clique para desativar' : 'Clique para ativar'}
+                        title={!type.isDeleted ? 'Clique para desativar' : 'Clique para ativar'}
                       >
-                        {!category.isDeleted ? (
+                        {!type.isDeleted ? (
                           <FiToggleRight className="w-3 h-3" />
                         ) : (
                           <FiToggleLeft className="w-3 h-3" />
                         )}
-                        {!category.isDeleted ? 'Ativa' : 'Inativa'}
+                        {!type.isDeleted ? 'Ativo' : 'Inativo'}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -213,20 +216,20 @@ const CategoriesPage: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/categories/${category.categoryId}`);
+                            navigate(`/types/${type.typeId}`);
                           }}
                           className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                          title="Editar Categoria"
+                          title="Editar Tipo"
                         >
                           <FiEdit2 size={16} />
                         </button>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setDeleteModal({ open: true, category });
+                            setDeleteModal({ open: true, type });
                           }}
                           className="p-2 text-red-600 dark:text-red-400 hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                          title="Excluir Categoria"
+                          title="Excluir Tipo"
                         >
                           <FiTrash2 size={16} />
                         </button>
@@ -242,7 +245,7 @@ const CategoriesPage: React.FC = () => {
               <div className="px-6 py-4 border-t border-gray-700">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-400">
-                    Mostrando {((filters.page || 1) - 1) * (filters.limit || 10) + 1} até {Math.min((filters.page || 1) * (filters.limit || 10), total)} de {total} categorias
+                    Mostrando {((filters.page || 1) - 1) * (filters.limit || 10) + 1} até {Math.min((filters.page || 1) * (filters.limit || 10), total)} de {total} tipos
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -298,16 +301,16 @@ const CategoriesPage: React.FC = () => {
       <ConfirmDialog
         isOpen={deleteModal.open}
         title="Confirmar Exclusão"
-        message="Tem certeza que deseja excluir a categoria"
-        itemName={deleteModal.category ? getCategoryName(deleteModal.category) : ''}
+        message="Tem certeza que deseja excluir o tipo"
+        itemName={deleteModal.type ? getTypeName(deleteModal.type) : ''}
         confirmText="Excluir"
         cancelText="Cancelar"
         confirmColor="red"
         onConfirm={handleDelete}
-        onCancel={() => setDeleteModal({ open: false, category: null })}
+        onCancel={() => setDeleteModal({ open: false, type: null })}
       />
     </div>
   );
 };
 
-export default CategoriesPage;
+export default TypesPage;

@@ -16,7 +16,9 @@ import {
   FiMoon,
   FiMenu,
   FiX,
-  FiCalendar
+  FiCalendar,
+  FiTag,
+  FiHelpCircle
 } from 'react-icons/fi';
 
 interface MenuItem {
@@ -51,6 +53,8 @@ const MainLayout: React.FC = () => {
     { path: '/dashboard', label: 'Painel', icon: <FiHome /> },
     { path: '/users', label: 'Usuários', icon: <FiUsers /> },
     { path: '/categories', label: 'Categorias', icon: <FiGrid /> },
+    { path: '/types', label: 'Tipos', icon: <FiTag /> },
+    { path: '/faqs', label: 'FAQs', icon: <FiHelpCircle /> },
     { path: '/cities', label: 'Cidades', icon: <FiMap /> },
     { path: '/locations', label: 'Locais', icon: <FiMapPin /> },
     { path: '/events', label: 'Eventos', icon: <FiCalendar /> },

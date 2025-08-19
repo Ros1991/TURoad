@@ -218,7 +218,7 @@ const UsersPage: React.FC = () => {
                   </th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Função</th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider">Ações</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-300 tracking-wider"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-700">

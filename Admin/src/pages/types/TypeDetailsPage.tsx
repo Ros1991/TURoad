@@ -1,0 +1,258 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { FiArrowLeft, FiTrash2, FiEdit2, FiCheck, FiX } from 'react-icons/fi';
+import { toast } from 'react-toastify';
+import typesService, { Type } from '../../services/types.service';
+import LocalizedTextInput from '../../components/common/LocalizedTextInput';
+
+const TypeDetailsPage: React.FC = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [type, setType] = useState<Type | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    nameTextRefId: 0
+  });
+
+  useEffect(() => {
+    if (id && id !== 'new') {
+      loadType();
+    } else if (id === 'new') {
+      setEditMode(true);
+      setLoading(false);
+    }
+  }, [id]);
+
+  const loadType = async () => {
+    try {
+      setLoading(true);
+      const typeId = Number(id);
+      if (isNaN(typeId)) {
+        toast.error('ID de tipo inválido');
+        navigate('/types');
+        return;
+      }
+      const data = await typesService.getTypeById(typeId);
+      if (data) {
+        setType(data);
+        if (editMode) {
+          const form = {
+            name: data.name || '',
+            nameTextRefId: data.nameTextRefId || 0
+          };
+          setEditForm(form);
+        } else {
+          if (data && !editMode) {
+            setEditForm({
+              name: data.name || '',
+              nameTextRefId: data.nameTextRefId || 0
+            });
+          }
+        }
+      }
+    } catch (error) {
+      toast.error('Erro ao carregar tipo');
+      navigate('/types');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      const payload = {
+        nameTextRefId: editForm.nameTextRefId
+      };
+      
+      if (id === 'new') {
+        await typesService.createType(payload);
+        toast.success('Tipo criado com sucesso');
+        navigate('/types');
+      } else {
+        await typesService.updateType(Number(id), payload);
+        toast.success('Tipo atualizado com sucesso');
+        setEditMode(false);
+        loadType();
+      }
+    } catch (error) {
+      console.error('Error saving type:', error);
+      toast.error(id === 'new' ? 'Erro ao criar tipo' : 'Erro ao atualizar tipo');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    if (id === 'new') {
+      navigate('/types');
+    } else {
+      setEditMode(false);
+      if (type) {
+        setEditForm({
+          name: type.name || '',
+          nameTextRefId: type.nameTextRefId || 0
+        });
+      }
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await typesService.deleteType(Number(id));
+      toast.success('Tipo excluído com sucesso');
+      navigate('/types');
+    } catch (error) {
+      toast.error('Falha ao excluir tipo');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-400">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (!type && id !== 'new') {
+    return (
+      <div className="text-center text-gray-400">
+        Tipo não encontrado
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <Link
+          to="/types"
+          className="inline-flex items-center text-gray-400 hover:text-white transition-colors mb-4"
+        >
+          <FiArrowLeft className="mr-2" />
+          Voltar para Tipos
+        </Link>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              {id === 'new' ? 'Novo Tipo' : 'Detalhes do Tipo'}
+            </h1>
+            <p className="text-gray-400">
+              {id === 'new' ? 'Criar novo tipo' : 'Gerenciar informações do tipo'}
+            </p>
+          </div>
+          <div className="flex gap-3">
+            {!editMode && id !== 'new' ? (
+              <>
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+                >
+                  <FiEdit2 />
+                  Editar Tipo
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(true)}
+                  className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                >
+                  <FiTrash2 />
+                  Excluir Tipo
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                >
+                  <FiCheck />
+                  {id === 'new' ? 'Criar Tipo' : 'Salvar Alterações'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors flex items-center gap-2"
+                >
+                  <FiX />
+                  Cancelar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Type Information */}
+      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
+        <h2 className="text-xl font-semibold text-white mb-4">
+          {id === 'new' ? 'Informações do Novo Tipo' : 'Informações do Tipo'}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="text-white text-sm mb-2 block">Nome do Tipo</label>
+            {editMode || id === 'new' ? (
+              <LocalizedTextInput
+                value={editForm.name}
+                onChange={(value) => {
+                  setEditForm(prev => ({ ...prev, name: value }));
+                }}
+                onBothChange={(value, referenceId) => {
+                  setEditForm(prev => ({ ...prev, name: value, nameTextRefId: referenceId }));
+                }}
+                onReferenceIdChange={(referenceId) => {
+                  setEditForm(prev => ({ ...prev, nameTextRefId: referenceId }));
+                }}
+                fieldName="Nome do Tipo"
+                placeholder="Digite o nome do tipo"
+                referenceId={editForm.nameTextRefId || type?.nameTextRefId || 0}
+              />
+            ) : (
+              <p className="text-white">{type?.name}</p>
+            )}
+          </div>
+          {type && (
+            <>
+              <div>
+                <label className="text-gray-400 text-sm">Data de Criação</label>
+                <p className="text-white">{new Date(type.createdAt).toLocaleDateString('pt-BR')}</p>
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm">Última Atualização</label>
+                <p className="text-white">{new Date(type.updatedAt).toLocaleDateString('pt-BR')}</p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-white mb-4">Confirmar Exclusão</h3>
+            <p className="text-gray-400 mb-6">
+              Tem certeza que deseja excluir este tipo? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDelete}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Excluir
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default TypeDetailsPage;
