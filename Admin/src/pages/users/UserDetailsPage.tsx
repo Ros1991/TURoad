@@ -4,6 +4,9 @@ import { FiArrowLeft, FiTrash2, FiUser, FiMail, FiShield, FiToggleLeft, FiToggle
 import { toast } from 'react-toastify';
 import usersService, { User } from '../../services/users.service';
 import UserPushSettingsCard from '../../components/common/UserPushSettingsCard';
+import UserFavoriteCitiesCard from '../../components/common/UserFavoriteCitiesCard';
+import UserFavoriteRoutesCard from '../../components/common/UserFavoriteRoutesCard';
+import UserVisitedRoutesCard from '../../components/common/UserVisitedRoutesCard';
 
 const UserDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -11,6 +14,7 @@ const UserDetailsPage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('push-settings');
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -301,8 +305,70 @@ const UserDetailsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Push Notification Settings */}
-      <UserPushSettingsCard userId={user.userId} />
+      {/* Tabs Section */}
+      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-800">
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab('push-settings')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'push-settings'
+                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+              }`}
+            >
+              Configurações Push
+            </button>
+            <button
+              onClick={() => setActiveTab('favorite-cities')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'favorite-cities'
+                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+              }`}
+            >
+              Cidades Favoritas
+            </button>
+            <button
+              onClick={() => setActiveTab('favorite-routes')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'favorite-routes'
+                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+              }`}
+            >
+              Rotas Favoritas
+            </button>
+            <button
+              onClick={() => setActiveTab('visited-routes')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'visited-routes'
+                  ? 'border-blue-500 text-blue-400 bg-blue-500/10'
+                  : 'border-transparent text-gray-400 hover:text-gray-300 hover:bg-gray-800/50'
+              }`}
+            >
+              Rotas Visitadas
+            </button>
+          </nav>
+        </div>
+
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === 'push-settings' && (
+            <UserPushSettingsCard userId={user.userId} />
+          )}
+          {activeTab === 'favorite-cities' && (
+            <UserFavoriteCitiesCard userId={user.userId} />
+          )}
+          {activeTab === 'favorite-routes' && (
+            <UserFavoriteRoutesCard userId={user.userId} />
+          )}
+          {activeTab === 'visited-routes' && (
+            <UserVisitedRoutesCard userId={user.userId} />
+          )}
+        </div>
+      </div>
 
       {/* Delete User Modal */}
       {showDeleteModal && (
