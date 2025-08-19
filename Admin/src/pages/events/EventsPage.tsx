@@ -20,13 +20,35 @@ const EventsPage: React.FC = () => {
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
+      console.log('Making API call with filters:', filters);
       const response = await eventsService.getEvents(filters);
-      setEvents(response.items);
-      setTotal(response.pagination.total);
+      console.log('Raw API Response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', Object.keys(response || {}));
+      
+      // Handle both possible response structures
+      let items, total;
+      if ((response as any)?.data) {
+        // Full backend response structure
+        items = (response as any).data.items || [];
+        total = (response as any).data.pagination?.total || 0;
+        console.log('Using full response structure');
+      } else {
+        // Extracted data structure
+        items = response?.items || [];
+        total = response?.pagination?.total || 0;
+        console.log('Using extracted data structure');
+      }
+      
+      console.log('Setting events:', items);
+      console.log('Setting total:', total);
+      setEvents(items);
+      setTotal(total);
     } catch (error) {
       toast.error('Failed to load events');
       console.error('Error loading events:', error);
-      setEvents([]); // Set empty array on error to prevent undefined access
+      setEvents([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -68,6 +90,14 @@ const EventsPage: React.FC = () => {
       return ptTranslation?.text || event.locationTranslations[0].text || 'Sem nome';
     }
     return event.location || 'Sem nome';
+  };
+
+  const getCityName = (event: Event): string => {
+    if (event.city?.nameTextRefId) {
+      // Se tiver dados da cidade, mostrar ID por enquanto
+      return `Cidade ${event.city.cityId}`;
+    }
+    return event.cityId ? `Cidade ${event.cityId}` : 'Não informado';
   };
 
   const formatEventDate = (eventDate?: string, eventTime?: string): string => {
@@ -151,7 +181,7 @@ const EventsPage: React.FC = () => {
                     {/* Cidade */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-300">
-                        {event.cityId ? `Cidade ID: ${event.cityId}` : 'Não informado'}
+                        {getCityName(event)}
                       </span>
                     </td>
                     

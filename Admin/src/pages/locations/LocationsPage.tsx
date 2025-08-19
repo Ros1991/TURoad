@@ -62,6 +62,10 @@ const LocationsPage: React.FC = () => {
     return location.name || 'Sem nome';
   };
 
+  const getCityName = (location: Location): string => {
+    return location.cityId ? `Cidade ${location.cityId}` : 'Não informado';
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -129,7 +133,7 @@ const LocationsPage: React.FC = () => {
                     {/* Cidade */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-300">
-                        {location.cityId ? `Cidade ID: ${location.cityId}` : 'Não informado'}
+                        {getCityName(location)}
                       </span>
                     </td>
                     

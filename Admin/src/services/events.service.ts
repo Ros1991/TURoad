@@ -1,4 +1,4 @@
-import api, { PaginatedRequest, PaginatedResponse } from './api';
+import { api, PaginatedRequest, PaginatedResponse } from './api';
 import { LocalizedText } from './categories.service';
 
 export interface StoryEvent {
@@ -61,14 +61,14 @@ class EventsService {
    * Get paginated list of events
    */
   async getEvents(params?: EventFilters): Promise<PaginatedResponse<Event>> {
-    return api.get(this.basePath, { params });
+    return api.get<PaginatedResponse<Event>>(this.basePath, { params });
   }
 
   /**
    * Get event by ID
    */
   async getEventById(id: number): Promise<Event> {
-    return api.get(`${this.basePath}/${id}`);
+    return api.get<Event>(`${this.basePath}/${id}`);
   }
 
   /**
@@ -82,28 +82,28 @@ class EventsService {
    * Create new event
    */
   async createEvent(data: CreateEventDto): Promise<Event> {
-    return api.post(this.basePath, data);
+    return api.post<Event>(this.basePath, data);
   }
 
   /**
    * Update event
    */
   async updateEvent(id: number, data: UpdateEventDto): Promise<Event> {
-    return api.put(`${this.basePath}/${id}`, data);
+    return api.put<Event>(`${this.basePath}/${id}`, data);
   }
 
   /**
    * Delete event
    */
   async deleteEvent(id: number): Promise<void> {
-    return api.delete(`${this.basePath}/${id}`);
+    return api.delete<void>(`${this.basePath}/${id}`);
   }
 
   /**
    * Toggle event status
    */
   async toggleEventStatus(id: number): Promise<Event> {
-    return api.patch(`${this.basePath}/${id}/toggle-status`);
+    return api.patch<Event>(`${this.basePath}/${id}/toggle-status`);
   }
 
   // Story management methods
@@ -111,7 +111,7 @@ class EventsService {
    * Get stories for an event
    */
   async getStories(eventId: number): Promise<StoryEvent[]> {
-    return api.get(`${this.basePath}/${eventId}/stories`);
+    return api.get<StoryEvent[]>(`${this.basePath}/${eventId}/stories`);
   }
 
   /**
@@ -125,7 +125,7 @@ class EventsService {
    * Add story to event
    */
   async addStory(eventId: number, story: Omit<StoryEvent, 'storyEventId' | 'eventId'>): Promise<StoryEvent> {
-    return api.post(`${this.basePath}/${eventId}/stories`, story);
+    return api.post<StoryEvent>(`${this.basePath}/${eventId}/stories`, story);
   }
 
   /**
@@ -139,7 +139,7 @@ class EventsService {
    * Update event story
    */
   async updateStory(eventId: number, storyId: number, story: Partial<Omit<StoryEvent, 'storyEventId' | 'eventId'>>): Promise<StoryEvent> {
-    return api.put(`${this.basePath}/${eventId}/stories/${storyId}`, story);
+    return api.put<StoryEvent>(`${this.basePath}/${eventId}/stories/${storyId}`, story);
   }
 
   /**
@@ -153,7 +153,7 @@ class EventsService {
    * Delete event story
    */
   async deleteStory(eventId: number, storyId: number): Promise<void> {
-    return api.delete(`${this.basePath}/${eventId}/stories/${storyId}`);
+    return api.delete<void>(`${this.basePath}/${eventId}/stories/${storyId}`);
   }
 
   /**

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
 // API base URL from environment variable or default
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -116,7 +116,7 @@ interface BackendResponse<T> {
 // API methods
 class ApiService {
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await apiClient.get<BackendResponse<T>>(url, config);
+    const response = await apiClient.get(url, config);
     return response.data.data; // Extract actual data from backend response structure
   }
 
