@@ -14,6 +14,7 @@ export interface Event {
   cityId: number;
   nameTextRefId: number;
   descriptionTextRefId?: number;
+  locationTextRefId?: number;
   eventDate: string;
   eventTime: string;
   imageUrl?: string;
@@ -23,14 +24,17 @@ export interface Event {
     state: string;
   };
   stories?: StoryEvent[];
-
-  
+  // Localized fields
+  name?: string;
+  description?: string;
+  location?: string;
 }
 
 export interface CreateEventDto {
   cityId: number;
   nameTextRefId: number;
   descriptionTextRefId?: number;
+  locationTextRefId?: number;
   eventDate: string;
   eventTime: string;
   imageUrl?: string;

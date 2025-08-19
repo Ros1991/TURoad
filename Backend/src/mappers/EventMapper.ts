@@ -8,8 +8,10 @@ export class EventMapper extends BaseMapper<Event> {
     event.cityId = createDto.cityId;
     event.nameTextRefId = createDto.nameTextRefId;
     event.descriptionTextRefId = createDto.descriptionTextRefId;
+    event.locationTextRefId = createDto.locationTextRefId;
     event.eventDate = createDto.eventDate;
     event.eventTime = createDto.eventTime;
+    event.imageUrl = createDto.imageUrl;
     return event;
   }
 
@@ -17,8 +19,10 @@ export class EventMapper extends BaseMapper<Event> {
     if (dto.cityId !== undefined) entity.cityId = dto.cityId;
     if (dto.nameTextRefId !== undefined) entity.nameTextRefId = dto.nameTextRefId;
     if (dto.descriptionTextRefId !== undefined) entity.descriptionTextRefId = dto.descriptionTextRefId;
+    if (dto.locationTextRefId !== undefined) entity.locationTextRefId = dto.locationTextRefId;
     if (dto.eventDate !== undefined) entity.eventDate = dto.eventDate;
     if (dto.eventTime !== undefined) entity.eventTime = dto.eventTime;
+    if (dto.imageUrl !== undefined) entity.imageUrl = dto.imageUrl;
   }
 
   static toResponseDto(entity: Event): EventResponseDto {
@@ -28,8 +32,10 @@ export class EventMapper extends BaseMapper<Event> {
       cityId: entity.cityId,
       nameTextRefId: entity.nameTextRefId,
       descriptionTextRefId: entity.descriptionTextRefId,
+      locationTextRefId: entity.locationTextRefId,
       eventDate: entity.eventDate,
       eventTime: entity.eventTime,
+      imageUrl: entity.imageUrl,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,

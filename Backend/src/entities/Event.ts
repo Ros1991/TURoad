@@ -21,6 +21,10 @@ export class Event extends SoftDeleteBaseEntity {
   @Column({ name: 'description_text_ref_id', type: 'integer', nullable: true })
   descriptionTextRefId?: number;
 
+  @LocalizedTextRef
+  @Column({ name: 'location_text_ref_id', type: 'integer', nullable: true })
+  locationTextRefId?: number;
+
   @Column({ name: 'event_date', type: 'date' })
   eventDate!: Date;
 

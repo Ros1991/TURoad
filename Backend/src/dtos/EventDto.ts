@@ -8,12 +8,16 @@ export class CreateEventDto implements IDto {
   cityId!: number;
 
   @IsNotEmpty()
-  @IsString()
-  name!: string;
+  @IsInt()
+  nameTextRefId!: number;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
+
+  @IsOptional()
+  @IsInt()
+  locationTextRefId?: number;
 
   @IsNotEmpty()
   @IsDateString()
@@ -35,12 +39,16 @@ export class UpdateEventDto implements IDto {
   cityId?: number;
 
   @IsOptional()
-  @IsString()
-  name?: string;
+  @IsInt()
+  nameTextRefId?: number;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
+
+  @IsOptional()
+  @IsInt()
+  locationTextRefId?: number;
 
   @IsOptional()
   @IsDateString()
@@ -66,12 +74,16 @@ export class EventResponseDto implements IDto {
   @IsInt()
   cityId!: number;
   
-  @IsString()
-  name!: string;
+  @IsInt()
+  nameTextRefId!: number;
   
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
+  
+  @IsOptional()
+  @IsInt()
+  locationTextRefId?: number;
   
   @IsDateString()
   eventDate!: Date;

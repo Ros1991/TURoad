@@ -23,6 +23,8 @@ const EventDetailsPage: React.FC = () => {
     nameTextRefId: 0,
     description: '',
     descriptionTextRefId: 0,
+    location: '',
+    locationTextRefId: 0,
     eventDate: '',
     eventTime: '',
     cityId: 0,
@@ -50,6 +52,8 @@ const EventDetailsPage: React.FC = () => {
         nameTextRefId: data.nameTextRefId || 0,
         description: data.description || '',
         descriptionTextRefId: data.descriptionTextRefId || 0,
+        location: data.location || '',
+        locationTextRefId: data.locationTextRefId || 0,
         eventDate: data.eventDate || '',
         eventTime: data.eventTime || '',
         cityId: data.cityId || 0,
@@ -124,9 +128,22 @@ const EventDetailsPage: React.FC = () => {
           }
         }
 
+        // Create location reference if needed
+        let locationRefId = editForm.locationTextRefId;
+        if (editForm.location && editForm.location.trim() && (!locationRefId || locationRefId === 0)) {
+          console.log('Auto-creating location reference for:', editForm.location);
+          try {
+            locationRefId = await localizedTextsService.createReference(editForm.location.trim(), []);
+            console.log('Created location reference:', locationRefId);
+          } catch (error) {
+            console.error('Error creating location reference:', error);
+          }
+        }
+
         const payload = {
           nameTextRefId: nameRefId || 0,
           descriptionTextRefId: descRefId || 0,
+          locationTextRefId: locationRefId || 0,
           eventDate: editForm.eventDate,
           eventTime: editForm.eventTime,
           cityId: editForm.cityId,
@@ -142,6 +159,7 @@ const EventDetailsPage: React.FC = () => {
         const payload = {
           nameTextRefId: editForm.nameTextRefId,
           descriptionTextRefId: editForm.descriptionTextRefId,
+          locationTextRefId: editForm.locationTextRefId,
           eventDate: editForm.eventDate,
           eventTime: editForm.eventTime,
           cityId: editForm.cityId,
@@ -168,6 +186,8 @@ const EventDetailsPage: React.FC = () => {
         nameTextRefId: event.nameTextRefId || 0,
         description: event.description || '',
         descriptionTextRefId: event.descriptionTextRefId || 0,
+        location: event.location || '',
+        locationTextRefId: event.locationTextRefId || 0,
         eventDate: event.eventDate || '',
         eventTime: event.eventTime || '',
         cityId: event.cityId || 0,
@@ -382,6 +402,28 @@ const EventDetailsPage: React.FC = () => {
             />
           ) : (
             <p className="text-white">{event?.description || 'N/A'}</p>
+          )}
+        </div>
+        
+        {/* Localização - Coluna inteira */}
+        <div className="mt-4">
+          <label className="text-white text-sm mb-2 block">Localização do Evento</label>
+          {editMode ? (
+            <LocalizedTextInput
+              value={editForm.location || ''}
+              onChange={(value) => setEditForm(prev => ({ ...prev, location: value }))}
+              onBothChange={(value, referenceId) => {
+                setEditForm(prev => ({ ...prev, location: value, locationTextRefId: referenceId }));
+              }}
+              onReferenceIdChange={(referenceId) => {
+                setEditForm(prev => ({ ...prev, locationTextRefId: referenceId }));
+              }}
+              fieldName="Localização do Evento"
+              placeholder="Digite a localização do evento"
+              referenceId={editForm.locationTextRefId || event?.locationTextRefId || 0}
+            />
+          ) : (
+            <p className="text-white">{event?.location || 'N/A'}</p>
           )}
         </div>
         
