@@ -79,6 +79,19 @@ export class CityNestedDto {
   name?: string;
 }
 
+// Type nested DTO for responses
+export class TypeNestedDto {
+  @IsInt()
+  typeId!: number;
+  
+  @IsInt()
+  nameTextRefId!: number;
+  
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
 // RESPONSE
 export class LocationResponseDto implements IDto {
   @IsInt()
@@ -115,6 +128,9 @@ export class LocationResponseDto implements IDto {
   
   @IsOptional()
   city?: CityNestedDto;
+  
+  @IsOptional()
+  type?: TypeNestedDto;
   
   // Localized fields
   @IsOptional()

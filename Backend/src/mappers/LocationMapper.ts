@@ -1,5 +1,5 @@
 import { Location } from '@/entities/Location';
-import { CreateLocationDto, UpdateLocationDto, LocationResponseDto, CityNestedDto } from '@/dtos/LocationDto';
+import { CreateLocationDto, UpdateLocationDto, LocationResponseDto, CityNestedDto, TypeNestedDto } from '@/dtos/LocationDto';
 import { BaseMapper } from '@/core/base/BaseMapper';
 
 export class LocationMapper extends BaseMapper<Location> {
@@ -31,6 +31,12 @@ export class LocationMapper extends BaseMapper<Location> {
       name: (entity.city as any).name // Localized name from BaseService
     } : undefined;
 
+    const typeDto: TypeNestedDto | undefined = entity.type ? {
+      typeId: entity.type.typeId,
+      nameTextRefId: entity.type.nameTextRefId,
+      name: (entity.type as any).name // Localized name from BaseService
+    } : undefined;
+
     return {
       id: entity.locationId,
       locationId: entity.locationId,
@@ -42,6 +48,7 @@ export class LocationMapper extends BaseMapper<Location> {
       typeId: entity.typeId,
       imageUrl: entity.imageUrl,
       city: cityDto,
+      type: typeDto,
       name: (entity as any).name, // Localized name from BaseService
       description: (entity as any).description, // Localized description from BaseService
       createdAt: entity.createdAt,

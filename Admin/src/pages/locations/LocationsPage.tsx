@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import locationsService, { Location, LocationFilters } from '../../services/locations.service';
+import typesService, { Type } from '../../services/types.service';
 
 const LocationsPage: React.FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [types, setTypes] = useState<Type[]>([]);
   const [filters, setFilters] = useState<LocationFilters>({
     search: '',
     isActive: undefined,
@@ -32,9 +34,19 @@ const LocationsPage: React.FC = () => {
     }
   }, [filters]);
 
+  const loadTypes = useCallback(async () => {
+    try {
+      const response = await typesService.getActiveTypes();
+      setTypes(response);
+    } catch (error) {
+      console.error('Error loading types:', error);
+    }
+  }, []);
+
   useEffect(() => {
     loadLocations();
-  }, [loadLocations]);
+    loadTypes();
+  }, [loadLocations, loadTypes]);
 
   const handleSearch = (value: string) => {
     setFilters((prev: LocationFilters) => ({ ...prev, search: value, page: 1 }));
@@ -69,6 +81,18 @@ const LocationsPage: React.FC = () => {
     return location.cityId ? `Cidade ${location.cityId}` : 'Não informado';
   };
 
+  const getTypeName = (location: Location): string => {
+    if (location.type?.name) {
+      return location.type.name;
+    }
+    return 'Sem tipo';
+  };
+
+  const handleTypeFilter = (typeId: string) => {
+    const typeIdNumber = typeId === '' ? undefined : parseInt(typeId);
+    setFilters((prev: LocationFilters) => ({ ...prev, typeId: typeIdNumber, page: 1 }));
+  };
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -86,17 +110,33 @@ const LocationsPage: React.FC = () => {
         </Link>
       </div>
 
-      {/* Search */}
+      {/* Search and Filters */}
       <div className="bg-gray-800/50 backdrop-blur-lg rounded-xl p-4 mb-6">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Pesquisar locais..."
-            value={filters.search}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="relative">
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder="Pesquisar locais..."
+              value={filters.search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <select
+              value={filters.typeId || ''}
+              onChange={(e) => handleTypeFilter(e.target.value)}
+              className="w-full px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="">Todos os tipos</option>
+              {types.map((type) => (
+                <option key={type.typeId} value={type.typeId}>
+                  {type.name || `Tipo ${type.typeId}`}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -119,6 +159,7 @@ const LocationsPage: React.FC = () => {
               <thead className="bg-gray-900/50 border-b border-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tipo</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cidade</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Coordenadas</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider"></th>
@@ -130,6 +171,13 @@ const LocationsPage: React.FC = () => {
                     <td className="px-6 py-4">
                       <span className="font-medium text-white">
                         {getLocalizedName(location)}
+                      </span>
+                    </td>
+                    
+                    {/* Tipo */}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-300">
+                        {getTypeName(location)}
                       </span>
                     </td>
                     

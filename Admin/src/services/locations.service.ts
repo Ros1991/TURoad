@@ -19,6 +19,11 @@ export interface Location {
     state: string;
     name?: string;
   };
+  type?: {
+    typeId: number;
+    nameTextRefId: number;
+    name?: string;
+  };
   // Localized text fields returned by backend
   name?: string;
   description?: string;
