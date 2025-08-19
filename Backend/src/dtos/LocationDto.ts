@@ -8,12 +8,12 @@ export class CreateLocationDto implements IDto {
   cityId!: number;
 
   @IsNotEmpty()
-  @IsString()
-  name!: string;
+  @IsInt()
+  nameTextRefId!: number;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
 
   @IsOptional()
   @IsNumber()
@@ -39,12 +39,12 @@ export class UpdateLocationDto implements IDto {
   cityId?: number;
 
   @IsOptional()
-  @IsString()
-  name?: string;
+  @IsInt()
+  nameTextRefId?: number;
 
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
 
   @IsOptional()
   @IsNumber()
@@ -63,6 +63,22 @@ export class UpdateLocationDto implements IDto {
   imageUrl?: string;
 }
 
+// City nested DTO for responses
+export class CityNestedDto {
+  @IsInt()
+  cityId!: number;
+  
+  @IsInt()
+  nameTextRefId!: number;
+  
+  @IsString()
+  state!: string;
+  
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
 // RESPONSE
 export class LocationResponseDto implements IDto {
   @IsInt()
@@ -74,12 +90,12 @@ export class LocationResponseDto implements IDto {
   @IsInt()
   cityId!: number;
   
-  @IsString()
-  name!: string;
+  @IsInt()
+  nameTextRefId!: number;
   
   @IsOptional()
-  @IsString()
-  description?: string;
+  @IsInt()
+  descriptionTextRefId?: number;
   
   @IsOptional()
   @IsNumber()
@@ -96,6 +112,18 @@ export class LocationResponseDto implements IDto {
   @IsOptional()
   @IsUrl()
   imageUrl?: string;
+  
+  @IsOptional()
+  city?: CityNestedDto;
+  
+  // Localized fields
+  @IsOptional()
+  @IsString()
+  name?: string;
+  
+  @IsOptional()
+  @IsString()
+  description?: string;
   
   @IsDateString()
   createdAt!: Date;

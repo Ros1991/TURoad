@@ -23,6 +23,7 @@ export interface Event {
     cityId: number;
     nameTextRefId: number;
     state: string;
+    name?: string;
   };
   stories?: StoryEvent[];
   // Localized fields

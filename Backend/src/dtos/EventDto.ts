@@ -63,6 +63,22 @@ export class UpdateEventDto implements IDto {
   imageUrl?: string;
 }
 
+// City nested DTO for responses
+export class CityNestedDto {
+  @IsInt()
+  cityId!: number;
+  
+  @IsInt()
+  nameTextRefId!: number;
+  
+  @IsString()
+  state!: string;
+  
+  @IsOptional()
+  @IsString()
+  name?: string;
+}
+
 // RESPONSE
 export class EventResponseDto implements IDto {
   @IsInt()
@@ -94,6 +110,22 @@ export class EventResponseDto implements IDto {
   @IsOptional()
   @IsUrl()
   imageUrl?: string;
+  
+  @IsOptional()
+  city?: CityNestedDto;
+  
+  // Localized fields
+  @IsOptional()
+  @IsString()
+  name?: string;
+  
+  @IsOptional()
+  @IsString()
+  description?: string;
+  
+  @IsOptional()
+  @IsString()
+  location?: string;
   
   @IsDateString()
   createdAt!: Date;

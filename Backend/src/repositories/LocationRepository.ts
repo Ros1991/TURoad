@@ -1,10 +1,28 @@
 import { BaseRepository } from '@/core/base/BaseRepository';
 import { Location } from '@/entities/Location';
-import { SelectQueryBuilder } from 'typeorm';
+import { SelectQueryBuilder, FindManyOptions } from 'typeorm';
+import { PaginationRequestVO, ListResponseVO } from '@/core/base/BaseVO';
 
 export class LocationRepository extends BaseRepository<Location> {
   constructor() {
     super(Location, 'locationId');
+  }
+
+  // Override findWithPagination to always include city relations
+  override async findWithPagination(
+    pagination: PaginationRequestVO & { search?: any }, 
+    options?: FindManyOptions<Location>,
+  ): Promise<ListResponseVO<Location>> {
+    // Ensure city relation is always included
+    const optionsWithCity = {
+      ...options,
+      relations: {
+        ...options?.relations,
+        city: true
+      }
+    };
+    
+    return super.findWithPagination(pagination, optionsWithCity);
   }
 
   protected override applySearch(qb: SelectQueryBuilder<Location>, search: any): void {

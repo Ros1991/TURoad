@@ -1,10 +1,28 @@
 import { BaseRepository } from '@/core/base/BaseRepository';
 import { Event } from '@/entities/Event';
-import { SelectQueryBuilder } from 'typeorm';
+import { SelectQueryBuilder, FindManyOptions } from 'typeorm';
+import { PaginationRequestVO, ListResponseVO } from '@/core/base/BaseVO';
 
 export class EventRepository extends BaseRepository<Event> {
   constructor() {
     super(Event, 'eventId');
+  }
+
+  // Override findWithPagination to always include city relations
+  override async findWithPagination(
+    pagination: PaginationRequestVO & { search?: any }, 
+    options?: FindManyOptions<Event>,
+  ): Promise<ListResponseVO<Event>> {
+    // Ensure city relation is always included
+    const optionsWithCity = {
+      ...options,
+      relations: {
+        ...options?.relations,
+        city: true
+      }
+    };
+    
+    return super.findWithPagination(pagination, optionsWithCity);
   }
 
   protected override applySearch(qb: SelectQueryBuilder<Event>, search: any): void {

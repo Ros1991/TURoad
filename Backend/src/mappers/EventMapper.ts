@@ -1,5 +1,5 @@
 import { Event } from '@/entities/Event';
-import { CreateEventDto, UpdateEventDto, EventResponseDto } from '@/dtos/EventDto';
+import { CreateEventDto, UpdateEventDto, EventResponseDto, CityNestedDto } from '@/dtos/EventDto';
 import { BaseMapper } from '@/core/base/BaseMapper';
 
 export class EventMapper extends BaseMapper<Event> {
@@ -26,6 +26,13 @@ export class EventMapper extends BaseMapper<Event> {
   }
 
   static toResponseDto(entity: Event): EventResponseDto {
+    const cityDto: CityNestedDto | undefined = entity.city ? {
+      cityId: entity.city.cityId,
+      nameTextRefId: entity.city.nameTextRefId,
+      state: entity.city.state,
+      name: (entity.city as any).name // Localized name from BaseService
+    } : undefined;
+
     return {
       id: entity.eventId,
       eventId: entity.eventId,
@@ -36,6 +43,10 @@ export class EventMapper extends BaseMapper<Event> {
       eventDate: entity.eventDate,
       eventTime: entity.eventTime,
       imageUrl: entity.imageUrl,
+      city: cityDto,
+      name: (entity as any).name, // Localized name from BaseService
+      description: (entity as any).description, // Localized description from BaseService
+      location: (entity as any).location, // Localized location from BaseService
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,

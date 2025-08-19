@@ -63,6 +63,9 @@ const LocationsPage: React.FC = () => {
   };
 
   const getCityName = (location: Location): string => {
+    if (location.city?.name) {
+      return location.city.name;
+    }
     return location.cityId ? `Cidade ${location.cityId}` : 'Não informado';
   };
 

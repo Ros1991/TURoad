@@ -93,9 +93,8 @@ const EventsPage: React.FC = () => {
   };
 
   const getCityName = (event: Event): string => {
-    if (event.city?.nameTextRefId) {
-      // Se tiver dados da cidade, mostrar ID por enquanto
-      return `Cidade ${event.city.cityId}`;
+    if (event.city?.name) {
+      return event.city.name;
     }
     return event.cityId ? `Cidade ${event.cityId}` : 'Não informado';
   };

@@ -13,6 +13,12 @@ export interface Location {
   imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
+  city?: {
+    cityId: number;
+    nameTextRefId: number;
+    state: string;
+    name?: string;
+  };
   // Localized text fields returned by backend
   name?: string;
   description?: string;
