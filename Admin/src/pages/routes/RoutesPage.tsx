@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiRoute } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiEdit2, FiTrash2, FiMapPin } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import routesService, { Route, RouteFilters } from '../../services/routes.service';
 
@@ -20,7 +20,7 @@ const RoutesPage: React.FC = () => {
   const loadRoutes = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await routesService.getAll(filters);
+      const response = await routesService.getRoutes(filters);
       setRoutes(response.items);
       setTotal(response.pagination.total);
     } catch (error) {
@@ -102,7 +102,7 @@ const RoutesPage: React.FC = () => {
           </div>
         ) : routes.length === 0 ? (
           <div className="p-8 text-center">
-            <FiRoute size={48} className="text-gray-600 mx-auto mb-4" />
+            <FiMapPin size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-500 text-center py-8">Nenhuma rota encontrada</p>
             <p className="text-gray-500 text-sm mt-2">Tente ajustar a busca ou adicionar uma nova rota</p>
           </div>
@@ -138,7 +138,6 @@ const RoutesPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">
                         <div>{route.citiesCount || 0} cidades</div>
-                        <div className="text-xs text-gray-500">{route.locationsCount || 0} locais</div>
                       </div>
                     </td>
                     
@@ -146,7 +145,6 @@ const RoutesPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">
                         <div>{route.storiesCount || 0} histórias</div>
-                        <div className="text-xs text-gray-500">{route.categoriesCount || 0} categorias</div>
                       </div>
                     </td>
                     

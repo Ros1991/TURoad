@@ -1,18 +1,6 @@
 import { api, PaginatedRequest, PaginatedResponse } from './api';
 import { LocalizedText } from './categories.service';
 
-export enum LocationType {
-  VIEWPOINT = 'VIEWPOINT',
-  RESTAURANT = 'RESTAURANT',
-  HOTEL = 'HOTEL',
-  ATTRACTION = 'ATTRACTION',
-  PARKING = 'PARKING',
-  RESTROOM = 'RESTROOM',
-  GAS_STATION = 'GAS_STATION',
-  HOSPITAL = 'HOSPITAL',
-  SHOPPING = 'SHOPPING',
-  OTHER = 'OTHER'
-}
 
 export interface Location {
   locationId: number;
@@ -23,21 +11,14 @@ export interface Location {
   longitude?: number;
   typeId?: number;
   imageUrl?: string;
-  rating?: number;
-  reviewsCount?: number;
-  photoUrls?: string[];
-  amenities?: string[];
-  isAccessible?: boolean;
-  isPetFriendly?: boolean;
-  hasParking?: boolean;
-  hasWifi?: boolean;
-  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Localized text fields returned by backend
+  name?: string;
+  description?: string;
+  // Legacy support for translations
   nameTranslations?: LocalizedText[];
   descriptionTranslations?: LocalizedText[];
-  addressTranslations?: LocalizedText[];
-  routes?: any[];
   storiesCount?: number;
 }
 
@@ -48,6 +29,10 @@ export interface StoryLocation {
   playCount: number;
   audioUrlRefId?: number;
   locationId: number;
+  // Localized text fields returned by backend
+  name?: string;
+  description?: string;
+  audioUrl?: string;
 }
 
 export interface CreateLocationDto {
@@ -55,25 +40,9 @@ export interface CreateLocationDto {
   descriptionTextRefId?: number;
   cityId: number;
   typeId?: number;
-  locationType: LocationType;
-  latitude: number;
-  longitude: number;
-  altitude?: number;
-  phoneNumber?: string;
-  email?: string;
-  website?: string;
-  openingHours?: string;
-  priceRange?: string;
-  amenities?: string[];
-  isAccessible?: boolean;
-  isPetFriendly?: boolean;
-  hasParking?: boolean;
-  hasWifi?: boolean;
+  latitude?: number;
+  longitude?: number;
   imageUrl?: string;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
-  addressTranslations?: LocalizedText[];
 }
 
 export interface UpdateLocationDto {
@@ -81,38 +50,16 @@ export interface UpdateLocationDto {
   descriptionTextRefId?: number;
   cityId?: number;
   typeId?: number;
-  locationType?: LocationType;
   latitude?: number;
   longitude?: number;
-  altitude?: number;
-  phoneNumber?: string;
-  email?: string;
-  website?: string;
-  openingHours?: string;
-  priceRange?: string;
-  amenities?: string[];
-  isAccessible?: boolean;
-  isPetFriendly?: boolean;
-  hasParking?: boolean;
-  hasWifi?: boolean;
   imageUrl?: string;
-  isActive?: boolean;
-  nameTranslations?: LocalizedText[];
-  descriptionTranslations?: LocalizedText[];
-  addressTranslations?: LocalizedText[];
 }
 
 export interface LocationFilters extends PaginatedRequest {
-  locationType?: LocationType;
-  minRating?: number;
-  isAccessible?: boolean;
-  isPetFriendly?: boolean;
-  hasParking?: boolean;
-  hasWifi?: boolean;
+  search?: string;
+  cityId?: number;
+  typeId?: number;
   isActive?: boolean;
-  nearLatitude?: number;
-  nearLongitude?: number;
-  maxDistance?: number;
 }
 
 class LocationsService {
@@ -135,17 +82,15 @@ class LocationsService {
   /**
    * Get locations by type
    */
-  async getLocationsByType(type: LocationType): Promise<Location[]> {
-    return api.get<Location[]>(`${this.basePath}/type/${type}`);
+  async getLocationsByType(typeId: number): Promise<Location[]> {
+    return api.get<Location[]>(`${this.basePath}/type/${typeId}`);
   }
 
   /**
-   * Get locations nearby
+   * Get locations by city
    */
-  async getLocationsNearby(latitude: number, longitude: number, radius: number = 5): Promise<Location[]> {
-    return api.get<Location[]>(`${this.basePath}/nearby`, {
-      params: { latitude, longitude, radius }
-    });
+  async getLocationsByCity(cityId: number): Promise<Location[]> {
+    return api.get<Location[]>(`${this.basePath}/city/${cityId}`);
   }
 
   // Story management methods

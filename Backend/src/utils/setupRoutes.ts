@@ -4,8 +4,11 @@ import authRoutes from '@/routes/authRoutes';
 import userRoutes from '@/routes/usersRoutes';
 import categoryRoutes from '@/routes/categoriesRoutes';
 import typeRoutes from '@/routes/typesRoutes';
-import faqRoutes from '@/routes/faqRoutes';
+import faqRoutes from '@/routes/faqsRoutes';
 import cityRoutes from '@/routes/citiesRoutes';
+import routesRoutes from '@/routes/routesRoutes';
+import locationsRoutes from '@/routes/locationsRoutes';
+import eventsRoutes from '@/routes/eventsRoutes';
 
 export const setupRoutes = (app: Application): void => {
   const apiPrefix = config.server.apiPrefix;
@@ -19,6 +22,9 @@ export const setupRoutes = (app: Application): void => {
   app.use(`${apiPrefix}/types`, typeRoutes);
   app.use(`${apiPrefix}/faq`, faqRoutes);
   app.use(`${apiPrefix}/cities`, cityRoutes);
+  app.use(`${apiPrefix}/routes`, routesRoutes);
+  app.use(`${apiPrefix}/locations`, locationsRoutes);
+  app.use(`${apiPrefix}/events`, eventsRoutes);
 
   // Status endpoint
   app.get(`${apiPrefix}/status`, (req, res) => {

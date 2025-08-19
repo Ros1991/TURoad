@@ -20,7 +20,7 @@ const LocationsPage: React.FC = () => {
   const loadLocations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await locationsService.getAll(filters);
+      const response = await locationsService.getLocations(filters);
       setLocations(response.items);
       setTotal(response.pagination.total);
     } catch (error) {
@@ -114,7 +114,6 @@ const LocationsPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cidade</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Coordenadas</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Histórias</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
@@ -139,14 +138,6 @@ const LocationsPage: React.FC = () => {
                       <div className="text-xs text-gray-400">
                         <div>Lat: {Number(location.latitude || 0).toFixed(4)}</div>
                         <div>Lng: {Number(location.longitude || 0).toFixed(4)}</div>
-                      </div>
-                    </td>
-                    
-                    {/* Histórias */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">
-                        <div>{location.storiesCount || 0} histórias</div>
-                        <div className="text-xs text-gray-500">{location.categoriesCount || 0} categorias</div>
                       </div>
                     </td>
                     

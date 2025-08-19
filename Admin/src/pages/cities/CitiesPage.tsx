@@ -115,7 +115,6 @@ const CitiesPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Estado</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Coordenadas</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rotas</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
@@ -140,14 +139,6 @@ const CitiesPage: React.FC = () => {
                       <div className="text-xs text-gray-400">
                         <div>Lat: {Number(city.latitude).toFixed(4)}</div>
                         <div>Lng: {Number(city.longitude).toFixed(4)}</div>
-                      </div>
-                    </td>
-                    
-                    {/* Rotas */}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-300">
-                        <div>{city.routesCount || 0} rotas</div>
-                        <div className="text-xs text-gray-500">{city.storiesCount || 0} histórias</div>
                       </div>
                     </td>
                     

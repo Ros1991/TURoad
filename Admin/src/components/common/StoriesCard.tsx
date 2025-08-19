@@ -4,14 +4,21 @@ import ConfirmDialog from './ConfirmDialog';
 import LocalizedTextInput from './LocalizedTextInput';
 
 export interface Story {
-  storyCityId: number;
+  storyCityId?: number;
+  storyEventId?: number;
+  storyLocationId?: number;
+  storyRouteId?: number;
   name: string;
   nameTextRefId: number;
   description?: string;
   descriptionTextRefId?: number;
   audioUrl?: string;
   audioUrlRefId?: number;
+  playCount?: number;
   cityId?: number;
+  eventId?: number;
+  locationId?: number;
+  routeId?: number;
 }
 
 export interface StoryForm {
@@ -40,6 +47,10 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
   title = "Histórias",
   showAddButton = true
 }) => {
+  // Helper function to get the story ID regardless of type
+  const getStoryId = (story: Story): number => {
+    return story.storyCityId || story.storyEventId || story.storyLocationId || story.storyRouteId || 0;
+  };
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [editingStoryId, setEditingStoryId] = useState<number | null>(null);
   const [deleteStoryId, setDeleteStoryId] = useState<number | null>(null);
@@ -101,7 +112,7 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
         ) : (
           stories.map((story) => (
             <div
-              key={story.storyCityId}
+              key={getStoryId(story)}
               className="p-4 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors"
             >
               <div className="flex items-start justify-between">
@@ -125,7 +136,7 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
                   {onEditStory && (
                     <button
                       onClick={() => {
-                        setEditingStoryId(story.storyCityId);
+                        setEditingStoryId(getStoryId(story));
                         setStoryForm({
                           name: story.name || '',
                           nameTextRefId: story.nameTextRefId,
@@ -143,7 +154,7 @@ const StoriesCard: React.FC<StoriesCardProps> = ({
                   )}
                   {onDeleteStory && (
                     <button
-                      onClick={() => setDeleteStoryId(story.storyCityId)}
+                      onClick={() => setDeleteStoryId(getStoryId(story))}
                       className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                     >
                       <FiTrash2 />

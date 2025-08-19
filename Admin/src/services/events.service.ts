@@ -1,4 +1,5 @@
 import api, { PaginatedRequest, PaginatedResponse } from './api';
+import { LocalizedText } from './categories.service';
 
 export interface StoryEvent {
   storyEventId?: number;
@@ -10,7 +11,7 @@ export interface StoryEvent {
 }
 
 export interface Event {
-  eventId?: number;
+  eventId: number;
   cityId: number;
   nameTextRefId: number;
   descriptionTextRefId?: number;
@@ -28,6 +29,10 @@ export interface Event {
   name?: string;
   description?: string;
   location?: string;
+
+    // Legacy support for translations
+  nameTranslations?: LocalizedText[];
+  locationTranslations?: LocalizedText[];
 }
 
 export interface CreateEventDto {
@@ -50,48 +55,112 @@ export interface EventFilters extends PaginatedRequest {
 }
 
 class EventsService {
-  async getEvents(filters?: EventFilters): Promise<PaginatedResponse<Event>> {
-    const response = await api.get('/api/events', { params: filters });
-    return response.data;
+  private basePath = '/events';
+
+  /**
+   * Get paginated list of events
+   */
+  async getEvents(params?: EventFilters): Promise<PaginatedResponse<Event>> {
+    return api.get(this.basePath, { params });
   }
 
+  /**
+   * Get event by ID
+   */
+  async getEventById(id: number): Promise<Event> {
+    return api.get(`${this.basePath}/${id}`);
+  }
+
+  /**
+   * Get event by ID (legacy)
+   */
   async getEvent(id: number): Promise<Event> {
-    const response = await api.get(`/api/events/${id}`);
-    return response.data;
+    return this.getEventById(id);
   }
 
+  /**
+   * Create new event
+   */
   async createEvent(data: CreateEventDto): Promise<Event> {
-    const response = await api.post('/api/events', data);
-    return response.data;
+    return api.post(this.basePath, data);
   }
 
+  /**
+   * Update event
+   */
   async updateEvent(id: number, data: UpdateEventDto): Promise<Event> {
-    const response = await api.put(`/api/events/${id}`, data);
-    return response.data;
+    return api.put(`${this.basePath}/${id}`, data);
   }
 
+  /**
+   * Delete event
+   */
   async deleteEvent(id: number): Promise<void> {
-    await api.delete(`/api/events/${id}`);
+    return api.delete(`${this.basePath}/${id}`);
   }
 
-  // Story management
+  /**
+   * Toggle event status
+   */
+  async toggleEventStatus(id: number): Promise<Event> {
+    return api.patch(`${this.basePath}/${id}/toggle-status`);
+  }
+
+  // Story management methods
+  /**
+   * Get stories for an event
+   */
+  async getStories(eventId: number): Promise<StoryEvent[]> {
+    return api.get(`${this.basePath}/${eventId}/stories`);
+  }
+
+  /**
+   * Get stories for an event (legacy)
+   */
   async getEventStories(eventId: number): Promise<StoryEvent[]> {
-    const response = await api.get(`/api/events/${eventId}/stories`);
-    return response.data;
+    return this.getStories(eventId);
   }
 
-  async createEventStory(eventId: number, story: Omit<StoryEvent, 'eventId'>): Promise<StoryEvent> {
-    const response = await api.post(`/api/events/${eventId}/stories`, story);
-    return response.data;
+  /**
+   * Add story to event
+   */
+  async addStory(eventId: number, story: Omit<StoryEvent, 'storyEventId' | 'eventId'>): Promise<StoryEvent> {
+    return api.post(`${this.basePath}/${eventId}/stories`, story);
   }
 
-  async updateEventStory(eventId: number, storyId: number, story: Partial<StoryEvent>): Promise<StoryEvent> {
-    const response = await api.put(`/api/events/${eventId}/stories/${storyId}`, story);
-    return response.data;
+  /**
+   * Create event story (legacy)
+   */
+  async createEventStory(eventId: number, story: Omit<StoryEvent, 'storyEventId' | 'eventId'>): Promise<StoryEvent> {
+    return this.addStory(eventId, story);
   }
 
+  /**
+   * Update event story
+   */
+  async updateStory(eventId: number, storyId: number, story: Partial<Omit<StoryEvent, 'storyEventId' | 'eventId'>>): Promise<StoryEvent> {
+    return api.put(`${this.basePath}/${eventId}/stories/${storyId}`, story);
+  }
+
+  /**
+   * Update event story (legacy)
+   */
+  async updateEventStory(eventId: number, storyId: number, story: Partial<Omit<StoryEvent, 'storyEventId' | 'eventId'>>): Promise<StoryEvent> {
+    return this.updateStory(eventId, storyId, story);
+  }
+
+  /**
+   * Delete event story
+   */
+  async deleteStory(eventId: number, storyId: number): Promise<void> {
+    return api.delete(`${this.basePath}/${eventId}/stories/${storyId}`);
+  }
+
+  /**
+   * Delete event story (legacy)
+   */
   async deleteEventStory(eventId: number, storyId: number): Promise<void> {
-    await api.delete(`/api/events/${eventId}/stories/${storyId}`);
+    return this.deleteStory(eventId, storyId);
   }
 }
 

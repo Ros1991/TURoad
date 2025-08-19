@@ -20,7 +20,7 @@ const EventsPage: React.FC = () => {
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await eventsService.getAll(filters);
+      const response = await eventsService.getEvents(filters);
       setEvents(response.items);
       setTotal(response.pagination.total);
     } catch (error) {
@@ -60,6 +60,14 @@ const EventsPage: React.FC = () => {
       return ptTranslation?.text || event.nameTranslations[0].text || 'Sem nome';
     }
     return event.name || 'Sem nome';
+  };
+
+  const getLocalizedLocation = (event: Event): string => {
+    if (event.locationTranslations && event.locationTranslations.length > 0) {
+      const ptTranslation = event.locationTranslations.find(t => t.language === 'pt');
+      return ptTranslation?.text || event.locationTranslations[0].text || 'Sem nome';
+    }
+    return event.location || 'Sem nome';
   };
 
   const formatEventDate = (eventDate?: string, eventTime?: string): string => {
@@ -127,7 +135,7 @@ const EventsPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Nome</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Cidade</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Data/Hora</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Histórias</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Localização</th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
@@ -153,12 +161,11 @@ const EventsPage: React.FC = () => {
                         {formatEventDate(event.eventDate, event.eventTime)}
                       </div>
                     </td>
-                    
-                    {/* Histórias */}
+
+                    {/* Localização */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">
-                        <div>{event.storiesCount || 0} histórias</div>
-                        <div className="text-xs text-gray-500">{event.categoriesCount || 0} categorias</div>
+                        {getLocalizedLocation(event)}
                       </div>
                     </td>
                     

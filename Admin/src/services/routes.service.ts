@@ -1,13 +1,6 @@
 import { api, PaginatedRequest, PaginatedResponse } from './api';
 import { LocalizedText } from './categories.service';
 
-export enum DifficultyLevel {
-  EASY = 'EASY',
-  MODERATE = 'MODERATE',
-  HARD = 'HARD',
-  EXTREME = 'EXTREME'
-}
-
 export interface Route {
   routeId: number;
   titleTextRefId: number;
@@ -16,9 +9,16 @@ export interface Route {
   imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
-  nameTranslations?: LocalizedText[];
+  // Localized text fields returned by backend
+  title?: string;
+  description?: string;
+  whatToObserve?: string;
+  // Legacy support for translations
   descriptionTranslations?: LocalizedText[];
+  titleTranslations?: LocalizedText[];
+  whatToObserveTranslations?: LocalizedText[];
   storiesCount?: number;
+  citiesCount?: number;
 }
 
 export interface StoryRoute {
@@ -28,6 +28,10 @@ export interface StoryRoute {
   playCount: number;
   audioUrlRefId?: number;
   routeId: number;
+  // Localized text fields returned by backend
+  name?: string;
+  description?: string;
+  audioUrl?: string;
 }
 
 export interface CreateRouteDto {
@@ -45,12 +49,9 @@ export interface UpdateRouteDto {
 }
 
 export interface RouteFilters extends PaginatedRequest {
+  search?: string;
   cityId?: number;
   categoryId?: number;
-  difficultyLevel?: DifficultyLevel;
-  minDistance?: number;
-  maxDistance?: number;
-  isFeatured?: boolean;
   isActive?: boolean;
 }
 
