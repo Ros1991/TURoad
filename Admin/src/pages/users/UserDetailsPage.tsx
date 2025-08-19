@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FiArrowLeft, FiTrash2, FiUser, FiMail, FiShield, FiToggleLeft, FiToggleRight, FiCheck, FiX } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 import usersService, { User } from '../../services/users.service';
+import UserPushSettingsCard from '../../components/common/UserPushSettingsCard';
 
 const UserDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -268,7 +269,7 @@ const UserDetailsPage: React.FC = () => {
       </div>
 
       {/* Account Status */}
-      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6">
+      <div className="bg-gray-900/50 backdrop-blur-xl rounded-xl border border-gray-800 p-6 mb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Status da Conta</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -299,6 +300,9 @@ const UserDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Push Notification Settings */}
+      <UserPushSettingsCard userId={user.userId} />
 
       {/* Delete User Modal */}
       {showDeleteModal && (

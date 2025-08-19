@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { UserRepository } from '@/repositories/UserRepository';
 import { JwtTokenRepository } from '@/repositories/JwtTokenRepository';
+import { UserPushSettingsService } from '@/services/UserPushSettingsService';
 import { PasswordUtils } from '@/utils/password';
 import { JwtUtils } from '@/utils/jwt';
 import { AppError, AuthenticationError, ConflictError, ValidationError } from '@/utils/AppError';
@@ -18,10 +19,12 @@ import { UserMapper } from '@/mappers/UserMapper';
 export class AuthService {
   private userRepository: UserRepository;
   private jwtTokenRepository: JwtTokenRepository;
+  private userPushSettingsService: UserPushSettingsService;
 
   constructor() {
     this.userRepository = new UserRepository();
     this.jwtTokenRepository = new JwtTokenRepository();
+    this.userPushSettingsService = new UserPushSettingsService();
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponseDto> {
@@ -107,6 +110,14 @@ export class AuthService {
     userEntity.passwordHash = passwordHash; // Override with hashed password
     
     const savedUser = await this.userRepository.create(userEntity);
+
+    // Create default push notification settings for the new user
+    try {
+      await this.userPushSettingsService.createDefaultSettings(savedUser.userId);
+    } catch (error) {
+      console.error('Failed to create default push settings for user:', savedUser.userId, error);
+      // Don't fail the registration if push settings creation fails
+    }
 
     // Generate tokens for immediate login
     const payload = {
