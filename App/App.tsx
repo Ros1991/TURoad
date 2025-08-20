@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import { Platform, StatusBar } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import ThemeProvider from './src/themes/ThemeProvider';
@@ -42,6 +42,11 @@ function App(): React.JSX.Element {
 
   return (
     <ThemeProvider>
+      <StatusBar 
+        barStyle="dark-content" 
+        translucent={true} 
+        backgroundColor="transparent" 
+      />
       <AppNavigator />
     </ThemeProvider>
   );

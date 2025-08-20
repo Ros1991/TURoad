@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -120,9 +120,7 @@ const RouteHistoryScreen: React.FC = () => {
   );
 
   return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
-      <Box flex={1} backgroundColor="light">
+    <Box flex={1} backgroundColor="light">
         {/* Header */}
         <Box
           backgroundColor="white"
@@ -168,7 +166,6 @@ const RouteHistoryScreen: React.FC = () => {
           <Box height={20} />
         </ScrollView>
       </Box>
-    </>
   );
 };
 

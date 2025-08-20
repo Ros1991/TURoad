@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
+import { ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -118,9 +118,7 @@ const ProfileScreen: React.FC = () => {
   );
 
   return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="#F2F2F7" />
-      <ScrollView style={{ flex: 1, backgroundColor: '#F2F2F7' }}>
+    <ScrollView style={{ flex: 1, backgroundColor: '#F2F2F7' }}>
         <Box style={{ paddingTop: 60 }}>
           {/* User Profile Header */}
           <Box 
@@ -263,8 +261,7 @@ const ProfileScreen: React.FC = () => {
           {/* Bottom spacing for tab bar */}
           <Box height={20} />
         </Box>
-      </ScrollView>
-    </>
+    </ScrollView>
   );
 };
 

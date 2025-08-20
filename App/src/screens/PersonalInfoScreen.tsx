@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Image, StatusBar, TextInput } from 'react-native';
+import { ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -12,8 +12,6 @@ const PersonalInfoScreen: React.FC = () => {
   const [lastName, setLastName] = useState('Bezerra');
 
   return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
       <Box flex={1} backgroundColor="light">
         {/* Header */}
         <Box
@@ -191,7 +189,6 @@ const PersonalInfoScreen: React.FC = () => {
           <Box height={20} />
         </ScrollView>
       </Box>
-    </>
   );
 };
 

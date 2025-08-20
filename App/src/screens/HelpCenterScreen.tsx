@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import { ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -47,8 +47,6 @@ const HelpCenterScreen: React.FC = () => {
   );
 
   return (
-    <>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
       <Box flex={1} backgroundColor="light">
         {/* Header */}
         <Box
@@ -129,7 +127,6 @@ const HelpCenterScreen: React.FC = () => {
           <Box height={20} />
         </ScrollView>
       </Box>
-    </>
   );
 };
 

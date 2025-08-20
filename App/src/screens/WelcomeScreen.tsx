@@ -36,11 +36,6 @@ const WelcomeScreen: React.FC = () => {
           style={styles.backgroundImage}
           resizeMode="cover"
         />
-        <LinearGradient 
-          colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.6)', 'rgba(255, 255, 255, 0.9)', '#FFFFFF']} 
-          style={styles.gradient}
-          locations={[0, 0.2, 0.5, 0.8, 0.95]}
-        />
       </Box>
       {/* Language selector */}
       <Box 
@@ -74,9 +69,15 @@ const WelcomeScreen: React.FC = () => {
         </TouchableOpacity>
       </Box>
 
-      <ScrollView contentContainerStyle={styles.container}>
-        <Box flex={1} justifyContent="flex-end" style={{marginTop: '-50%'}}>
-          <Box backgroundColor="white" width="100%" padding="l" paddingBottom="m" paddingTop="none">
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+        {/* Gradiente dentro do ScrollView */}
+        <LinearGradient 
+          colors={['rgba(255, 255, 255, 0)', 'rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.4)', 'rgba(255, 255, 255, 0.8)', '#FFFFFF']} 
+          style={styles.gradientInScroll}
+          locations={[0, 0.2, 0.5, 0.8, 1.0]}
+        />
+        {/* Conteúdo branco que segue o gradiente */}
+        <Box backgroundColor="white" width="100%" padding="l" paddingBottom="m" paddingTop="l">
             <TranslateWithFormat
               i18nKey="welcome.title"
               style={{ fontSize: 30, color: '#035A6E', marginBottom: 16, fontWeight: '400' }}
@@ -106,7 +107,6 @@ const WelcomeScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             </Box>
-          </Box>
         </Box>
       </ScrollView>
     </Box>
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: '60%',
+    height: '60%', // Reduzido para dar espaço ao ScrollView
     overflow: 'visible',
   },
   backgroundImage: {
@@ -128,15 +128,20 @@ const styles = StyleSheet.create({
     top: '0%',
     resizeMode: 'cover',
   },
-  gradient: {
-    position: 'absolute',
-    bottom: 20,
-    top: 310,
-    left: 0,
-    right: 0,
-    height: 50, 
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+  scrollContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    transform: [{ translateY: -70 }], // Move 70px para cima
+    paddingBottom: 70, // Compensa os 70px movidos para cima
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    minHeight: '100%',
+  },
+  gradientInScroll: {
+    height: 120, // Altura fixa para o gradiente
+    width: '100%',
   },
   container: {
     flexGrow: 1,

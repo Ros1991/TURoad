@@ -50,9 +50,9 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <Box flex={1} backgroundColor="white">
-      <AuthHeader />
+      <AuthHeader withBackground={true} />
       <ScrollView style={{ flex: 1 }}>
-        <Box padding="l" paddingTop="l">
+        <Box padding="l" paddingTop="l" backgroundColor="white" style={{ marginTop: -10 }}>
           <Text 
             style={{
               fontFamily: 'ASAP',
