@@ -45,9 +45,9 @@ const LoginScreen: React.FC = () => {
 
   return (
     <Box flex={1} backgroundColor="white">
-      <AuthHeader withBackground={true} />
+      <AuthHeader withBackground={false} />
       <ScrollView style={{ flex: 1 }}>
-        <Box padding="l" paddingTop="l" backgroundColor="white" style={{ marginTop: -10 }}>
+        <Box padding="l" paddingTop="l" backgroundColor="white">
           <Text 
             style={{
               fontFamily: 'ASAP',
@@ -100,7 +100,7 @@ const LoginScreen: React.FC = () => {
             {t('login.noAccount')}
           </Text>
         </TouchableOpacity>
-
+{/* 
         <TouchableOpacity
           style={{
             backgroundColor: '#1877F2',
@@ -135,8 +135,8 @@ const LoginScreen: React.FC = () => {
           <Text style={{ fontSize: 18, marginRight: 8 }}>🔍</Text>
           <Text style={{ color: '#495057', fontSize: 16, fontWeight: '600' }}>
             {t('login.loginWithGoogle')}
-          </Text>
-        </TouchableOpacity>
+          </Text> 
+        </TouchableOpacity>*/}
         </Box>
       </ScrollView>
     </Box>
@@ -144,4 +144,3 @@ const LoginScreen: React.FC = () => {
 };
 
 export default LoginScreen;
-

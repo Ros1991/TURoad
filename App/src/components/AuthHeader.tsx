@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet, Image, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { Box, Text } from './index';
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -48,7 +49,7 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
         />
         {showBackButton && (
           <TouchableOpacity onPress={handleBackPress} style={styles.backButtonOverlay}>
-            <Text style={styles.backArrowOverlay}>←</Text>
+            <Ionicons name="arrow-back" size={28} color="#fff" />
           </TouchableOpacity>
         )}
       </Box>
@@ -60,7 +61,7 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
       <Box style={styles.content}>
         {showBackButton && (
           <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-            <Text style={styles.backArrow}>←</Text>
+            <Ionicons name="arrow-back" size={28} color="#333" />
           </TouchableOpacity>
         )}
       </Box>
@@ -74,11 +75,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: 'white',
     height: 90,
+    marginTop: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 50,
+
   },
   backButton: {
     width: 44,
@@ -86,14 +91,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  backArrow: {
-    fontSize: 24,
-    fontWeight: '400',
-    color: '#333',
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    includeFontPadding: false,
-  },
+
   // Novos estilos para o background
   backgroundContainer: {
     height: screenHeight * 0.4, // 40% da altura da tela

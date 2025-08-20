@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import i18n from '../locales/i18n';
 import { Box, Text, Button } from '../components';
 import TranslateWithFormat from '../components/TranslateWithFormat';
+import { backgroundColor } from '@shopify/restyle';
 
 type RootStackParamList = {
   Welcome: undefined;
@@ -29,7 +30,7 @@ const WelcomeScreen: React.FC = () => {
   const currentLanguage = i18n.language;
 
   return (
-    <Box flex={1}>
+    <Box flex={1} style={styles.backgroundColorWhite}>
       <Box style={styles.imageContainer}>
         <Image 
           source={require('../../assets/welcome.png')}
@@ -132,7 +133,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
     transform: [{ translateY: -70 }], // Move 70px para cima
-    paddingBottom: 70, // Compensa os 70px movidos para cima
   },
   scrollContent: {
     flexGrow: 1,
@@ -155,6 +155,9 @@ const styles = StyleSheet.create({
   },
   activeLanguage: {
     backgroundColor: 'rgba(0, 32, 67, 0.1)',
+  },
+  backgroundColorWhite: {
+    backgroundColor: 'white',
   },
 });
 

@@ -50,9 +50,9 @@ const RegisterScreen: React.FC = () => {
 
   return (
     <Box flex={1} backgroundColor="white">
-      <AuthHeader withBackground={true} />
+      <AuthHeader withBackground={false} />
       <ScrollView style={{ flex: 1 }}>
-        <Box padding="l" paddingTop="l" backgroundColor="white" style={{ marginTop: -10 }}>
+        <Box padding="l" paddingTop="l" backgroundColor="white">
           <Text 
             style={{
               fontFamily: 'ASAP',
@@ -108,7 +108,7 @@ const RegisterScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={{
             backgroundColor: '#1877F2',
             borderRadius: 8,
@@ -143,7 +143,7 @@ const RegisterScreen: React.FC = () => {
           <Text style={{ color: '#495057', fontSize: 16, fontWeight: '600' }}>
             {t('register.createWithGoogle')}
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         </Box>
       </ScrollView>
     </Box>
@@ -151,4 +151,3 @@ const RegisterScreen: React.FC = () => {
 };
 
 export default RegisterScreen;
-
