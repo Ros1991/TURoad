@@ -1,2 +1,4 @@
 /Admin/node_modules/
 /Backend/node_modules/
+App/pnpm-lock.yaml
+App/node_modules/
