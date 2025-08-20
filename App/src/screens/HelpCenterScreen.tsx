@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 
 const HelpCenterScreen: React.FC = () => {
@@ -41,7 +41,7 @@ const HelpCenterScreen: React.FC = () => {
             {description}
           </Text>
         </Box>
-        <Icon name="chevron-right" size={20} color="#C7C7CC" />
+        <Icon name="chevron-right" as any size={20} color="#C7C7CC" />
       </Box>
     </TouchableOpacity>
   );
@@ -67,7 +67,7 @@ const HelpCenterScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" size={24} color="#1A1A1A" />
+            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,

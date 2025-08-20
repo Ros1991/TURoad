@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text, Button, AudioStoriesPlayer } from '../components';
 import { getCityById } from '../services/CityService';
 import { City } from '../types';
@@ -151,7 +151,7 @@ const CityScreen: React.FC = () => {
                       alignItems="center"
                       style={{ backgroundColor: '#F5F5F5' }}
                     >
-                      <Icon name="heart-outline" size={18} color="#FF3B30" />
+                      <Icon name="heart-outline" as any size={20} color="white" />
                     </Box>
                   </TouchableOpacity>
                 </Box>
@@ -189,7 +189,7 @@ const CityScreen: React.FC = () => {
                     borderRadius={8}
                     style={{ backgroundColor: '#035A6E' }}
                   >
-                    <Icon name="map-marker-path" size={16} color="white" />
+                    <Icon name="arrow-left" as any size={24} color="white" />
                     <Text style={{ fontSize: 14, color: 'white', marginLeft: 8, fontWeight: '500' }}>Rota</Text>
                   </Box>
                 </TouchableOpacity>

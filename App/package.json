@@ -47,6 +47,7 @@
     "react-native-mmkv": "^2.12.2",
     "react-native-notifications": "^5.1.0",
     "react-native-permissions": "^5.4.2",
+    "react-native-reanimated": "^3.16.4",
     "react-native-restyle": "^0.0.1",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",

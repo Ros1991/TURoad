@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 
 const RouteHistoryScreen: React.FC = () => {
@@ -90,25 +90,25 @@ const RouteHistoryScreen: React.FC = () => {
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker" size={12} color="#666666" />
+              <Icon name="map-marker" as any size={12} color="#666666" />
               <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
                 {route.cities} cidades
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-distance" size={12} color="#666666" />
+              <Icon name="map-marker-distance" as any size={12} color="#666666" />
               <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
                 Distância total: {route.distance}
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="headphones" size={12} color="#666666" />
+              <Icon name="headphones" as any size={12} color="#666666" />
               <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
                 {route.stories} histórias em áudio
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center">
-              <Icon name="clock-outline" size={12} color="#666666" />
+              <Icon name="clock-outline" as any size={12} color="#666666" />
               <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
                 Há {route.duration}
               </Text>
@@ -142,7 +142,7 @@ const RouteHistoryScreen: React.FC = () => {
         >
           <Box flexDirection="row" alignItems="center" flex={1}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon name="arrow-left" size={24} color="#1A1A1A" />
+              <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
             </TouchableOpacity>
             <Text style={{
               fontSize: 18,
@@ -154,7 +154,7 @@ const RouteHistoryScreen: React.FC = () => {
             </Text>
           </Box>
           <TouchableOpacity onPress={() => setShowFilterMenu(!showFilterMenu)}>
-            <Icon name="tune" size={24} color="#1A1A1A" />
+            <Icon name="tune" as any size={24} color="#1A1A1A" />
           </TouchableOpacity>
         </Box>
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 
 const ProfileScreen: React.FC = () => {
@@ -34,14 +34,14 @@ const ProfileScreen: React.FC = () => {
             alignItems="center"
             marginRight="m"
           >
-            <Icon name={iconName} size={20} color={iconColor} />
+            <Icon name={iconName as any} size={20} color={iconColor} />
           </Box>
           <Text style={{ fontSize: 16, color: textColor, fontWeight: '400' }}>
             {title}
           </Text>
         </Box>
         {showArrow && (
-          <Icon name="chevron-right" size={20} color="#C7C7CC" />
+          <Icon name="chevron-right" as any size={20} color="#C7C7CC" />
         )}
       </Box>
     </TouchableOpacity>
@@ -65,7 +65,7 @@ const ProfileScreen: React.FC = () => {
             alignItems="center"
             marginRight="m"
           >
-            <Icon name="web" size={20} color="#666666" />
+            <Icon name="web" as any size={20} color="#666666" />
           </Box>
           <Text style={{ fontSize: 16, color: '#1A1A1A', fontWeight: '400' }}>
             Idioma
@@ -75,7 +75,7 @@ const ProfileScreen: React.FC = () => {
           <Text style={{ fontSize: 16, color: '#666666', marginRight: 8 }}>
             Português
           </Text>
-          <Icon name="chevron-right" size={20} color="#C7C7CC" />
+          <Icon name="chevron-right" as any size={20} color="#C7C7CC" />
         </Box>
       </Box>
     </TouchableOpacity>
@@ -215,7 +215,7 @@ const ProfileScreen: React.FC = () => {
                     alignItems="center"
                     marginRight="m"
                   >
-                    <Icon name="web" size={20} color="#666666" />
+                    <Icon name="web" as any size={20} color="#666666" />
                   </Box>
                   <Text style={{ fontSize: 16, color: '#1A1A1A', fontWeight: '400' }}>
                     Idioma
@@ -225,7 +225,7 @@ const ProfileScreen: React.FC = () => {
                   <Text style={{ fontSize: 16, color: '#666666', marginRight: 8 }}>
                     Português
                   </Text>
-                  <Icon name="chevron-right" size={20} color="#C7C7CC" />
+                  <Icon name="chevron-right" as any size={20} color="#C7C7CC" />
                 </Box>
               </Box>
             </TouchableOpacity>

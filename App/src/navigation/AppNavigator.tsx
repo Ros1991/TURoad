@@ -30,7 +30,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import HelpCenterScreen from '../screens/HelpCenterScreen';
 import FAQScreen from '../screens/FAQScreen';
 import ContactScreen from '../screens/ContactScreen';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -77,7 +77,7 @@ function MainTabNavigator() {
               marginTop: 16
             }}>
               {/* Ícones Unicode simples - estilo Material */}
-              <Icon name={iconName} size={20} color={color} />
+              <Icon name={iconName as any} size={20} color={color} />
                 
               <Text style={{
                 fontFamily: 'Proxima-Soft',

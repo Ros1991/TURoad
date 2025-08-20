@@ -3,7 +3,7 @@ import { ScrollView, Image, TouchableOpacity, FlatList, Modal, TextInput } from 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Card, Input } from '../components';
 import { getCategories, getRoutes } from '../services/RouteService';
@@ -179,7 +179,7 @@ const HomeScreen: React.FC = () => {
           <Box>
             {/* Cidades */}
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
+              <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -194,7 +194,7 @@ const HomeScreen: React.FC = () => {
             
             {/* Distância */}
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-path" size={16} color="#5A5A5A"/>
+              <Icon name="map-marker-path" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -209,7 +209,7 @@ const HomeScreen: React.FC = () => {
             
             {/* Histórias em áudio */}
             <Box flexDirection="row" alignItems="center">
-              <Icon name="headphones" size={16} color="#5A5A5A"/>
+              <Icon name="headphones" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -289,7 +289,7 @@ const HomeScreen: React.FC = () => {
           <Box>
             {/* Distância */}
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
+              <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -304,7 +304,7 @@ const HomeScreen: React.FC = () => {
             
             {/* Histórias em áudio */}
             <Box flexDirection="row" alignItems="center">
-              <Icon name="headphones" size={16} color="#5A5A5A"/>
+              <Icon name="headphones" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -552,7 +552,7 @@ const HomeScreen: React.FC = () => {
           </Box>
           <Box marginBottom="s">
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
+              <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -565,7 +565,7 @@ const HomeScreen: React.FC = () => {
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="calendar-month-outline" size={16} color="#5A5A5A"/>
+              <Icon name="calendar-month-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -578,7 +578,7 @@ const HomeScreen: React.FC = () => {
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center">
-              <Icon name="clock-outline" size={16} color="#5A5A5A"/>
+              <Icon name="clock-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -713,7 +713,7 @@ const HomeScreen: React.FC = () => {
           </Text>
           <Box>
             <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
+              <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',
@@ -726,7 +726,7 @@ const HomeScreen: React.FC = () => {
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center">
-              <Icon name="headphones" size={16} color="#5A5A5A"/>
+              <Icon name="headphones" as any size={16} color="#5A5A5A"/>
               <Text
                 style={{
                   fontFamily: 'Asap',

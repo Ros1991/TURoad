@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ScrollView, TouchableOpacity, Image, StatusBar } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 
 const FavoritesScreen: React.FC = () => {
@@ -108,7 +108,7 @@ const FavoritesScreen: React.FC = () => {
         >
           <Box flexDirection="row" alignItems="center" flex={1}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon name="arrow-left" size={24} color="#1A1A1A" />
+              <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
             </TouchableOpacity>
             <Text style={{
               fontSize: 18,
@@ -120,7 +120,7 @@ const FavoritesScreen: React.FC = () => {
             </Text>
           </Box>
           <TouchableOpacity onPress={() => setShowFilterMenu(!showFilterMenu)}>
-            <Icon name="tune" size={24} color="#1A1A1A" />
+            <Icon name="tune" as any size={24} color="#1A1A1A" />
           </TouchableOpacity>
         </Box>
 

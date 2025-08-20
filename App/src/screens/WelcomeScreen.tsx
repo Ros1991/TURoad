@@ -32,7 +32,7 @@ const WelcomeScreen: React.FC = () => {
     <Box flex={1}>
       <Box style={styles.imageContainer}>
         <Image 
-          source={require('../assets/welcome.png')}
+          source={require('../../assets/welcome.png')}
           style={styles.backgroundImage}
           resizeMode="cover"
         />

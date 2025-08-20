@@ -27,7 +27,7 @@ const SplashScreen: React.FC = () => {
   return (
     <Box flex={1} justifyContent="center" alignItems="center">
       <ImageBackground 
-        source={require('../assets/spash.png')} 
+        source={require('../../assets/splash.png')} 
         style={styles.background}
       >
         {/* Overlay semi-transparente */}

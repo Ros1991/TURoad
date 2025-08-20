@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TouchableOpacity } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Sound from 'react-native-sound';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 import { Story } from '../types';
 
@@ -24,9 +23,6 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [storyDurations, setStoryDurations] = useState<{ [key: string]: number }>({});
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const soundRef = useRef<Sound | null>(null);
 
   const languageOptions = [
     { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
@@ -37,157 +33,50 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
   const currentLanguage = languageOptions.find(lang => lang.code === selectedLanguage) || languageOptions[0];
 
   useEffect(() => {
-    // Habilita reprodução em modo mudo (iOS)
-    Sound.setCategory('Playback');
+    // Simula carregamento da duração das histórias
+    if (stories.length > 0) {
+      const mockDuration = parseFloat(stories[currentStoryIndex]?.duration?.replace(' min', '') || '3') * 60;
+      setDuration(mockDuration);
+    }
   }, []);
 
   useEffect(() => {
     if (stories.length > 0) {
-      loadCurrentStory();
-      loadAllStoryDurations();
+      const mockDuration = parseFloat(stories[currentStoryIndex]?.duration?.replace(' min', '') || '3') * 60;
+      setDuration(mockDuration);
+      setCurrentPosition(0);
+      setIsPlaying(false);
     }
   }, [currentStoryIndex, selectedLanguage, stories]);
 
+  // Simula progresso do áudio quando está 'reproduzindo'
   useEffect(() => {
-    if (isPlaying && soundRef.current) {
-      intervalRef.current = setInterval(() => {
-        if (soundRef.current) {
-          soundRef.current.getCurrentTime((seconds) => {
-            setCurrentPosition(seconds);
-            if (seconds >= duration) {
-              setIsPlaying(false);
-              if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-            }
-          });
-        }
-      }, 500);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+    let interval: ReturnType<typeof setInterval> | null = null;
+    
+    if (isPlaying) {
+      interval = setInterval(() => {
+        setCurrentPosition(prev => {
+          const newPosition = prev + 1;
+          if (newPosition >= duration) {
+            setIsPlaying(false);
+            return duration;
+          }
+          return newPosition;
+        });
+      }, 1000);
     }
-
+    
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (interval) {
+        clearInterval(interval);
       }
     };
   }, [isPlaying, duration]);
 
-  const loadAllStoryDurations = () => {
-    if (stories.length === 0) return;
 
-    stories.forEach((story, index) => {
-      const audioUrl = story.audioUrlTranslations 
-        ? story.audioUrlTranslations[selectedLanguage] 
-        : story.audioUrl;
-      
-      const storyKey = `${story.id}-${selectedLanguage}`;
-      
-      // Só carrega se ainda não tiver a duração em cache
-      if (!storyDurations[storyKey]) {
-        const tempSound = new Sound(audioUrl, undefined, (error) => {
-          if (error) {
-            console.log(`❌ Erro ao carregar duração da história ${index + 1}:`, error);
-            // Usa duração do mock como fallback
-            const mockDuration = parseFloat(story.duration.replace(' min', '')) * 60;
-            setStoryDurations(prev => ({
-              ...prev,
-              [storyKey]: mockDuration
-            }));
-          } else {
-            const audioDuration = tempSound.getDuration();
-            console.log(`✅ Duração carregada para história ${index + 1}:`, audioDuration, 'segundos');
-            setStoryDurations(prev => ({
-              ...prev,
-              [storyKey]: audioDuration
-            }));
-          }
-          
-          // Libera o sound temporário
-          tempSound.release();
-        });
-      }
-    });
-  };
-
-  const loadCurrentStory = () => {
-    if (stories.length === 0) return;
-    
-    // Limpa o player anterior
-    if (soundRef.current) {
-      soundRef.current.stop();
-      soundRef.current.release();
-      soundRef.current = null;
-    }
-    
-    const currentStory = stories[currentStoryIndex];
-    const audioUrl = currentStory.audioUrlTranslations 
-      ? currentStory.audioUrlTranslations[selectedLanguage] 
-      : currentStory.audioUrl;
-    
-    console.log('🎵 Carregando áudio:', audioUrl);
-    
-    setCurrentPosition(0);
-    setIsPlaying(false);
-    
-    // Carrega o novo áudio (para URLs remotas, usar undefined como segundo parâmetro)
-    soundRef.current = new Sound(audioUrl, undefined, (error) => {
-      if (error) {
-        console.log('❌ Erro ao carregar áudio:', error);
-        console.log('📍 URL que falhou:', audioUrl);
-        // Usa duração do mock se não conseguir carregar
-        const mockDuration = parseFloat(currentStory.duration.replace(' min', '')) * 60;
-        setDuration(mockDuration);
-        return;
-      }
-      
-      if (soundRef.current) {
-        const audioDuration = soundRef.current.getDuration();
-        setDuration(audioDuration);
-        console.log('✅ Áudio carregado com sucesso!');
-        console.log('📖 História:', currentStory.titleTranslations 
-          ? currentStory.titleTranslations[selectedLanguage] 
-          : currentStory.title);
-        console.log('⏱️ Duração:', audioDuration, 'segundos');
-      }
-    });
-  };
 
   const togglePlayback = () => {
-    console.log('🎮 Toggle playback chamado, isPlaying atual:', isPlaying);
-    
-    if (!soundRef.current) {
-      console.log('❌ SoundRef está null - áudio não carregado ainda');
-      return;
-    }
-
-    if (isPlaying) {
-      console.log('⏸️ Pausando áudio...');
-      soundRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      console.log('▶️ Tentando reproduzir áudio...');
-      console.log('🔊 Volume do dispositivo precisa estar ligado!');
-      
-      soundRef.current.play((success) => {
-        if (success) {
-          console.log('✅ Áudio reproduzido com sucesso!');
-          console.log('🔊 Se não está ouvindo, verifique:');
-          console.log('   • Volume do dispositivo/emulador');
-          console.log('   • Permissões de áudio');
-          console.log('   • Se o emulador suporta áudio');
-        } else {
-          console.log('❌ Falha na reprodução do áudio');
-          setIsPlaying(false);
-        }
-      });
-      setIsPlaying(true);
-    }
+    setIsPlaying(!isPlaying);
   };
 
   const goToNextStory = () => {
@@ -202,22 +91,9 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
 
   const goToStory = (index: number) => {
     if (index < 0 || index >= stories.length) return;
-    console.log(`🎯 Navegando para história ${index + 1}`);
     setCurrentStoryIndex(index);
   };
 
-  // Cleanup ao desmontar o componente
-  useEffect(() => {
-    return () => {
-      if (soundRef.current) {
-        soundRef.current.stop();
-        soundRef.current.release();
-      }
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, []);
 
   const formatTime = (seconds: number): string => {
     if (!seconds || isNaN(seconds)) return '0:00';
@@ -392,11 +268,8 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
         
         {/* Story List */}
         {stories.map((story, index) => {
-          const storyKey = `${story.id}-${selectedLanguage}`;
-          const realDuration = storyDurations[storyKey];
-          const displayDuration = realDuration 
-            ? formatTime(realDuration)
-            : story.duration;
+          const mockDuration = parseFloat(story.duration?.replace(' min', '') || '3') * 60;
+          const displayDuration = formatTime(mockDuration);
 
           return (
             <TouchableOpacity key={story.id} onPress={() => goToStory(index)}>
@@ -432,9 +305,9 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                     <Text style={{ 
                       fontSize: 12, 
                       color: '#666666',
-                      fontWeight: realDuration ? '500' : '400'
+                      fontWeight: '500'
                     }}>
-                      {!realDuration ? 'carregando...' : displayDuration}
+                      {displayDuration}
                     </Text>
                   </Box>
                 </Box>
