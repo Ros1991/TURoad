@@ -78,12 +78,12 @@ const ChangePasswordScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -92,7 +92,7 @@ const ChangePasswordScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -100,7 +100,7 @@ const ChangePasswordScreen: React.FC = () => {
             color: '#1A1A1A',
             marginLeft: 16,
           }}>
-            Alterar senha
+            {t('changePassword.title')}
           </Text>
         </Box>
 
@@ -108,7 +108,7 @@ const ChangePasswordScreen: React.FC = () => {
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
           <Box padding="m">
             <PasswordInput
-              label="Senha antiga"
+              label={t('changePassword.currentPassword')}
               value={currentPassword}
               onChangeText={setCurrentPassword}
               showPassword={showCurrentPassword}
@@ -116,7 +116,7 @@ const ChangePasswordScreen: React.FC = () => {
             />
 
             <PasswordInput
-              label="Nova senha"
+              label={t('changePassword.newPassword')}
               value={newPassword}
               onChangeText={setNewPassword}
               showPassword={showNewPassword}
@@ -124,7 +124,7 @@ const ChangePasswordScreen: React.FC = () => {
             />
 
             <PasswordInput
-              label="Confirme a nova senha"
+              label={t('changePassword.confirmNewPassword')}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               showPassword={showConfirmPassword}
@@ -145,7 +145,7 @@ const ChangePasswordScreen: React.FC = () => {
                   fontWeight: '600',
                   color: 'white',
                 }}>
-                  Alterar senha
+                  {t('changePassword.changePasswordButton')}
                 </Text>
               </Box>
             </TouchableOpacity>

@@ -141,6 +141,60 @@
     "others": "OTROS",
     "logout": "Cerrar sesión"
   },
+  "language": {
+    "title": "Idioma",
+    "selectPrimary": "Selecciona el idioma principal",
+    "changeAnytime": "Puedes cambiar el idioma cuando quieras y también directamente desde el reproductor."
+  },
+  "personalInfo": {
+    "title": "Información personal",
+    "yourEmail": "Tu email",
+    "profilePhoto": "Foto de perfil",
+    "firstName": "Primer nombre",
+    "lastName": "Segundo nombre",
+    "firstNamePlaceholder": "Ingresa tu primer nombre",
+    "lastNamePlaceholder": "Ingresa tu segundo nombre",
+    "saveInformation": "Guardar información"
+  },
+  "changePassword": {
+    "title": "Cambiar contraseña",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "confirmNewPassword": "Confirma la nueva contraseña",
+    "changePasswordButton": "Cambiar contraseña"
+  },
+  "helpCenter": {
+    "title": "Ayuda y contacto",
+    "contactTeam": "Contactar al equipo de TURoad",
+    "contactDescription": "¿Tienes alguna duda, sugerencia o encontraste un problema en la app?",
+    "accessFAQ": "Acceder a FAQ",
+    "faqDescription": "Encuentra respuestas rápidas sobre cómo utilizar TURoad"
+  },
+  "notifications": {
+    "title": "Configuración de notificaciones",
+    "appNotifications": "NOTIFICACIONES EN LA APP",
+    "activeRouteTitle": "Notificaciones de ruta activa",
+    "activeRouteDescription": "Recibe actualizaciones mientras recorres una ruta, como alertas de paradas, consejos locales y puntos de interés cercanos.",
+    "travelTipsTitle": "Consejos de viaje",
+    "travelTipsDescription": "Sugerencias personalizadas basadas en tus rutas anteriores, intereses y ubicación actual.",
+    "nearbyEventsTitle": "Eventos y actividades cercanas",
+    "nearbyEventsDescription": "Avisos sobre eventos culturales, ferias y atracciones que están ocurriendo cerca de ti.",
+    "narrativesTitle": "Narrativas disponibles",
+    "narrativesDescription": "Notificaciones cuando nuevo contenido narrativo o histórico esté disponible en tu ruta.",
+    "localOffersTitle": "Ofertas y comercio local",
+    "localOffersDescription": "Promociones de establecimientos y socios en las ciudades o lugares que visites."
+  },
+  "favorites": {
+    "title": "Favoritos",
+    "audioStories": "historias en audio"
+  },
+  "routeHistory": {
+    "title": "Historial de rutas",
+    "cities": "ciudades",
+    "totalDistance": "Distancia total: ",
+    "audioStories": "historias en audio",
+    "timeAgo": "Hace "
+  },
   "selectCity": {
     "title": "Buscar otra ciudad o región",
     "recentSearches": "Búsquedas recientes",

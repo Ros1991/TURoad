@@ -80,7 +80,7 @@ const NotificationsScreen: React.FC = () => {
           flexDirection="row"
           alignItems="center"
           style={{
-            paddingTop: 60,
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -89,7 +89,7 @@ const NotificationsScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="close" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -97,7 +97,7 @@ const NotificationsScreen: React.FC = () => {
             color: '#1A1A1A',
             marginLeft: 16,
           }}>
-            Configurações de notificação
+            {t('notifications.title')}
           </Text>
         </Box>
 
@@ -131,8 +131,8 @@ const NotificationsScreen: React.FC = () => {
               }}
             >
               <NotificationItem
-                title="Notificações de rota ativa"
-                description="Receba atualizações enquanto percorre uma rota, como alertas de paradas, dicas locais e pontos de interesse próximos."
+                title={t('notifications.activeRouteTitle')}
+                description={t('notifications.activeRouteDescription')}
                 value={notifications.activeRoute}
                 onToggle={() => toggleNotification('activeRoute')}
               />
@@ -152,8 +152,8 @@ const NotificationsScreen: React.FC = () => {
               }}
             >
               <NotificationItem
-                title="Dicas de viagem"
-                description="Sugestões personalizadas com base nas suas rotas anteriores, interesses e localização atual."
+                title={t('notifications.travelTipsTitle')}
+                description={t('notifications.travelTipsDescription')}
                 value={notifications.travelTips}
                 onToggle={() => toggleNotification('travelTips')}
               />
@@ -173,8 +173,8 @@ const NotificationsScreen: React.FC = () => {
               }}
             >
               <NotificationItem
-                title="Eventos e atividades próximas"
-                description="Avisos sobre eventos culturais, feiras e atrações que estão acontecendo perto de você."
+                title={t('notifications.nearbyEventsTitle')}
+                description={t('notifications.nearbyEventsDescription')}
                 value={notifications.nearbyEvents}
                 onToggle={() => toggleNotification('nearbyEvents')}
               />
@@ -194,8 +194,8 @@ const NotificationsScreen: React.FC = () => {
               }}
             >
               <NotificationItem
-                title="Narrativas disponíveis"
-                description="Notificações quando um novo conteúdo narrativo ou histórico estiver disponível na sua rota."
+                title={t('notifications.narrativesTitle')}
+                description={t('notifications.narrativesDescription')}
                 value={notifications.narratives}
                 onToggle={() => toggleNotification('narratives')}
               />
@@ -215,8 +215,8 @@ const NotificationsScreen: React.FC = () => {
               }}
             >
               <NotificationItem
-                title="Ofertas e comércio local"
-                description="Promoções de estabelecimentos e parceiros nas cidades ou pontos que você visitar."
+                title={t('notifications.localOffersTitle')}
+                description={t('notifications.localOffersDescription')}
                 value={notifications.localOffers}
                 onToggle={() => toggleNotification('localOffers')}
               />

@@ -55,7 +55,7 @@ const LanguageScreen: React.FC = () => {
             justifyContent="center"
             alignItems="center"
           >
-            <Icon name="check" as any size={12} color="white" />
+            <Icon name="check" size={12} color="white" />
           </Box>
         )}
       </Box>
@@ -67,12 +67,12 @@ const LanguageScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -81,7 +81,7 @@ const LanguageScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -89,7 +89,7 @@ const LanguageScreen: React.FC = () => {
             color: '#1A1A1A',
             marginLeft: 16,
           }}>
-            Idioma
+            {t('language.title')}
           </Text>
         </Box>
 
@@ -102,7 +102,7 @@ const LanguageScreen: React.FC = () => {
               color: '#1A1A1A',
               marginBottom: 8,
             }}>
-              Selecione o idioma principal
+              {t('language.selectPrimary')}
             </Text>
             <Text style={{
               fontSize: 14,
@@ -110,7 +110,7 @@ const LanguageScreen: React.FC = () => {
               marginBottom: 24,
               lineHeight: 20,
             }}>
-              Você poderá alterar o idioma sempre que precisar e também diretamente pelo player.
+              {t('language.changeAnytime')}
             </Text>
 
             {languages.map((language) => (

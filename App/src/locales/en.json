@@ -141,6 +141,60 @@
     "others": "OTHERS",
     "logout": "Logout"
   },
+  "language": {
+    "title": "Language",
+    "selectPrimary": "Select the primary language",
+    "changeAnytime": "You can change the language anytime and also directly from the player."
+  },
+  "personalInfo": {
+    "title": "Personal information",
+    "yourEmail": "Your email",
+    "profilePhoto": "Profile photo",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "firstNamePlaceholder": "Enter your first name",
+    "lastNamePlaceholder": "Enter your last name",
+    "saveInformation": "Save information"
+  },
+  "changePassword": {
+    "title": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmNewPassword": "Confirm new password",
+    "changePasswordButton": "Change password"
+  },
+  "helpCenter": {
+    "title": "Help and contact",
+    "contactTeam": "Contact TURoad team",
+    "contactDescription": "Have any questions, suggestions or found a problem in the app?",
+    "accessFAQ": "Access FAQ",
+    "faqDescription": "Find quick answers on how to use TURoad"
+  },
+  "notifications": {
+    "title": "Notification settings",
+    "appNotifications": "APP NOTIFICATIONS",
+    "activeRouteTitle": "Active route notifications",
+    "activeRouteDescription": "Receive updates while traveling a route, such as stop alerts, local tips and nearby points of interest.",
+    "travelTipsTitle": "Travel tips",
+    "travelTipsDescription": "Personalized suggestions based on your previous routes, interests and current location.",
+    "nearbyEventsTitle": "Nearby events and activities",
+    "nearbyEventsDescription": "Notifications about cultural events, fairs and attractions happening near you.",
+    "narrativesTitle": "Available narratives",
+    "narrativesDescription": "Notifications when new narrative or historical content is available on your route.",
+    "localOffersTitle": "Local offers and commerce",
+    "localOffersDescription": "Promotions from establishments and partners in the cities or places you visit."
+  },
+  "favorites": {
+    "title": "Favorites",
+    "audioStories": "audio stories"
+  },
+  "routeHistory": {
+    "title": "Route history",
+    "cities": "cities",
+    "totalDistance": "Total distance: ",
+    "audioStories": "audio stories",
+    "timeAgo": ""
+  },
   "selectCity": {
     "title": "Search for another city or region",
     "recentSearches": "Recent searches",

@@ -16,12 +16,12 @@ const PersonalInfoScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -30,7 +30,7 @@ const PersonalInfoScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -38,7 +38,7 @@ const PersonalInfoScreen: React.FC = () => {
             color: '#1A1A1A',
             marginLeft: 16,
           }}>
-            Informações pessoais
+            {t('personalInfo.title')}
           </Text>
         </Box>
 
@@ -53,7 +53,7 @@ const PersonalInfoScreen: React.FC = () => {
                 color: '#1A1A1A',
                 marginBottom: 8,
               }}>
-                Seu email
+                {t('personalInfo.yourEmail')}
               </Text>
               <Text style={{
                 fontSize: 16,
@@ -72,7 +72,7 @@ const PersonalInfoScreen: React.FC = () => {
                 color: '#1A1A1A',
                 marginBottom: 12,
               }}>
-                Foto do perfil
+                {t('personalInfo.profilePhoto')}
               </Text>
               <Box flexDirection="row" alignItems="center">
                 <Image
@@ -107,7 +107,7 @@ const PersonalInfoScreen: React.FC = () => {
                 color: '#1A1A1A',
                 marginBottom: 8,
               }}>
-                Primeiro nome
+                {t('personalInfo.firstName')}
               </Text>
               <Box
                 backgroundColor="white"
@@ -127,7 +127,7 @@ const PersonalInfoScreen: React.FC = () => {
                     color: '#1A1A1A',
                     padding: 0,
                   }}
-                  placeholder="Digite seu primeiro nome"
+                  placeholder={t('personalInfo.firstNamePlaceholder')}
                   placeholderTextColor="#999999"
                 />
               </Box>
@@ -141,7 +141,7 @@ const PersonalInfoScreen: React.FC = () => {
                 color: '#1A1A1A',
                 marginBottom: 8,
               }}>
-                Segundo nome
+                {t('personalInfo.lastName')}
               </Text>
               <Box
                 backgroundColor="white"
@@ -161,7 +161,7 @@ const PersonalInfoScreen: React.FC = () => {
                     color: '#1A1A1A',
                     padding: 0,
                   }}
-                  placeholder="Digite seu segundo nome"
+                  placeholder={t('personalInfo.lastNamePlaceholder')}
                   placeholderTextColor="#999999"
                 />
               </Box>
@@ -181,7 +181,7 @@ const PersonalInfoScreen: React.FC = () => {
                   fontWeight: '600',
                   color: 'white',
                 }}>
-                  Salvar informações
+                  {t('personalInfo.saveInformation')}
                 </Text>
               </Box>
             </TouchableOpacity>

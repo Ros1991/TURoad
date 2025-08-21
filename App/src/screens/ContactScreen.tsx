@@ -159,12 +159,12 @@ const ContactScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -173,7 +173,7 @@ const ContactScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,

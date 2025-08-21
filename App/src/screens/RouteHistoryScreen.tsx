@@ -63,7 +63,7 @@ const RouteHistoryScreen: React.FC = () => {
             source={{ uri: route.image }}
             style={{
               width: 80,
-              height: 80,
+              height: 60,
               borderRadius: 8,
               marginRight: 12,
             }}
@@ -76,6 +76,13 @@ const RouteHistoryScreen: React.FC = () => {
               marginBottom: 4,
             }}>
               {route.title}
+            </Text>
+            <Text style={{
+              fontSize: 12,
+              color: '#999',
+              marginTop: 4,
+            }}>
+              {t('routeHistory.timeAgo')}3 dias
             </Text>
             <Box
               backgroundColor="primary"
@@ -124,13 +131,13 @@ const RouteHistoryScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
           justifyContent="space-between"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -140,7 +147,7 @@ const RouteHistoryScreen: React.FC = () => {
         >
           <Box flexDirection="row" alignItems="center" flex={1}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+              <Icon name="chevron-left" size={24} color="#1A1A1A" />
             </TouchableOpacity>
             <Text style={{
               fontSize: 18,
@@ -148,7 +155,7 @@ const RouteHistoryScreen: React.FC = () => {
               color: '#1A1A1A',
               marginLeft: 16,
             }}>
-              Histórico de rotas
+              {t('routeHistory.title')}
             </Text>
           </Box>
           <TouchableOpacity onPress={() => setShowFilterMenu(!showFilterMenu)}>

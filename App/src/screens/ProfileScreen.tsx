@@ -159,44 +159,44 @@ const ProfileScreen: React.FC = () => {
           </Box>
 
           {/* Navigation Section */}
-          <SectionHeader title="NAVEGAÇÃO" />
+          <SectionHeader title={t('profile.navigation')} />
           <CardItem>
             <ProfileItem 
-              title="Histórico de rotas" 
+              title={t('profile.routeHistory')} 
               iconName="map-marker-path" 
               onPress={() => navigation.navigate('RouteHistory')} 
             />
           </CardItem>
           <CardItem>
             <ProfileItem 
-              title="Favoritos" 
+              title={t('profile.favorites')} 
               iconName="heart" 
               onPress={() => navigation.navigate('Favorites')} 
             />
           </CardItem>
 
           {/* Account Information Section */}
-          <SectionHeader title="INFORMAÇÕES DA CONTA" />
+          <SectionHeader title={t('profile.accountInfo')} />
           <CardItem>
             <ProfileItem 
-              title="Informações pessoais" 
+              title={t('profile.personalInfo')} 
               iconName="account" 
               onPress={() => navigation.navigate('PersonalInfo')} 
             />
           </CardItem>
 
           {/* Security Section */}
-          <SectionHeader title="SEGURANÇA" />
+          <SectionHeader title={t('profile.security')} />
           <CardItem>
             <ProfileItem 
-              title="Alterar senha" 
+              title={t('profile.changePassword')} 
               iconName="lock" 
               onPress={() => navigation.navigate('ChangePassword')} 
             />
           </CardItem>
 
           {/* App Settings Section */}
-          <SectionHeader title="CONFIGURAÇÕES DO APLICATIVO" />
+          <SectionHeader title={t('profile.appSettings')} />
           <CardItem>
             <TouchableOpacity onPress={() => navigation.navigate('Language')}>
               <Box
@@ -232,24 +232,24 @@ const ProfileScreen: React.FC = () => {
           </CardItem>
           <CardItem>
             <ProfileItem 
-              title="Notificações" 
+              title={t('profile.notifications')} 
               iconName="bell" 
               onPress={() => navigation.navigate('Notifications')} 
             />
           </CardItem>
           <CardItem>
             <ProfileItem 
-              title="Central de ajuda" 
+              title={t('profile.helpCenter')} 
               iconName="help-circle" 
               onPress={() => navigation.navigate('HelpCenter')} 
             />
           </CardItem>
 
           {/* Others Section */}
-          <SectionHeader title="OUTROS" />
+          <SectionHeader title={t('profile.others')} />
           <CardItem>
             <ProfileItem 
-              title="Sair" 
+              title={t('profile.logout')} 
               iconName="logout" 
               textColor="#FF3B30" 
               iconColor="#FF3B30"

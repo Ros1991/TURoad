@@ -15,14 +15,14 @@ const FavoritesScreen: React.FC = () => {
       id: '1',
       title: 'Aracaju',
       type: 'Cidade',
-      stories: 5,
+      stories: 3,
       image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73c0e?w=400&h=300&fit=crop',
     },
     {
       id: '2',
       title: 'Orla de Atalaia',
       type: 'Ponto turístico',
-      stories: 5,
+      stories: 3,
       image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop',
     },
   ];
@@ -47,7 +47,7 @@ const FavoritesScreen: React.FC = () => {
             source={{ uri: item.image }}
             style={{
               width: 80,
-              height: 80,
+              height: 60,
               borderRadius: 8,
               marginRight: 12,
             }}
@@ -76,7 +76,7 @@ const FavoritesScreen: React.FC = () => {
             <Box flexDirection="row" alignItems="center">
               <Icon name="headphones" size={12} color="#666666" />
               <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
-                {item.stories} histórias em áudio
+                {item.stories} {t('favorites.audioStories')}
               </Text>
             </Box>
           </Box>
@@ -90,13 +90,12 @@ const FavoritesScreen: React.FC = () => {
         {/* Header */}
         <Box
           backgroundColor="white"
-          paddingTop="l"
           paddingBottom="m"
           paddingHorizontal="m"
           flexDirection="row"
-          justifyContent="space-between"
           alignItems="center"
           style={{
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -106,7 +105,7 @@ const FavoritesScreen: React.FC = () => {
         >
           <Box flexDirection="row" alignItems="center" flex={1}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+              <Icon name="chevron-left" size={24} color="#1A1A1A" />
             </TouchableOpacity>
             <Text style={{
               fontSize: 18,
@@ -114,7 +113,7 @@ const FavoritesScreen: React.FC = () => {
               color: '#1A1A1A',
               marginLeft: 16,
             }}>
-              Favoritos
+              {t('favorites.title')}
             </Text>
           </Box>
           <TouchableOpacity onPress={() => setShowFilterMenu(!showFilterMenu)}>

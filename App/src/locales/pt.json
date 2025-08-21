@@ -141,6 +141,60 @@
     "others": "OUTROS",
     "logout": "Sair"
   },
+  "language": {
+    "title": "Idioma",
+    "selectPrimary": "Selecione o idioma principal",
+    "changeAnytime": "Você poderá alterar o idioma sempre que precisar e também diretamente pelo player."
+  },
+  "personalInfo": {
+    "title": "Informações pessoais",
+    "yourEmail": "Seu email",
+    "profilePhoto": "Foto do perfil",
+    "firstName": "Primeiro nome",
+    "lastName": "Segundo nome",
+    "firstNamePlaceholder": "Digite seu primeiro nome",
+    "lastNamePlaceholder": "Digite seu segundo nome",
+    "saveInformation": "Salvar informações"
+  },
+  "changePassword": {
+    "title": "Alterar senha",
+    "currentPassword": "Senha antiga",
+    "newPassword": "Nova senha",
+    "confirmNewPassword": "Confirme a nova senha",
+    "changePasswordButton": "Alterar senha"
+  },
+  "helpCenter": {
+    "title": "Ajuda e contato",
+    "contactTeam": "Fale com a equipe do TURoad",
+    "contactDescription": "Está com alguma dúvida, sugestão ou encontrou um problema no app?",
+    "accessFAQ": "Acessar FAQ",
+    "faqDescription": "Encontre respostas rápidas sobre como utilizar o TURoad"
+  },
+  "notifications": {
+    "title": "Configurações de notificação",
+    "appNotifications": "NOTIFICAÇÕES NO APP",
+    "activeRouteTitle": "Notificações de rota ativa",
+    "activeRouteDescription": "Receba atualizações enquanto percorre uma rota, como alertas de paradas, dicas locais e pontos de interesse próximos.",
+    "travelTipsTitle": "Dicas de viagem",
+    "travelTipsDescription": "Sugestões personalizadas com base nas suas rotas anteriores, interesses e localização atual.",
+    "nearbyEventsTitle": "Eventos e atividades próximas",
+    "nearbyEventsDescription": "Avisos sobre eventos culturais, feiras e atrações que estão acontecendo perto de você.",
+    "narrativesTitle": "Narrativas disponíveis",
+    "narrativesDescription": "Notificações quando um novo conteúdo narrativo ou histórico estiver disponível na sua rota.",
+    "localOffersTitle": "Ofertas e comércio local",
+    "localOffersDescription": "Promoções de estabelecimentos e parceiros nas cidades ou pontos que você visitar."
+  },
+  "favorites": {
+    "title": "Favoritos",
+    "audioStories": "histórias em áudio"
+  },
+  "routeHistory": {
+    "title": "Histórico de rotas",
+    "cities": "cidades",
+    "totalDistance": "Distância total: ",
+    "audioStories": "histórias em áudio",
+    "timeAgo": "Há "
+  },
   "selectCity": {
     "title": "Busque por outra cidade ou região",
     "recentSearches": "Buscas recentes",

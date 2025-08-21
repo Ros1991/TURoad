@@ -56,7 +56,7 @@ const HelpCenterScreen: React.FC = () => {
           flexDirection="row"
           alignItems="center"
           style={{
-            paddingTop: 60,
+            paddingTop: 80,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.1,
@@ -65,7 +65,7 @@ const HelpCenterScreen: React.FC = () => {
           }}
         >
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-left" as any size={24} color="#1A1A1A" />
+            <Icon name="chevron-left" size={24} color="#1A1A1A" />
           </TouchableOpacity>
           <Text style={{
             fontSize: 18,
@@ -73,7 +73,7 @@ const HelpCenterScreen: React.FC = () => {
             color: '#1A1A1A',
             marginLeft: 16,
           }}>
-            Ajuda e contato
+            {t('helpCenter.title')}
           </Text>
         </Box>
 
@@ -94,8 +94,8 @@ const HelpCenterScreen: React.FC = () => {
               }}
             >
               <HelpItem
-                title="Fale com a equipe do TURoad"
-                description="Está com alguma dúvida, sugestão ou encontrou um problema no app?"
+                title={t('helpCenter.contactTeam')}
+                description={t('helpCenter.contactDescription')}
                 onPress={() => {
                   (navigation as any).navigate('Contact');
                 }}
@@ -116,8 +116,8 @@ const HelpCenterScreen: React.FC = () => {
               }}
             >
               <HelpItem
-                title="Acessar FAQ"
-                description="Encontre respostas rápidas sobre como utilizar o TURoad"
+                title={t('helpCenter.accessFAQ')}
+                description={t('helpCenter.faqDescription')}
                 onPress={() => {
                   (navigation as any).navigate('FAQ');
                 }}
