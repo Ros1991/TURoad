@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import ThemeProvider from './src/themes/ThemeProvider';
 import AppNavigator from './src/navigation/AppNavigator';
+import { LanguageProvider } from './src/contexts/LanguageContext';
 import './src/locales/i18n'; // Import i18n configuration
 
 // Keep the splash screen visible while we fetch resources
@@ -41,14 +42,16 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <ThemeProvider>
-      <StatusBar 
-        barStyle="dark-content" 
-        translucent={true} 
-        backgroundColor="transparent" 
-      />
-      <AppNavigator />
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <StatusBar 
+          barStyle="dark-content" 
+          translucent={true} 
+          backgroundColor="transparent" 
+        />
+        <AppNavigator />
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }
 

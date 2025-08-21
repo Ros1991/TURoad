@@ -3,11 +3,13 @@ import { ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Box, Text } from '../components';
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>(); // Using any temporarily until navigation types are defined
   const { t } = useTranslation();
+  const { currentLanguage, availableLanguages, changeLanguage } = useLanguage();
 
   const ProfileItem = ({ title, iconName, onPress, showArrow = true, textColor = '#1A1A1A', iconColor = '#666666' }: { 
     title: string; 
@@ -216,12 +218,12 @@ const ProfileScreen: React.FC = () => {
                     <Icon name="web" as any size={20} color="#666666" />
                   </Box>
                   <Text style={{ fontSize: 16, color: '#1A1A1A', fontWeight: '400' }}>
-                    Idioma
+                    {t('profile.language')}
                   </Text>
                 </Box>
                 <Box flexDirection="row" alignItems="center">
                   <Text style={{ fontSize: 16, color: '#666666', marginRight: 8 }}>
-                    Português
+                    {availableLanguages.find(lang => lang.code === currentLanguage)?.name || 'Português'}
                   </Text>
                   <Icon name="chevron-right" as any size={20} color="#C7C7CC" />
                 </Box>

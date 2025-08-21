@@ -4,7 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
-import i18n from '../locales/i18n';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Box, Text, Button } from '../components';
 import TranslateWithFormat from '../components/TranslateWithFormat';
 import { backgroundColor } from '@shopify/restyle';
@@ -20,14 +20,8 @@ type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welc
 
 const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
-  const { t, i18n } = useTranslation();
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
-  };
-  
-  // Get current language
-  const currentLanguage = i18n.language;
+  const { t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useLanguage();
 
   return (
     <Box flex={1} style={styles.backgroundColorWhite}>

@@ -3,17 +3,19 @@ import { ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Box, Text } from '../components';
 
 const LanguageScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
-  const [selectedLanguage, setSelectedLanguage] = useState('pt');
+  const { currentLanguage, availableLanguages, changeLanguage } = useLanguage();
+  const [selectedLanguage, setSelectedLanguage] = useState(currentLanguage);
 
   const languages = [
     { code: 'pt', name: 'Português', flag: '🇧🇷' },
-    { code: 'en', name: 'Inglês', flag: '🇺🇸' },
-    { code: 'es', name: 'Espanhol', flag: '🇪🇸' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
   ];
 
   const LanguageOption = ({ language }: { language: any }) => (
@@ -116,7 +118,13 @@ const LanguageScreen: React.FC = () => {
             ))}
 
             {/* Save Button */}
-            <TouchableOpacity style={{ marginTop: 32 }}>
+            <TouchableOpacity 
+              style={{ marginTop: 32 }}
+              onPress={async () => {
+                await changeLanguage(selectedLanguage);
+                navigation.goBack();
+              }}
+            >
               <Box
                 backgroundColor="success"
                 borderRadius={8}
@@ -129,7 +137,7 @@ const LanguageScreen: React.FC = () => {
                   fontWeight: '600',
                   color: 'white',
                 }}>
-                  Salvar
+                  {t('common.save')}
                 </Text>
               </Box>
             </TouchableOpacity>
