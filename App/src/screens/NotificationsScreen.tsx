@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, TouchableOpacity, Switch, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/ApiService';
 
 const NotificationsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   
   const [notifications, setNotifications] = useState({
     activeRoute: true,
@@ -17,12 +22,109 @@ const NotificationsScreen: React.FC = () => {
     localOffers: true,
   });
 
-  const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+  useEffect(() => {
+    fetchNotificationSettings();
+  }, [user]);
+
+  const fetchNotificationSettings = async () => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await apiService.get(`/api/users/${user.id}/push-settings`);
+
+      if (response.success && response.data) {
+        const settings = response.data as any;
+        setNotifications({
+          activeRoute: settings.activeRouteNotifications ?? true,
+          travelTips: settings.travelTipsNotifications ?? true,
+          nearbyEvents: settings.nearbyEventsNotifications ?? true,
+          narratives: settings.availableNarrativesNotifications ?? true,
+          localOffers: settings.localOffersNotifications ?? true,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching notification settings:', error);
+      // If settings don't exist, create default ones
+      if (error.response?.status === 404) {
+        await createDefaultSettings();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const createDefaultSettings = async () => {
+    if (!user) return;
+
+    try {
+      const backendFormat = {
+        activeRouteNotifications: notifications.activeRoute,
+        travelTipsNotifications: notifications.travelTips,
+        nearbyEventsNotifications: notifications.nearbyEvents,
+        availableNarrativesNotifications: notifications.narratives,
+        localOffersNotifications: notifications.localOffers,
+      };
+      await apiService.post(`/api/users/${user.id}/push-settings`, backendFormat);
+    } catch (error) {
+      console.error('Error creating default settings:', error);
+    }
+  };
+
+  const toggleNotification = async (key: keyof typeof notifications) => {
+    if (!user) return;
+
+    const newValue = !notifications[key];
+    const updatedNotifications = {
+      ...notifications,
+      [key]: newValue
+    };
+    
+    setNotifications(updatedNotifications);
+    setSaving(true);
+
+    try {
+      // Map frontend field names to backend field names
+      const backendFormat = {
+        activeRouteNotifications: updatedNotifications.activeRoute,
+        travelTipsNotifications: updatedNotifications.travelTips,
+        nearbyEventsNotifications: updatedNotifications.nearbyEvents,
+        availableNarrativesNotifications: updatedNotifications.narratives,
+        localOffersNotifications: updatedNotifications.localOffers,
+      };
+
+      const response = await apiService.put(`/api/users/${user.id}/push-settings`, backendFormat);
+
+      if (!response.success) {
+        // Revert on failure
+        setNotifications(notifications);
+        Alert.alert(
+          t('notifications.error'),
+          t('notifications.errorMessage')
+        );
+      }
+    } catch (error) {
+      console.error('Error updating notification settings:', error);
+      // Revert on error
+      setNotifications(notifications);
+      Alert.alert(
+        t('notifications.error'),
+        t('notifications.errorMessage')
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box flex={1} backgroundColor="light" justifyContent="center" alignItems="center">
+        <ActivityIndicator size="large" color="#035A6E" />
+      </Box>
+    );
+  }
 
   const NotificationItem = ({ 
     title, 
@@ -66,6 +168,7 @@ const NotificationsScreen: React.FC = () => {
         onValueChange={onToggle}
         trackColor={{ false: '#E5E5E5', true: '#035A6E' }}
         thumbColor={value ? '#FFFFFF' : '#FFFFFF'}
+        disabled={saving}
       />
     </Box>
   );

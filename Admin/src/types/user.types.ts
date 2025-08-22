@@ -1,8 +1,8 @@
 export interface User {
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   role: string;
   isActive: boolean;
   emailVerified: boolean;
@@ -19,8 +19,8 @@ export interface User {
 export interface CreateUserDto {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   role?: string;
   birthDate?: string;
   gender?: 'male' | 'female' | 'other';

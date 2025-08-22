@@ -11,20 +11,20 @@ export class CreateUserDto implements IDto {
   @IsNotEmpty()
   @IsString()
   @Length(6, 100)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'password too weak',
+  @Matches(/^(?=.*[a-zA-Z])(?=.*\d).+$/, {
+    message: 'A senha deve conter pelo menos uma letra e um número',
   })
   password!: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @Length(2, 50)
-  firstName!: string;
+  firstName?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   @Length(2, 50)
-  lastName!: string;
+  lastName?: string;
 
   @IsOptional()
   @IsUrl()
@@ -50,8 +50,8 @@ export class UpdateUserDto implements IDto {
   @IsOptional()
   @IsString()
   @Length(6, 100)
-  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'password too weak',
+  @Matches(/^(?=.*[a-zA-Z])(?=.*\d).+$/, {
+    message: 'A senha deve conter pelo menos uma letra e um número',
   })
   password?: string;
 
@@ -91,11 +91,13 @@ export class UserResponseDto implements IDto {
   @IsEmail()
   email!: string;
   
+  @IsOptional()
   @IsString()
-  firstName!: string;
+  firstName?: string;
   
+  @IsOptional()
   @IsString()
-  lastName!: string;
+  lastName?: string;
   
   @IsOptional()
   @IsUrl()
@@ -111,8 +113,8 @@ export class UserResponseDto implements IDto {
 export class UserProfileDto implements IDto {
   userId!: number;
   email!: string;
-  firstName!: string;
-  lastName!: string;
+  firstName?: string;
+  lastName?: string;
   profilePictureUrl?: string;
   isAdmin!: boolean;
   enabled!: boolean;

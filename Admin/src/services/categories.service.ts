@@ -9,21 +9,31 @@ export interface Category {
   categoryId: number;
   name: string;
   nameTextRefId?: number;
+  description?: string;
+  descriptionTextRefId?: number;
+  imageUrl?: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
   isDeleted: boolean;
   nameTranslations?: LocalizedText[];
+  descriptionTranslations?: LocalizedText[];
 }
 
 export interface CreateCategoryDto {
   name: string;
   nameTextRefId?: number;
+  description?: string;
+  descriptionTextRefId?: number;
+  imageUrl?: string;
 }
 
 export interface UpdateCategoryDto {
   name?: string;
   nameTextRefId?: number;
+  description?: string;
+  descriptionTextRefId?: number;
+  imageUrl?: string;
 }
 
 class CategoriesService {

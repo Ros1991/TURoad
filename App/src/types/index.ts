@@ -2,6 +2,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
+  profileImage?: string;
+  isAdmin?: boolean;
 }
 
 export interface City {

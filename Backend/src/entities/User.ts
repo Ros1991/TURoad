@@ -26,11 +26,11 @@ export class User extends SoftDeleteBaseEntity {
     this.passwordHash = value;
   }
 
-  @Column({ name: 'first_name', type: 'varchar', length: 255 })
-  firstName!: string;
+  @Column({ name: 'first_name', type: 'varchar', length: 255, nullable: true })
+  firstName?: string;
 
-  @Column({ name: 'last_name', type: 'varchar', length: 255 })
-  lastName!: string;
+  @Column({ name: 'last_name', type: 'varchar', length: 255, nullable: true })
+  lastName?: string;
 
   @Column({ name: 'profile_picture_url', type: 'varchar', length: 255, nullable: true })
   profilePictureUrl?: string;

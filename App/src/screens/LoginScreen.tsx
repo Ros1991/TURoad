@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Button, Input, AuthHeader } from '../components';
 import { login } from '../services/AuthService';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
   Login: undefined;
@@ -18,6 +19,7 @@ type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const { t } = useTranslation();
+  const { setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,8 @@ const LoginScreen: React.FC = () => {
     try {
       const user = await login(email, password);
       if (user) {
+        // Update AuthContext with the logged in user
+        setUser(user);
         navigation.replace('MainTabs');
       } else {
         Alert.alert(t('alerts.error'), t('alerts.incorrectEmailOrPassword'));

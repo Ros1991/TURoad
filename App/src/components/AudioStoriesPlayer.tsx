@@ -319,3 +319,5 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
     </Box>
   );
 };
+
+export default AudioStoriesPlayer;

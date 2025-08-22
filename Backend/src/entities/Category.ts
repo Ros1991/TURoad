@@ -15,6 +15,13 @@ export class Category extends SoftDeleteBaseEntity {
   @Column({ name: 'name_text_ref_id', type: 'integer' })
   nameTextRefId!: number;
 
+  @LocalizedTextRef
+  @Column({ name: 'description_text_ref_id', type: 'integer', nullable: true })
+  descriptionTextRefId?: number;
+
+  @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
+  imageUrl?: string;
+
   // Relationships
   @OneToMany(() => EventCategory, (eventCategory) => eventCategory.category)
   eventCategories!: EventCategory[];

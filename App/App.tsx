@@ -5,6 +5,8 @@ import * as Updates from 'expo-updates';
 import ThemeProvider from './src/themes/ThemeProvider';
 import AppNavigator from './src/navigation/AppNavigator';
 import { LanguageProvider } from './src/contexts/LanguageContext';
+import { AuthProvider } from './src/contexts/AuthContext';
+import { ToastProvider } from './src/contexts/ToastContext';
 import './src/locales/i18n'; // Import i18n configuration
 
 // Keep the splash screen visible while we fetch resources
@@ -42,16 +44,20 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <LanguageProvider>
-      <ThemeProvider>
-        <StatusBar 
-          barStyle="dark-content" 
-          translucent={true} 
-          backgroundColor="transparent" 
-        />
-        <AppNavigator />
-      </ThemeProvider>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <StatusBar 
+              barStyle="dark-content" 
+              translucent={true} 
+              backgroundColor="transparent" 
+            />
+            <AppNavigator />
+          </ToastProvider>
+        </ThemeProvider>
+      </LanguageProvider>
+    </AuthProvider>
   );
 }
 

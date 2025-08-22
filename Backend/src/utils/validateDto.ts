@@ -16,7 +16,13 @@ export async function validateDto<T extends object>(
       constraints: error.constraints,
     }));
 
-    throw new ValidationError('Validation failed', formattedErrors);
+    // Get the first validation constraint message to show as the main error
+    const firstError = errors[0];
+    const firstConstraintMessage = firstError.constraints 
+      ? Object.values(firstError.constraints)[0] 
+      : 'Validation failed';
+
+    throw new ValidationError(firstConstraintMessage as string, formattedErrors);
   }
 
   return dto;

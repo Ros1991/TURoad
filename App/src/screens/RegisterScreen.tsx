@@ -5,6 +5,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Button, Input, AuthHeader } from '../components';
 import { register } from '../services/AuthService';
+import { validateEmail, validatePassword, validatePasswordConfirmation } from '../utils/validation';
+import { useAuth } from '../contexts/AuthContext';
 
 type RootStackParamList = {
   Register: undefined;
@@ -17,32 +19,50 @@ type RegisterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Reg
 const RegisterScreen: React.FC = () => {
   const navigation = useNavigation<RegisterScreenNavigationProp>();
   const { t } = useTranslation();
+  const { setUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRegister = async () => {
-    if (!email || !password || !confirmPassword) {
-      Alert.alert(t('alerts.error'), t('alerts.fillAllFields'));
+    setError(''); // Clear previous errors
+
+    // Client-side validation with translations
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(t(emailValidation.errorKey!));
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert(t('alerts.error'), t('alerts.passwordMismatch'));
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(t(passwordValidation.errorKey!));
+      return;
+    }
+
+    const confirmPasswordValidation = validatePasswordConfirmation(password, confirmPassword);
+    if (!confirmPasswordValidation.isValid) {
+      setError(t(confirmPasswordValidation.errorKey!));
       return;
     }
 
     setLoading(true);
     try {
-      const user = await register(email, password);
-      if (user) {
+      const result = await register(email, password);
+      if (result.success) {
+        // Update AuthContext with the registered user
+        if (result.user) {
+          setUser(result.user);
+        }
         navigation.replace('MainTabs');
       } else {
-        Alert.alert(t('alerts.error'), t('alerts.registerError'));
+        // Only show backend errors if client-side validation passes
+        setError(result.message);
       }
     } catch (error) {
-      Alert.alert(t('alerts.error'), t('alerts.registerError'));
+      setError(t('alerts.registerError'));
     } finally {
       setLoading(false);
     }
@@ -90,10 +110,35 @@ const RegisterScreen: React.FC = () => {
           placeholder={t('register.confirmPassword')}
         />
 
+        {error ? (
+          <Box
+            paddingVertical="m"
+            paddingHorizontal="m"
+            marginVertical="m"
+            style={{
+              backgroundColor: '#FFEAEA',
+              borderRadius: 8,
+            }}
+          >
+            <Text
+              style={{
+                color: '#DC3545',
+                fontSize: 14,
+                fontFamily: 'ASAP',
+                fontWeight: '500',
+                textAlign: 'center',
+              }}
+            >
+              {error}
+            </Text>
+          </Box>
+        ) : null}
+
         <Button
           title={loading ? t('common.loading') : t('register.createAccount')}
           variant="primary"
           marginBottom="l"
+          marginTop="l"
           onPress={handleRegister}
           disabled={loading}
           style={{ backgroundColor: '#002043', borderRadius: 8 }}

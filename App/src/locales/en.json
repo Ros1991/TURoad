@@ -23,12 +23,14 @@
     "loginWithGoogle": "Login with Google"
   },
   "register": {
-    "title": "Create account",
+    "title": "Create Account",
+    "firstName": "First Name",
+    "lastName": "Last Name",
     "email": "Email",
     "password": "Password",
-    "confirmPassword": "Confirm password",
-    "alreadyHaveAccount": "Already have an account? Login",
-    "createAccount": "Create account",
+    "confirmPassword": "Confirm Password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account? Sign in",
     "createWithFacebook": "Create with Facebook",
     "createWithGoogle": "Create with Google"
   },
@@ -139,7 +141,8 @@
     "notifications": "Notifications",
     "helpCenter": "Help center",
     "others": "OTHERS",
-    "logout": "Logout"
+    "logout": "Logout",
+    "login": "Login"
   },
   "language": {
     "title": "Language",
@@ -161,7 +164,13 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "confirmNewPassword": "Confirm new password",
-    "changePasswordButton": "Change password"
+    "changePasswordButton": "Change password",
+    "error": "Error",
+    "success": "Success",
+    "currentPasswordRequired": "Current password is required",
+    "successMessage": "Password changed successfully",
+    "errorMessage": "Error changing password. Please try again.",
+    "samePassword": "New password must be different from current password"
   },
   "helpCenter": {
     "title": "Help and contact",
@@ -240,6 +249,16 @@
     "accountCreatedSuccessfully": "Account created successfully",
     "passwordResetSent": "Password recovery email sent",
     "passwordResetError": "Error sending password recovery email"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordTooLong": "Password cannot exceed 255 characters",
+    "passwordWeakPattern": "Password must contain at least one letter and one number",
+    "confirmPasswordRequired": "Password confirmation is required",
+    "passwordMismatch": "Passwords do not match"
   }
 }
 

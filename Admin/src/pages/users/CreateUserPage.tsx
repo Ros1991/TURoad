@@ -41,12 +41,13 @@ const CreateUserPage: React.FC = () => {
       newErrors.confirmPassword = 'As senhas não coincidem';
     }
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'Nome é obrigatório';
+    // firstName and lastName are now optional
+    if (formData.firstName && formData.firstName.length > 0 && formData.firstName.length < 2) {
+      newErrors.firstName = 'Nome deve ter pelo menos 2 caracteres';
     }
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Sobrenome é obrigatório';
+    if (formData.lastName && formData.lastName.length > 0 && formData.lastName.length < 2) {
+      newErrors.lastName = 'Sobrenome deve ter pelo menos 2 caracteres';
     }
 
     setErrors(newErrors);
@@ -127,7 +128,7 @@ const CreateUserPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 mb-2">
-                  Nome *
+                  Nome
                 </label>
                 <input
                   type="text"
@@ -147,7 +148,7 @@ const CreateUserPage: React.FC = () => {
 
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 mb-2">
-                  Sobrenome *
+                  Sobrenome
                 </label>
                 <input
                   type="text"

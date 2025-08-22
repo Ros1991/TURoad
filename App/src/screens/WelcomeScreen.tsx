@@ -1,10 +1,11 @@
-import React from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Box, Text, Button } from '../components';
 import TranslateWithFormat from '../components/TranslateWithFormat';
 import { backgroundColor } from '@shopify/restyle';
@@ -22,6 +23,26 @@ const WelcomeScreen: React.FC = () => {
   const navigation = useNavigation<WelcomeScreenNavigationProp>();
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
+  const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    // If user is authenticated and we're done loading, navigate to home
+    if (!loading && isAuthenticated) {
+      navigation.replace('MainTabs');
+    }
+  }, [loading, isAuthenticated, navigation]);
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return (
+      <Box flex={1} justifyContent="center" alignItems="center" backgroundColor="white">
+        <ActivityIndicator size="large" color="#035A6E" />
+        <Text variant="body" color="textPrimary" marginTop="m">
+          {t('common.loading')}
+        </Text>
+      </Box>
+    );
+  }
 
   return (
     <Box flex={1} style={styles.backgroundColorWhite}>

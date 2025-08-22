@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, Length, IsOptional, IsEmail } from 'class-validator';
+import { IsNotEmpty, IsString, Length, IsOptional, IsEmail, Matches } from 'class-validator';
 import { IDto } from '../core/base/BaseDto';
 
 export class LoginDto implements IDto {
@@ -19,17 +19,20 @@ export class RegisterDto implements IDto {
   @IsNotEmpty()
   @IsString()
   @Length(6, 255)
+  @Matches(/^(?=.*[a-zA-Z])(?=.*\d).+$/, {
+    message: 'A senha deve conter pelo menos uma letra e um número',
+  })
   password!: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  @Length(1, 255)
-  firstName!: string;
+  @Length(2, 50)
+  firstName?: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
-  @Length(1, 255)
-  lastName!: string;
+  @Length(2, 50)
+  lastName?: string;
 
   @IsOptional()
   @IsString()
@@ -45,6 +48,9 @@ export class ChangePasswordDto implements IDto {
   @IsNotEmpty()
   @IsString()
   @Length(6, 255)
+  @Matches(/^(?=.*[a-zA-Z])(?=.*\d).+$/, {
+    message: 'A senha deve conter pelo menos uma letra e um número',
+  })
   newPassword!: string;
 }
 

@@ -10,6 +10,18 @@ export class CreateCategoryDto implements IDto {
   @IsOptional()
   @IsInt()
   nameTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  descriptionTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 // UPDATE
@@ -21,6 +33,18 @@ export class UpdateCategoryDto implements IDto {
   @IsOptional()
   @IsInt()
   nameTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  descriptionTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 }
 
 // RESPONSE
@@ -37,6 +61,18 @@ export class CategoryResponseDto implements IDto {
   @IsOptional()
   @IsInt()
   nameTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  descriptionTextRefId?: number;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
   
   @IsDateString()
   createdAt!: Date;

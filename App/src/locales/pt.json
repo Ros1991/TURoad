@@ -24,11 +24,13 @@
   },
   "register": {
     "title": "Criar conta",
-    "email": "Email",
+    "firstName": "Primeiro nome",
+    "lastName": "Sobrenome",
+    "email": "E-mail",
     "password": "Senha",
-    "confirmPassword": "Confirme a senha",
-    "alreadyHaveAccount": "Já tem uma conta? Entrar",
+    "confirmPassword": "Confirmar senha",
     "createAccount": "Criar conta",
+    "alreadyHaveAccount": "Já tem uma conta? Faça login",
     "createWithFacebook": "Criar com Facebook",
     "createWithGoogle": "Criar com Google"
   },
@@ -139,7 +141,8 @@
     "notifications": "Notificações",
     "helpCenter": "Central de ajuda",
     "others": "OUTROS",
-    "logout": "Sair"
+    "logout": "Sair",
+    "login": "Entrar"
   },
   "language": {
     "title": "Idioma",
@@ -161,7 +164,13 @@
     "currentPassword": "Senha antiga",
     "newPassword": "Nova senha",
     "confirmNewPassword": "Confirme a nova senha",
-    "changePasswordButton": "Alterar senha"
+    "changePasswordButton": "Alterar senha",
+    "error": "Erro",
+    "success": "Sucesso",
+    "currentPasswordRequired": "Senha atual é obrigatória",
+    "successMessage": "Senha alterada com sucesso",
+    "errorMessage": "Erro ao alterar senha. Tente novamente.",
+    "samePassword": "A nova senha deve ser diferente da senha atual"
   },
   "helpCenter": {
     "title": "Ajuda e contato",
@@ -240,5 +249,15 @@
     "accountCreatedSuccessfully": "Conta criada com sucesso",
     "passwordResetSent": "Email de recuperação enviado",
     "passwordResetError": "Erro ao enviar email de recuperação"
+  },
+  "validation": {
+    "emailRequired": "Email é obrigatório",
+    "emailInvalid": "Email inválido",
+    "passwordRequired": "Senha é obrigatória",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+    "passwordTooLong": "A senha não pode ter mais de 255 caracteres",
+    "passwordWeakPattern": "A senha deve conter pelo menos uma letra e um número",
+    "confirmPasswordRequired": "Confirmação de senha é obrigatória",
+    "passwordMismatch": "As senhas não coincidem"
   }
 }

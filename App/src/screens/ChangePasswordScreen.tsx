@@ -1,21 +1,115 @@
-import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/ApiService';
+import { useToast } from '../contexts/ToastContext';
+import { validatePassword, validatePasswordConfirmation } from '../utils/validation';
 
 const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const { showToast } = useToast();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const PasswordInput = ({ 
+  const handleChangePassword = async () => {
+    // Validation - current password
+    if (!currentPassword || currentPassword.trim() === '') {
+      showToast({
+        type: 'error',
+        title: t('changePassword.error'),
+        message: t('changePassword.currentPasswordRequired'),
+      });
+      return;
+    }
+
+    // Validation - new password using same rules as registration
+    const passwordValidation = validatePassword(newPassword);
+    if (!passwordValidation.isValid) {
+      showToast({
+        type: 'error',
+        title: t('changePassword.error'),
+        message: t(passwordValidation.errorKey!),
+      });
+      return;
+    }
+
+    // Validation - confirm password
+    const confirmPasswordValidation = validatePasswordConfirmation(newPassword, confirmPassword);
+    if (!confirmPasswordValidation.isValid) {
+      showToast({
+        type: 'error',
+        title: t('changePassword.error'),
+        message: t(confirmPasswordValidation.errorKey!),
+      });
+      return;
+    }
+
+    // Check if new password is different from current
+    if (currentPassword === newPassword) {
+      showToast({
+        type: 'error',
+        title: t('changePassword.error'),
+        message: t('changePassword.samePassword'),
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await apiService.post(
+        '/api/auth/change-password',
+        {
+          currentPassword,
+          newPassword,
+        }
+      );
+
+      if (response.success) {
+        showToast({
+          type: 'success',
+          title: t('changePassword.success'),
+          message: t('changePassword.successMessage'),
+        });
+        
+        // Clear form and go back after a short delay
+        setTimeout(() => {
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmPassword('');
+          navigation.goBack();
+        }, 1500);
+      } else {
+        showToast({
+          type: 'error',
+          title: t('changePassword.error'),
+          message: response.message || t('changePassword.errorMessage'),
+        });
+      }
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      showToast({
+        type: 'error',
+        title: t('changePassword.error'),
+        message: t('changePassword.errorMessage'),
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Move PasswordInput outside to prevent re-renders and focus loss
+  const PasswordInput = useCallback(({ 
     label, 
     value, 
     onChangeText, 
@@ -61,6 +155,8 @@ const ChangePasswordScreen: React.FC = () => {
           }}
           placeholder="••••••••"
           placeholderTextColor="#999999"
+          autoCorrect={false}
+          autoCapitalize="none"
         />
         <TouchableOpacity onPress={onToggleShow}>
           <Icon 
@@ -71,7 +167,7 @@ const ChangePasswordScreen: React.FC = () => {
         </TouchableOpacity>
       </Box>
     </Box>
-  );
+  ), []);
 
   return (
       <Box flex={1} backgroundColor="light">
@@ -132,21 +228,30 @@ const ChangePasswordScreen: React.FC = () => {
             />
 
             {/* Change Password Button */}
-            <TouchableOpacity style={{ marginTop: 16 }}>
+            <TouchableOpacity 
+              style={{ marginTop: 16 }}
+              onPress={handleChangePassword}
+              disabled={saving}
+            >
               <Box
                 backgroundColor="success"
                 borderRadius={8}
                 paddingVertical="m"
                 justifyContent="center"
                 alignItems="center"
+                opacity={saving ? 0.6 : 1}
               >
-                <Text style={{
-                  fontSize: 16,
-                  fontWeight: '600',
-                  color: 'white',
-                }}>
-                  {t('changePassword.changePasswordButton')}
-                </Text>
+                {saving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={{
+                    fontSize: 16,
+                    fontWeight: '600',
+                    color: 'white',
+                  }}>
+                    {t('changePassword.changePasswordButton')}
+                  </Text>
+                )}
               </Box>
             </TouchableOpacity>
           </Box>

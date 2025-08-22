@@ -4,12 +4,27 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Box, Text } from '../components';
 
 const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<any>(); // Using any temporarily until navigation types are defined
   const { t } = useTranslation();
   const { currentLanguage, availableLanguages, changeLanguage } = useLanguage();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // User will be redirected by navigation logic based on auth state
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  const handleLoginRedirect = () => {
+    navigation.navigate('Welcome');
+  };
 
   const ProfileItem = ({ title, iconName, onPress, showArrow = true, textColor = '#1A1A1A', iconColor = '#666666' }: { 
     title: string; 
@@ -130,70 +145,77 @@ const ProfileScreen: React.FC = () => {
             marginBottom="l"
           >
             <Box flexDirection="row" alignItems="center">
-              <Image
-                source={{ uri: 'https://via.placeholder.com/70x70/4ECDC4/FFFFFF?text=AB' }}
-                style={{ 
-                  width: 70, 
-                  height: 70, 
-                  borderRadius: 35, 
-                  marginRight: 16 
-                }}
-              />
-              <Box>
+              {/* Only show profile image for authenticated users with profile image */}
+              {isAuthenticated && user?.profileImage && (
+                <Image
+                  source={{ uri: user.profileImage }}
+                  style={{ 
+                    width: 70, 
+                    height: 70, 
+                    borderRadius: 35, 
+                    marginRight: 16 
+                  }}
+                />
+              )}
+              <Box flex={1}>
                 <Text 
                   variant="subheader" 
                   color="textPrimary"
                   style={{ fontSize: 22, fontWeight: '600', marginBottom: 4 }}
                 >
-                  Altair Bezerra
+                  {isAuthenticated ? (user?.name || 'Usuário') : 'Convidado'}
                 </Text>
                 <Text 
                   variant="body" 
                   color="secondary"
                   style={{ fontSize: 16 }}
                 >
-                  altair@gmail.com
+                  {isAuthenticated ? (user?.name == user?.email ? '' : (user?.email || '')) : 'Faça login para acessar recursos completos'}
                 </Text>
               </Box>
             </Box>
           </Box>
 
-          {/* Navigation Section */}
-          <SectionHeader title={t('profile.navigation')} />
-          <CardItem>
-            <ProfileItem 
-              title={t('profile.routeHistory')} 
-              iconName="map-marker-path" 
-              onPress={() => navigation.navigate('RouteHistory')} 
-            />
-          </CardItem>
-          <CardItem>
-            <ProfileItem 
-              title={t('profile.favorites')} 
-              iconName="heart" 
-              onPress={() => navigation.navigate('Favorites')} 
-            />
-          </CardItem>
+          {/* Navigation Section - Only for authenticated users */}
+          {isAuthenticated && (
+            <>
+              <SectionHeader title={t('profile.navigation')} />
+              <CardItem>
+                <ProfileItem 
+                  title={t('profile.routeHistory')} 
+                  iconName="map-marker-path" 
+                  onPress={() => navigation.navigate('RouteHistory')} 
+                />
+              </CardItem>
+              <CardItem>
+                <ProfileItem 
+                  title={t('profile.favorites')} 
+                  iconName="heart" 
+                  onPress={() => navigation.navigate('Favorites')} 
+                />
+              </CardItem>
 
-          {/* Account Information Section */}
-          <SectionHeader title={t('profile.accountInfo')} />
-          <CardItem>
-            <ProfileItem 
-              title={t('profile.personalInfo')} 
-              iconName="account" 
-              onPress={() => navigation.navigate('PersonalInfo')} 
-            />
-          </CardItem>
+              {/* Account Information Section */}
+              <SectionHeader title={t('profile.accountInfo')} />
+              <CardItem>
+                <ProfileItem 
+                  title={t('profile.personalInfo')} 
+                  iconName="account" 
+                  onPress={() => navigation.navigate('PersonalInfo')} 
+                />
+              </CardItem>
 
-          {/* Security Section */}
-          <SectionHeader title={t('profile.security')} />
-          <CardItem>
-            <ProfileItem 
-              title={t('profile.changePassword')} 
-              iconName="lock" 
-              onPress={() => navigation.navigate('ChangePassword')} 
-            />
-          </CardItem>
+              {/* Security Section */}
+              <SectionHeader title={t('profile.security')} />
+              <CardItem>
+                <ProfileItem 
+                  title={t('profile.changePassword')} 
+                  iconName="lock" 
+                  onPress={() => navigation.navigate('ChangePassword')} 
+                />
+              </CardItem>
+            </>
+          )}
 
           {/* App Settings Section */}
           <SectionHeader title={t('profile.appSettings')} />
@@ -230,13 +252,16 @@ const ProfileScreen: React.FC = () => {
               </Box>
             </TouchableOpacity>
           </CardItem>
-          <CardItem>
-            <ProfileItem 
-              title={t('profile.notifications')} 
-              iconName="bell" 
-              onPress={() => navigation.navigate('Notifications')} 
-            />
-          </CardItem>
+          {/* Notifications - Only for authenticated users */}
+          {isAuthenticated && (
+            <CardItem>
+              <ProfileItem 
+                title={t('profile.notifications')} 
+                iconName="bell" 
+                onPress={() => navigation.navigate('Notifications')} 
+              />
+            </CardItem>
+          )}
           <CardItem>
             <ProfileItem 
               title={t('profile.helpCenter')} 
@@ -248,16 +273,23 @@ const ProfileScreen: React.FC = () => {
           {/* Others Section */}
           <SectionHeader title={t('profile.others')} />
           <CardItem>
-            <ProfileItem 
-              title={t('profile.logout')} 
-              iconName="logout" 
-              textColor="#FF3B30" 
-              iconColor="#FF3B30"
-              onPress={() => {
-                // TODO: Implementar lógica de logout
-                console.log('Logout pressed');
-              }}
-            />
+            {isAuthenticated ? (
+              <ProfileItem 
+                title={t('profile.logout')} 
+                iconName="logout" 
+                textColor="#FF3B30" 
+                iconColor="#FF3B30"
+                onPress={handleLogout}
+              />
+            ) : (
+              <ProfileItem 
+                title={t('profile.login')} 
+                iconName="login" 
+                textColor="#007AFF" 
+                iconColor="#007AFF"
+                onPress={handleLoginRedirect}
+              />
+            )}
           </CardItem>
 
           {/* Bottom spacing for tab bar */}

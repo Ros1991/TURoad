@@ -14,7 +14,10 @@ const CategoryDetailsPage: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editForm, setEditForm] = useState({
     name: '',
-    nameTextRefId: 0
+    nameTextRefId: 0,
+    description: '',
+    descriptionTextRefId: 0,
+    imageUrl: ''
   });
 
   useEffect(() => {
@@ -41,14 +44,20 @@ const CategoryDetailsPage: React.FC = () => {
         if (editMode) {
           const form = {
             name: data.name || '',
-            nameTextRefId: data.nameTextRefId || 0
+            nameTextRefId: data.nameTextRefId || 0,
+            description: data.description || '',
+            descriptionTextRefId: data.descriptionTextRefId || 0,
+            imageUrl: data.imageUrl || ''
           };
           setEditForm(form);
         } else {
           if (data && !editMode) {
             setEditForm({
               name: data.name || '',
-              nameTextRefId: data.nameTextRefId || 0
+              nameTextRefId: data.nameTextRefId || 0,
+              description: data.description || '',
+              descriptionTextRefId: data.descriptionTextRefId || 0,
+              imageUrl: data.imageUrl || ''
             });
           }
         }
@@ -65,7 +74,10 @@ const CategoryDetailsPage: React.FC = () => {
     try {
       const payload = {
         name: editForm.name,
-        nameTextRefId: editForm.nameTextRefId
+        nameTextRefId: editForm.nameTextRefId,
+        description: editForm.description,
+        descriptionTextRefId: editForm.descriptionTextRefId,
+        imageUrl: editForm.imageUrl
       };
       
       if (id === 'new') {
@@ -92,7 +104,10 @@ const CategoryDetailsPage: React.FC = () => {
       if (category) {
         setEditForm({
           name: category.name || '',
-          nameTextRefId: category.nameTextRefId || 0
+          nameTextRefId: category.nameTextRefId || 0,
+          description: category.description || '',
+          descriptionTextRefId: category.descriptionTextRefId || 0,
+          imageUrl: category.imageUrl || ''
         });
       }
     }
@@ -189,8 +204,8 @@ const CategoryDetailsPage: React.FC = () => {
         <h2 className="text-xl font-semibold text-white mb-4">
           {id === 'new' ? 'Informações da Nova Categoria' : 'Informações da Categoria'}
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 gap-6">
+          <div>
             <label className="text-white text-sm mb-2 block">Nome da Categoria</label>
             {editMode || id === 'new' ? (
               <LocalizedTextInput
@@ -212,8 +227,58 @@ const CategoryDetailsPage: React.FC = () => {
               <p className="text-white">{category?.name}</p>
             )}
           </div>
+          
+          <div>
+            <label className="text-white text-sm mb-2 block">Descrição da Categoria</label>
+            {editMode || id === 'new' ? (
+              <LocalizedTextInput
+                value={editForm.description}
+                onChange={(value) => {
+                  setEditForm(prev => ({ ...prev, description: value }));
+                }}
+                onBothChange={(value, referenceId) => {
+                  setEditForm(prev => ({ ...prev, description: value, descriptionTextRefId: referenceId }));
+                }}
+                onReferenceIdChange={(referenceId) => {
+                  setEditForm(prev => ({ ...prev, descriptionTextRefId: referenceId }));
+                }}
+                fieldName="Descrição da Categoria"
+                placeholder="Digite a descrição da categoria"
+                referenceId={editForm.descriptionTextRefId || category?.descriptionTextRefId || 0}
+              />
+            ) : (
+              <p className="text-white">{category?.description || 'Sem descrição'}</p>
+            )}
+          </div>
+          
+          <div>
+            <label className="text-white text-sm mb-2 block">URL da Imagem</label>
+            {editMode || id === 'new' ? (
+              <input
+                type="url"
+                value={editForm.imageUrl}
+                onChange={(e) => setEditForm(prev => ({ ...prev, imageUrl: e.target.value }))}
+                placeholder="https://exemplo.com/imagem.jpg"
+                className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <p className="text-white">{category?.imageUrl || 'Sem imagem'}</p>
+                {category?.imageUrl && (
+                  <img 
+                    src={category.imageUrl} 
+                    alt="Categoria" 
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-600"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </div>
           {category && (
-            <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-700">
               <div>
                 <label className="text-gray-400 text-sm">Data de Criação</label>
                 <p className="text-white">{new Date(category.createdAt).toLocaleDateString('pt-BR')}</p>
@@ -222,7 +287,7 @@ const CategoryDetailsPage: React.FC = () => {
                 <label className="text-gray-400 text-sm">Última Atualização</label>
                 <p className="text-white">{new Date(category.updatedAt).toLocaleDateString('pt-BR')}</p>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

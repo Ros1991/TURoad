@@ -18,24 +18,16 @@ export class PasswordUtils {
       errors.push('A senha deve ter pelo menos 6 caracteres');
     }
 
-    if (password.length > 128) {
-      errors.push('A senha deve ter menos de 128 caracteres');
+    if (password.length > 255) {
+      errors.push('A senha deve ter menos de 255 caracteres');
     }
 
-    if (!/[a-z]/.test(password)) {
-      errors.push('A senha deve conter pelo menos uma letra minúscula');
-    }
+    // Must contain at least one letter and one number
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
 
-    if (!/[A-Z]/.test(password)) {
-      errors.push('A senha deve conter pelo menos uma letra maiúscula');
-    }
-
-    if (!/\d/.test(password)) {
-      errors.push('A senha deve conter pelo menos um número');
-    }
-
-    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-      errors.push('A senha deve conter pelo menos um caractere especial');
+    if (!hasLetter || !hasNumber) {
+      errors.push('A senha deve conter pelo menos uma letra e um número');
     }
 
     return {
