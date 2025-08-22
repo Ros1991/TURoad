@@ -8,8 +8,10 @@ import { useTranslation } from 'react-i18next';
 import { Box, Text, Card, Input } from '../components';
 import { getCategories, getRoutes } from '../services/RouteService';
 import { getCities } from '../services/CityService';
+import { getEvents } from '../services/EventService';
+import { getBusinesses } from '../services/BusinessService';
+import { getHistoricalPlaces } from '../services/HistoricalPlaceService';
 import { Category, Route, City, Event, Business, HistoricalPlace } from '../types';
-import { mockedEvents, mockedBusinesses, mockedHistoricalPlaces } from '../mocks';
 
 type RootStackParamList = {
   Home: undefined;
@@ -36,7 +38,7 @@ const HomeScreen: React.FC = () => {
   const [citySearchResults, setCitySearchResults] = useState<City[]>([]);
   const [allCities, setAllCities] = useState<City[]>([]);
   const [recentSearches, setRecentSearches] = useState<Array<{text: string, cityId: string, cityName: string}>>([]);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     loadData();
@@ -48,49 +50,66 @@ const HomeScreen: React.FC = () => {
       // Obter idioma atual da aplicação
       const currentLanguage = i18n.language || 'pt';
       
-      const [categoriesData, routesData, citiesData] = await Promise.all([
+      const [categoriesData, routesData, citiesData, eventsData, businessesData, historicalPlacesData] = await Promise.all([
         getCategories(true, currentLanguage), // Apenas categorias principais e no idioma atual
-        getRoutes(),
-        getCities(),
+        getRoutes(undefined, currentLanguage),
+        getCities(currentLanguage),
+        getEvents(currentLanguage),
+        getBusinesses(currentLanguage),
+        getHistoricalPlaces(currentLanguage),
       ]);
-      setCategories(categoriesData);
-      setRoutes(routesData);
-      setCities(citiesData);
+      
+      // Verificar e definir dados com fallbacks seguros
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setRoutes(Array.isArray(routesData) ? routesData : []);
+      setCities(Array.isArray(citiesData) ? citiesData : []);
+      setEvents(Array.isArray(eventsData) ? eventsData : []);
+      setBusinesses(Array.isArray(businessesData) ? businessesData : []);
+      setHistoricalPlaces(Array.isArray(historicalPlacesData) ? historicalPlacesData : []);
       
       // Armazenar todas as cidades para busca
-      setAllCities(citiesData);
-      
-      // Carregar novos dados mock
-      setEvents(mockedEvents);
-      setBusinesses(mockedBusinesses);
-      setHistoricalPlaces(mockedHistoricalPlaces);
+      setAllCities(Array.isArray(citiesData) ? citiesData : []);
     } catch (error) {
       console.error('Error loading data:', error);
+      // Definir arrays vazios em caso de erro
+      setCategories([]);
+      setRoutes([]);
+      setCities([]);
+      setEvents([]);
+      setBusinesses([]);
+      setHistoricalPlaces([]);
+      setAllCities([]);
     }
   };
 
-  const renderCategory = ({ item }: { item: Category }) => (
-    <TouchableOpacity style={{ marginRight: 16 }}>
-      <Box alignItems="center">
-        <Image
-          source={{ uri: item.image }}
-          style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }}
-        />
-        <Text style={{ fontSize: 12, color: 'black', textAlign: 'center' }}>
-          {item.name}
-        </Text>
-      </Box>
-    </TouchableOpacity>
-  );
+  const renderCategory = ({ item }: { item: Category }) => {
+    if (!item) return null;
+    
+    return (
+      <TouchableOpacity style={{ marginRight: 16 }}>
+        <Box alignItems="center">
+          <Image
+            source={{ uri: item.image }}
+            style={{ width: 80, height: 80, borderRadius: 40, marginBottom: 8 }}
+          />
+          <Text style={{ fontSize: 12, color: 'black', textAlign: 'center' }}>
+            {item.name || 'Categoria'}
+          </Text>
+        </Box>
+      </TouchableOpacity>
+    );
+  };
 
   const renderRoute = ({ item }: { item: Route }) => {
+    if (!item) return null;
+    
     // Aplicar tradução baseada no idioma atual
     const currentLanguage = i18n.language || 'pt';
-    const routeTitle = item.titleTranslations[currentLanguage as keyof typeof item.titleTranslations] || item.title;
-    const routeDescription = item.descriptionTranslations[currentLanguage as keyof typeof item.descriptionTranslations] || item.description;
+    const routeTitle = item.titleTranslations?.[currentLanguage as keyof typeof item.titleTranslations] || item.title || 'Rota sem nome';
+    const routeDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || item.description || 'Descrição não disponível';
     
     // Buscar categorias traduzidas
-    const routeCategories = item.categories.map(categoryId => {
+    const routeCategories = (item.categories || []).map(categoryId => {
       const category = categories.find(cat => cat.id === categoryId);
       return category ? (category.nameTranslations?.[currentLanguage as keyof typeof category.nameTranslations] || category.name) : '';
     }).filter(Boolean);
@@ -188,7 +207,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.stops} {t('home.cities')}
+                {item.stops || 0} {t('home.cities')}
               </Text>
             </Box>
             
@@ -218,7 +237,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.stories} {t('home.audioStories')}
+                {item.stories || 0} {t('home.audioStories')}
               </Text>
             </Box>
           </Box>
@@ -228,9 +247,11 @@ const HomeScreen: React.FC = () => {
   };
 
   const renderCity = ({ item }: { item: City }) => {
+    if (!item) return null;
+    
     // Aplicar tradução baseada no idioma atual
     const currentLanguage = i18n.language || 'pt';
-    const cityDescription = item.descriptionTranslations[currentLanguage as keyof typeof item.descriptionTranslations];
+    const cityDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
 
     return (
       <TouchableOpacity 
@@ -269,7 +290,7 @@ const HomeScreen: React.FC = () => {
               marginBottom: 8
             }}
           >
-            {item.name}, {item.state}
+            {item.name || 'Cidade'}, {item.state || 'Estado'}
           </Text>
           
           {/* Descrição */}
@@ -313,7 +334,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.stories.length} {t('home.audioStories')}
+                {(item.stories || []).length} {t('home.audioStories')}
               </Text>
             </Box>
           </Box>
@@ -427,9 +448,11 @@ const HomeScreen: React.FC = () => {
 
   // Renderizar categorias (tamanho 150px)
   const renderCategoryByRoute = ({ item }: { item: Category }) => {
+    if (!item) return null;
+    
     const currentLanguage = i18n.language || 'pt';
-    const categoryName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || item.name;
-    const categoryDescription = item.descriptionTranslations[currentLanguage as keyof typeof item.descriptionTranslations];
+    const categoryName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || item.name || 'Categoria';
+    const categoryDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
 
     return (
       <TouchableOpacity 
@@ -484,7 +507,7 @@ const HomeScreen: React.FC = () => {
                 marginLeft: 4
               }}
             >
-              {item.routeCount} {t('home.routes')}
+              {item.routeCount || 0} {t('home.routes')}
             </Text>
           </Box>
         </Box>
@@ -494,10 +517,12 @@ const HomeScreen: React.FC = () => {
 
   // Renderizar eventos
   const renderEvent = ({ item }: { item: Event }) => {
+    if (!item) return null;
+    
     const currentLanguage = i18n.language || 'pt';
-    const eventName = item.nameTranslations[currentLanguage as keyof typeof item.nameTranslations];
-    const eventType = item.typeTranslations[currentLanguage as keyof typeof item.typeTranslations];
-    const eventLocation = item.locationTranslations[currentLanguage as keyof typeof item.locationTranslations];
+    const eventName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || 'Evento';
+    const eventType = item.typeTranslations?.[currentLanguage as keyof typeof item.typeTranslations] || 'Tipo';
+    const eventLocation = item.locationTranslations?.[currentLanguage as keyof typeof item.locationTranslations] || 'Local';
 
     return (
       <TouchableOpacity 
@@ -574,7 +599,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.date}
+                {item.date || 'Data não informada'}
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center">
@@ -587,7 +612,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.time}
+                {item.time || 'Horário não informado'}
               </Text>
             </Box>
           </Box>
@@ -598,9 +623,11 @@ const HomeScreen: React.FC = () => {
 
   // Renderizar comércios
   const renderBusiness = ({ item }: { item: Business }) => {
+    if (!item) return null;
+    
     const currentLanguage = i18n.language || 'pt';
-    const businessName = item.nameTranslations[currentLanguage as keyof typeof item.nameTranslations];
-    const businessDescription = item.descriptionTranslations[currentLanguage as keyof typeof item.descriptionTranslations];
+    const businessName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || 'Negócio';
+    const businessDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
 
     return (
       <TouchableOpacity 
@@ -654,7 +681,7 @@ const HomeScreen: React.FC = () => {
                 marginLeft: 4
               }}
             >
-              {item.distance}
+              {item.distance || 'N/A'}
             </Text>
           </Box>
         </Box>
@@ -664,10 +691,12 @@ const HomeScreen: React.FC = () => {
 
   // Renderizar locais históricos
   const renderHistoricalPlace = ({ item }: { item: HistoricalPlace }) => {
+    if (!item) return null;
+    
     const currentLanguage = i18n.language || 'pt';
-    const placeName = item.nameTranslations[currentLanguage as keyof typeof item.nameTranslations];
-    const placeDescription = item.descriptionTranslations[currentLanguage as keyof typeof item.descriptionTranslations];
-    const placeLocation = item.locationTranslations[currentLanguage as keyof typeof item.locationTranslations];
+    const placeName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || 'Local Histórico';
+    const placeDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
+    const placeLocation = item.locationTranslations?.[currentLanguage as keyof typeof item.locationTranslations] || 'Local não informado';
 
     return (
       <TouchableOpacity 
@@ -735,7 +764,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {item.storiesCount} {t('home.storiesAvailable')}
+                {item.storiesCount || 0} {t('home.storiesAvailable')}
               </Text>
             </Box>
           </Box>

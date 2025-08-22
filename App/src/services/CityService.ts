@@ -1,8 +1,5 @@
 import { City } from "../types";
-import { mockedCities } from '../mocks';
-
-// Usar o mock centralizado de cidades
-const cities: City[] = mockedCities;
+import { apiService } from './ApiService';
 
 const recentSearches = [
   "Aracaju, Sergipe",
@@ -10,33 +7,51 @@ const recentSearches = [
   "Itabaiana, Sergipe",
 ];
 
-export const getCities = async (): Promise<City[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(cities);
-    }, 500);
-  });
+export const getCities = async (language: string = 'pt'): Promise<City[]> => {
+  try {
+    const response = await apiService.get<City[]>('/api/public/cities', {
+      headers: { 'Accept-Language': language },
+      includeAuth: false
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching cities:', error);
+    return [];
+  }
 };
 
-export const getCityById = async (id: string): Promise<City | null> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const city = cities.find(c => c.id === id);
-      resolve(city || null);
-    }, 500);
-  });
+export const getCityById = async (id: string, language: string = 'pt'): Promise<City | null> => {
+  try {
+    const cities = await getCities(language);
+    return cities.find(c => c.id === id) || null;
+  } catch (error) {
+    console.error('Error fetching city by id:', error);
+    return null;
+  }
 };
 
-export const searchCities = async (query: string): Promise<City[]> => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const filteredCities = cities.filter(city => 
-        city.name.toLowerCase().includes(query.toLowerCase()) ||
-        city.state.toLowerCase().includes(query.toLowerCase())
-      );
-      resolve(filteredCities);
-    }, 300);
-  });
+export const searchCities = async (query: string, language: string = 'pt'): Promise<City[]> => {
+  try {
+    const response = await apiService.get<City[]>('/api/public/cities/search', {
+      params: { q: query },
+      headers: { 'Accept-Language': language },
+      includeAuth: false
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error searching cities:', error);
+    return [];
+  }
 };
 
 export const getRecentSearches = async (): Promise<string[]> => {

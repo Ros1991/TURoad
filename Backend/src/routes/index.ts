@@ -11,8 +11,12 @@ import eventsRoutes from './eventsRoutes'
 import typesRoutes from './typesRoutes'
 import faqsRoutes from './faqsRoutes'
 import localizedTextsRoutes from './localizedTextsRoutes'
+import publicRoutes from './publicRoutes'
 
 const router = Router()
+
+// Public routes (no authentication required)
+router.use('/public', publicRoutes)
 
 // Mount routes
 router.use('/auth', authRoutes)

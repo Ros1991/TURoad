@@ -63,11 +63,24 @@ class ApiService {
     return headers;
   }
 
-  async get<T>(endpoint: string, includeAuth: boolean = true): Promise<ApiResponse<T>> {
+  async get<T>(endpoint: string, options?: { 
+    params?: Record<string, any>; 
+    headers?: Record<string, string>;
+    includeAuth?: boolean;
+  }): Promise<ApiResponse<T>> {
     try {
-      const headers = await this.getHeaders(includeAuth);
+      const includeAuth = options?.includeAuth !== false;
+      const baseHeaders = await this.getHeaders(includeAuth);
+      const headers = { ...baseHeaders, ...options?.headers };
       
-      const response = await fetch(`${this.baseURL}${endpoint}`, {
+      // Build query string from params
+      let url = `${this.baseURL}${endpoint}`;
+      if (options?.params) {
+        const queryString = new URLSearchParams(options.params).toString();
+        url += `?${queryString}`;
+      }
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers,
       });
