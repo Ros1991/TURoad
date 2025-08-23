@@ -97,6 +97,10 @@ const EventsPage: React.FC = () => {
     return event.location || 'Sem nome';
   };
 
+  const getLocalizedTime = (event: Event): string => {
+    return event.time || 'Não informado';
+  };
+
   const getCityName = (event: Event): string => {
     if (event.city?.name) {
       return event.city.name;
@@ -104,14 +108,14 @@ const EventsPage: React.FC = () => {
     return event.cityId ? `Cidade ${event.cityId}` : 'Não informado';
   };
 
-  const formatEventDate = (eventDate?: string, eventTime?: string): string => {
+  const formatEventDate = (eventDate?: string, timeText?: string): string => {
     if (!eventDate) return 'Não informado';
     
     const date = new Date(eventDate);
     const dateStr = date.toLocaleDateString('pt-BR');
     
-    if (eventTime) {
-      return `${dateStr} às ${eventTime}`;
+    if (timeText) {
+      return `${dateStr} às ${timeText}`;
     }
     
     return dateStr;
@@ -203,7 +207,7 @@ const EventsPage: React.FC = () => {
                     {/* Data/Hora */}
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-300">
-                        {formatEventDate(event.eventDate, event.eventTime)}
+                        {formatEventDate(event.eventDate, getLocalizedTime(event))}
                       </div>
                     </td>
 

@@ -23,9 +23,9 @@ export class CreateEventDto implements IDto {
   @IsDateString()
   eventDate!: Date;
 
-  @IsNotEmpty()
-  @IsString()
-  eventTime!: string;
+  @IsOptional()
+  @IsInt()
+  timeTextRefId?: number;
 
   @IsOptional()
   @IsUrl()
@@ -55,8 +55,8 @@ export class UpdateEventDto implements IDto {
   eventDate?: Date;
 
   @IsOptional()
-  @IsString()
-  eventTime?: string;
+  @IsInt()
+  timeTextRefId?: number;
 
   @IsOptional()
   @IsUrl()
@@ -104,8 +104,9 @@ export class EventResponseDto implements IDto {
   @IsDateString()
   eventDate!: Date;
   
-  @IsString()
-  eventTime!: string;
+  @IsOptional()
+  @IsInt()
+  timeTextRefId?: number;
   
   @IsOptional()
   @IsUrl()
@@ -126,6 +127,10 @@ export class EventResponseDto implements IDto {
   @IsOptional()
   @IsString()
   location?: string;
+  
+  @IsOptional()
+  @IsString()
+  time?: string;
   
   @IsDateString()
   createdAt!: Date;

@@ -25,8 +25,9 @@ const EventDetailsPage: React.FC = () => {
     descriptionTextRefId: 0,
     location: '',
     locationTextRefId: 0,
+    time: '',
+    timeTextRefId: 0,
     eventDate: '',
-    eventTime: '',
     cityId: 0,
     imageUrl: ''
   });
@@ -54,8 +55,9 @@ const EventDetailsPage: React.FC = () => {
         descriptionTextRefId: data.descriptionTextRefId || 0,
         location: data.location || '',
         locationTextRefId: data.locationTextRefId || 0,
+        time: data.time || '',
+        timeTextRefId: data.timeTextRefId || 0,
         eventDate: data.eventDate || '',
-        eventTime: data.eventTime || '',
         cityId: data.cityId || 0,
         imageUrl: data.imageUrl || ''
       });
@@ -140,12 +142,24 @@ const EventDetailsPage: React.FC = () => {
           }
         }
 
+        // Create time reference if needed
+        let timeRefId = editForm.timeTextRefId;
+        if (editForm.time && editForm.time.trim() && (!timeRefId || timeRefId === 0)) {
+          console.log('Auto-creating time reference for:', editForm.time);
+          try {
+            timeRefId = await localizedTextsService.createReference(editForm.time.trim(), []);
+            console.log('Created time reference:', timeRefId);
+          } catch (error) {
+            console.error('Error creating time reference:', error);
+          }
+        }
+
         const payload = {
           nameTextRefId: nameRefId || 0,
           descriptionTextRefId: descRefId || 0,
           locationTextRefId: locationRefId || 0,
+          timeTextRefId: timeRefId || 0,
           eventDate: editForm.eventDate,
-          eventTime: editForm.eventTime,
           cityId: editForm.cityId,
           imageUrl: editForm.imageUrl
         };
@@ -160,8 +174,8 @@ const EventDetailsPage: React.FC = () => {
           nameTextRefId: editForm.nameTextRefId,
           descriptionTextRefId: editForm.descriptionTextRefId,
           locationTextRefId: editForm.locationTextRefId,
+          timeTextRefId: editForm.timeTextRefId,
           eventDate: editForm.eventDate,
-          eventTime: editForm.eventTime,
           cityId: editForm.cityId,
           imageUrl: editForm.imageUrl
         };
@@ -188,8 +202,9 @@ const EventDetailsPage: React.FC = () => {
         descriptionTextRefId: event.descriptionTextRefId || 0,
         location: event.location || '',
         locationTextRefId: event.locationTextRefId || 0,
+        time: event.time || '',
+        timeTextRefId: event.timeTextRefId || 0,
         eventDate: event.eventDate || '',
-        eventTime: event.eventTime || '',
         cityId: event.cityId || 0,
         imageUrl: event.imageUrl || ''
       });
@@ -445,14 +460,21 @@ const EventDetailsPage: React.FC = () => {
           <div>
             <label className="text-gray-400 text-sm block mb-2">Hora do Evento</label>
             {editMode ? (
-              <input
-                type="time"
-                value={editForm.eventTime}
-                onChange={(e) => setEditForm({ ...editForm, eventTime: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
+              <LocalizedTextInput
+                value={editForm.time || ''}
+                onChange={(value) => setEditForm(prev => ({ ...prev, time: value }))}
+                onBothChange={(value, referenceId) => {
+                  setEditForm(prev => ({ ...prev, time: value, timeTextRefId: referenceId }));
+                }}
+                onReferenceIdChange={(referenceId) => {
+                  setEditForm(prev => ({ ...prev, timeTextRefId: referenceId }));
+                }}
+                fieldName="Hora do Evento"
+                placeholder="Digite a hora do evento (ex: 14:30, tarde, manhã)"
+                referenceId={editForm.timeTextRefId || event?.timeTextRefId || 0}
               />
             ) : (
-              <p className="text-white">{event?.eventTime || 'N/A'}</p>
+              <p className="text-white">{event?.time || 'N/A'}</p>
             )}
           </div>
         </div>

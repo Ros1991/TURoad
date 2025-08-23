@@ -10,7 +10,7 @@ export class EventMapper extends BaseMapper<Event> {
     event.descriptionTextRefId = createDto.descriptionTextRefId;
     event.locationTextRefId = createDto.locationTextRefId;
     event.eventDate = createDto.eventDate;
-    event.eventTime = createDto.eventTime;
+    event.timeTextRefId = createDto.timeTextRefId;
     event.imageUrl = createDto.imageUrl;
     return event;
   }
@@ -21,7 +21,7 @@ export class EventMapper extends BaseMapper<Event> {
     if (dto.descriptionTextRefId !== undefined) entity.descriptionTextRefId = dto.descriptionTextRefId;
     if (dto.locationTextRefId !== undefined) entity.locationTextRefId = dto.locationTextRefId;
     if (dto.eventDate !== undefined) entity.eventDate = dto.eventDate;
-    if (dto.eventTime !== undefined) entity.eventTime = dto.eventTime;
+    if (dto.timeTextRefId !== undefined) entity.timeTextRefId = dto.timeTextRefId;
     if (dto.imageUrl !== undefined) entity.imageUrl = dto.imageUrl;
   }
 
@@ -41,12 +41,13 @@ export class EventMapper extends BaseMapper<Event> {
       descriptionTextRefId: entity.descriptionTextRefId,
       locationTextRefId: entity.locationTextRefId,
       eventDate: entity.eventDate,
-      eventTime: entity.eventTime,
+      timeTextRefId: entity.timeTextRefId,
       imageUrl: entity.imageUrl,
       city: cityDto,
       name: (entity as any).name, // Localized name from BaseService
       description: (entity as any).description, // Localized description from BaseService
       location: (entity as any).location, // Localized location from BaseService
+      time: (entity as any).time, // Localized time from BaseService
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       deletedAt: entity.deletedAt,

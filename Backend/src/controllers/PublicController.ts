@@ -274,7 +274,7 @@ export class PublicController {
           type: eventType,
           location: location || 'Local não especificado',
           date: formattedDate,
-          time: event.eventTime,
+          time: await this.getLocalizedText(event.timeTextRefId, language),
           image: event.imageUrl
         };
       }));

@@ -17,7 +17,7 @@ export interface Event {
   descriptionTextRefId?: number;
   locationTextRefId?: number;
   eventDate: string;
-  eventTime: string;
+  timeTextRefId?: number;
   imageUrl?: string;
   city?: {
     cityId: number;
@@ -30,6 +30,7 @@ export interface Event {
   name?: string;
   description?: string;
   location?: string;
+  time?: string;
 
     // Legacy support for translations
   nameTranslations?: LocalizedText[];
@@ -42,7 +43,7 @@ export interface CreateEventDto {
   descriptionTextRefId?: number;
   locationTextRefId?: number;
   eventDate: string;
-  eventTime: string;
+  timeTextRefId?: number;
   imageUrl?: string;
 }
 

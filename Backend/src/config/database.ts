@@ -63,7 +63,7 @@ export const AppDataSource = new DataSource({
     PushNotificationLog,
     FAQ,
   ],
-  migrations: ['src/migrations/*.ts'],
+  migrations: ['src/database/migrations/*.ts'],
   migrationsTableName: 'migrations',
   migrationsRun: true, // Run migrations automatically on startup
 });

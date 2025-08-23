@@ -28,8 +28,9 @@ export class Event extends SoftDeleteBaseEntity {
   @Column({ name: 'event_date', type: 'date' })
   eventDate!: Date;
 
-  @Column({ name: 'event_time', type: 'time' })
-  eventTime!: string;
+  @LocalizedTextRef
+  @Column({ name: 'time_text_ref_id', type: 'integer', nullable: true })
+  timeTextRefId?: number;
 
   @Column({ name: 'image_url', type: 'varchar', length: 255, nullable: true })
   imageUrl?: string;
