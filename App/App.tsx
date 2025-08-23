@@ -4,15 +4,18 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
 import ThemeProvider from './src/themes/ThemeProvider';
 import AppNavigator from './src/navigation/AppNavigator';
-import { LanguageProvider } from './src/contexts/LanguageContext';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { ToastProvider } from './src/contexts/ToastContext';
 import './src/locales/i18n'; // Import i18n configuration
+import { locationService } from './src/services/LocationService';
+import { LanguageProvider } from './src/contexts/LanguageContext';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 function App(): React.JSX.Element {
+  const appId = React.useRef(Math.random().toString(36).substr(2, 9));
+  console.log(`🚀 App: Component rendering - ID: ${appId.current}`);
   useEffect(() => {
     async function prepare() {
       try {
@@ -29,6 +32,10 @@ function App(): React.JSX.Element {
           }
         }
         
+        // Initialize location service
+        console.log('📍 Initializing location service...');
+        await locationService.initializeLocation();
+        
         // Simulate loading time or actual resource loading
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -44,8 +51,8 @@ function App(): React.JSX.Element {
   }, []);
 
   return (
-    <AuthProvider>
-      <LanguageProvider>
+    <LanguageProvider>
+      <AuthProvider>
         <ThemeProvider>
           <ToastProvider>
             <StatusBar 
@@ -53,11 +60,11 @@ function App(): React.JSX.Element {
               translucent={true} 
               backgroundColor="transparent" 
             />
-            <AppNavigator />
+            <AppNavigator key="main-navigator" />
           </ToastProvider>
         </ThemeProvider>
-      </LanguageProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

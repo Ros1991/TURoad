@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import { config } from './config/environment';
 import { initializeDatabase } from './config/database';
 import { errorHandler } from './middleware/errorHandler';
+import { languageMiddleware } from './middleware/languageMiddleware';
+import { locationLoggingMiddleware } from './middleware/locationLoggingMiddleware';
 
 // Import ALL routes
 import routes from './routes';
@@ -30,7 +32,7 @@ class TURoadServer {
       origin: ['http://localhost:5174'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-User-Location', 'X-Location-Accuracy'],
     }));
 
     // Logging
@@ -39,6 +41,12 @@ class TURoadServer {
     // Body parsing
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true }));
+
+    // Language detection middleware
+    this.app.use(languageMiddleware);
+
+    // Location headers logging middleware
+    this.app.use(locationLoggingMiddleware);
   }
 
   private initializeRoutes(): void {

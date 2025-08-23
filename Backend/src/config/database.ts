@@ -65,7 +65,7 @@ export const AppDataSource = new DataSource({
   ],
   migrations: ['src/database/migrations/*.ts'],
   migrationsTableName: 'migrations',
-  migrationsRun: true, // Run migrations automatically on startup
+  migrationsRun: false, // Disable automatic migrations - we run them manually
 });
 
 export const initializeDatabase = async (): Promise<void> => {
@@ -73,12 +73,18 @@ export const initializeDatabase = async (): Promise<void> => {
     await AppDataSource.initialize();
     console.log('✅ Database connection established successfully');
     
-    // Run pending migrations
-    const pendingMigrations = await AppDataSource.showMigrations();
-    if (pendingMigrations) {
-      console.log('🔄 Running pending migrations...');
-      await AppDataSource.runMigrations();
-      console.log('✅ Migrations completed successfully');
+    // Check and run pending migrations
+    try {
+      const hasPendingMigrations = await AppDataSource.showMigrations();
+      if (hasPendingMigrations) {
+        console.log('🔄 Found pending migrations. Running...');
+        await AppDataSource.runMigrations();
+        console.log('✅ Migrations completed successfully');
+      } else {
+        console.log('✅ No pending migrations found');
+      }
+    } catch (migrationError: any) {
+      console.log('⚠️ Migration check failed, continuing with existing schema:', migrationError?.message || 'Unknown error');
     }
 
     // Run database seeds

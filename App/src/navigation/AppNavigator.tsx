@@ -36,6 +36,15 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function MainTabNavigator() {
+  const navigatorId = React.useRef(Math.random().toString(36).substr(2, 9));
+  console.log(`🏗️ MainTabNavigator: Component mounting - ID: ${navigatorId.current}`);
+
+  React.useEffect(() => {
+    return () => {
+      console.log(`🗑️ MainTabNavigator: Component unmounting - ID: ${navigatorId.current}`);
+    };
+  }, []);
+
   return (
     <View style={{ flex: 1, position: 'relative' }}>
       <Tab.Navigator
@@ -141,8 +150,17 @@ function MainTabNavigator() {
 }
 
 function AppNavigator() {
+  const navigatorId = React.useRef(Math.random().toString(36).substr(2, 9));
+  console.log(`🗺️ AppNavigator: Component mounting - ID: ${navigatorId.current}`);
+
+  React.useEffect(() => {
+    return () => {
+      console.log(`🗑️ AppNavigator: Component unmounting - ID: ${navigatorId.current}`);
+    };
+  }, []);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer key="main-navigation-container">
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />

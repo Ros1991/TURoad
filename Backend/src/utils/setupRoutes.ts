@@ -9,10 +9,14 @@ import cityRoutes from '@/routes/citiesRoutes';
 import routesRoutes from '@/routes/routesRoutes';
 import locationsRoutes from '@/routes/locationsRoutes';
 import eventsRoutes from '@/routes/eventsRoutes';
+import publicRoutes from '@/routes/publicRoutes';
 
 export const setupRoutes = (app: Application): void => {
   const apiPrefix = config.server.apiPrefix;
 
+  // Public routes (for HomeScreen data)
+  app.use(`${apiPrefix}/public`, publicRoutes);
+  
   // Authentication routes
   app.use(`${apiPrefix}/auth`, authRoutes);
   

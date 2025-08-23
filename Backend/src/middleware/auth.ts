@@ -13,36 +13,25 @@ declare global {
 }
 
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    console.log('🔐 Auth middleware - Authorization header:', req.headers.authorization);
-    
+  try {    
     const token = JwtUtils.extractTokenFromHeader(req.headers.authorization);
     
     if (!token) {
-      console.log('❌ Auth middleware - No token found');
       throw new AuthenticationError('Access token required');
     }
 
-    console.log('🔍 Auth middleware - Extracted token:', `${token.substring(0, 20)}...`);
-    
-    const payload = JwtUtils.verifyToken(token);
-    console.log('✅ Auth middleware - Token verified, payload:', { userId: payload.userId, email: payload.email });
+    const payload = JwtUtils.verifyToken(token);    
     
     // Verify user still exists and is enabled
     const user = await userRepository.findById(payload.userId);
     if (!user || !user.enabled) {
-      console.log('❌ Auth middleware - User not found or disabled');
       throw new AuthenticationError('User not found or disabled');
     }
-
-    console.log('✅ Auth middleware - User verified:', { userId: user.userId, enabled: user.enabled });
-    
     req.user = payload;
     // Add userId to request for easier access
     (req as any).userId = payload.userId;
     next();
   } catch (error) {
-    console.log('❌ Auth middleware error:', error);
     next(error);
   }
 };

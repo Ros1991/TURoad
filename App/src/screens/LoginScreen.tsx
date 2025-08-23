@@ -11,6 +11,7 @@ type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
+  Welcome: undefined;
   MainTabs: undefined;
 };
 
@@ -36,7 +37,8 @@ const LoginScreen: React.FC = () => {
       if (user) {
         // Update AuthContext with the logged in user
         setUser(user);
-        navigation.replace('MainTabs');
+        // Let WelcomeScreen handle navigation based on AuthContext
+        //navigation.navigate('Welcome');
       } else {
         Alert.alert(t('alerts.error'), t('alerts.incorrectEmailOrPassword'));
       }

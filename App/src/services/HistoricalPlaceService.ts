@@ -1,10 +1,9 @@
 import { HistoricalPlace } from "../types";
 import { apiService } from './ApiService';
 
-export const getHistoricalPlaces = async (language: string = 'pt'): Promise<HistoricalPlace[]> => {
+export const getHistoricalPlaces = async (): Promise<HistoricalPlace[]> => {
   try {
     const response = await apiService.get<HistoricalPlace[]>('/api/public/locations/historical', {
-      headers: { 'Accept-Language': language },
       includeAuth: false
     });
     

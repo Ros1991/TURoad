@@ -7,10 +7,9 @@ const recentSearches = [
   "Itabaiana, Sergipe",
 ];
 
-export const getCities = async (language: string = 'pt'): Promise<City[]> => {
+export const getCities = async (): Promise<City[]> => {
   try {
     const response = await apiService.get<City[]>('/api/public/cities', {
-      headers: { 'Accept-Language': language },
       includeAuth: false
     });
     
@@ -25,9 +24,9 @@ export const getCities = async (language: string = 'pt'): Promise<City[]> => {
   }
 };
 
-export const getCityById = async (id: string, language: string = 'pt'): Promise<City | null> => {
+export const getCityById = async (id: string): Promise<City | null> => {
   try {
-    const cities = await getCities(language);
+    const cities = await getCities();
     return cities.find(c => c.id === id) || null;
   } catch (error) {
     console.error('Error fetching city by id:', error);
@@ -35,11 +34,10 @@ export const getCityById = async (id: string, language: string = 'pt'): Promise<
   }
 };
 
-export const searchCities = async (query: string, language: string = 'pt'): Promise<City[]> => {
+export const searchCities = async (query: string): Promise<City[]> => {
   try {
     const response = await apiService.get<City[]>('/api/public/cities/search', {
       params: { q: query },
-      headers: { 'Accept-Language': language },
       includeAuth: false
     });
     

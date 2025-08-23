@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { ScrollView, Image, TouchableOpacity, FlatList, Modal, TextInput } from 'react-native';
+import { ScrollView, Image, TouchableOpacity, FlatList, Modal, TextInput, RefreshControl, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Card, Input } from '../components';
+import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCategories, getRoutes } from '../services/RouteService';
 import { getCities } from '../services/CityService';
 import { getEvents } from '../services/EventService';
@@ -22,7 +23,18 @@ type RootStackParamList = {
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
+// Generate instance ID outside component to detect true re-creation
+const generateInstanceId = () => Math.random().toString(36).substr(2, 9);
+
 const HomeScreen: React.FC = () => {
+  const instanceId = useRef(generateInstanceId());
+  
+  // Only log if it's a NEW instance (not just re-render)
+  const hasLogged = useRef(false);
+  if (!hasLogged.current) {
+    hasLogged.current = true;
+  }
+  
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { t, i18n } = useTranslation();
   const [categories, setCategories] = useState<Category[]>([]);
@@ -43,42 +55,72 @@ const HomeScreen: React.FC = () => {
   useEffect(() => {
     loadData();
     loadRecentSearches();
+    // Cleanup function para detectar quando instância é destruída
+    return () => {
+    };
   }, []);
+
+  // Refresh data when language changes
+  useLanguageRefresh(() => {
+    loadData();
+  });
 
   const loadData = async () => {
     try {
       // Obter idioma atual da aplicação
       const currentLanguage = i18n.language || 'pt';
       
-      const [categoriesData, routesData, citiesData, eventsData, businessesData, historicalPlacesData] = await Promise.all([
-        getCategories(true, currentLanguage), // Apenas categorias principais e no idioma atual
-        getRoutes(undefined, currentLanguage),
-        getCities(currentLanguage),
-        getEvents(currentLanguage),
-        getBusinesses(currentLanguage),
-        getHistoricalPlaces(currentLanguage),
-      ]);
-      
-      // Verificar e definir dados com fallbacks seguros
-      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-      setRoutes(Array.isArray(routesData) ? routesData : []);
-      setCities(Array.isArray(citiesData) ? citiesData : []);
-      setEvents(Array.isArray(eventsData) ? eventsData : []);
-      setBusinesses(Array.isArray(businessesData) ? businessesData : []);
-      setHistoricalPlaces(Array.isArray(historicalPlacesData) ? historicalPlacesData : []);
-      
-      // Armazenar todas as cidades para busca
-      setAllCities(Array.isArray(citiesData) ? citiesData : []);
+      // Load categories first
+      try {
+        const categoriesData = await getCategories();
+        setCategories(categoriesData || []);
+      } catch (error) {
+        console.error('❌ Error loading categories:', error);
+      }
+
+      // Load routes
+      try {
+        const routesData = await getRoutes();
+        setRoutes(routesData || []);
+      } catch (error) {
+        console.error('❌ Error loading routes:', error);
+      }
+
+      // Load cities
+      try {
+        const citiesData = await getCities();
+        setCities(citiesData || []);
+        setAllCities(citiesData || []);
+      } catch (error) {
+        console.error('❌ Error loading cities:', error);
+      }
+
+      // Load events
+      try {
+        const eventsData = await getEvents();
+        setEvents(eventsData || []);
+      } catch (error) {
+        console.error('❌ Error loading events:', error);
+      }
+
+      // Load businesses
+      try {
+        const businessesData = await getBusinesses();
+        setBusinesses(businessesData || []);
+      } catch (error) {
+        console.error('❌ Error loading businesses:', error);
+      }
+
+      // Load historical places
+      try {
+        const historicalPlacesData = await getHistoricalPlaces();
+        setHistoricalPlaces(historicalPlacesData || []);
+      } catch (error) {
+        console.error('❌ Error loading historical places:', error);
+      }
+
     } catch (error) {
-      console.error('Error loading data:', error);
-      // Definir arrays vazios em caso de erro
-      setCategories([]);
-      setRoutes([]);
-      setCities([]);
-      setEvents([]);
-      setBusinesses([]);
-      setHistoricalPlaces([]);
-      setAllCities([]);
+      console.error('❌ Error loading data:', error);
     }
   };
 
@@ -374,7 +416,6 @@ const HomeScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error saving recent search:', error);
-      // Continuar mesmo se houver erro, mantendo no estado local
     }
   };
 

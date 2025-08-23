@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { locationService, Coordinates } from './LocationService';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -29,7 +30,8 @@ class ApiService {
 
   private async getCurrentLanguage(): Promise<string> {
     try {
-      const language = await AsyncStorage.getItem('selectedLanguage');
+      // ApiService agora usa a mesma chave que i18n.ts
+      const language = await AsyncStorage.getItem('@TURoad:language');
       return language || 'pt';
     } catch (error) {
       console.error('Error getting language:', error);
@@ -46,6 +48,24 @@ class ApiService {
     // Add language header
     const language = await this.getCurrentLanguage();
     headers['Accept-Language'] = language;
+
+    // Add location header if available (non-blocking with timeout)
+    try {
+      const locationPromise = locationService.getLocationForRequest();
+      const location = await locationPromise;      
+      
+      if (location && location.latitude && location.longitude) {
+        headers['X-User-Location'] = `${location.latitude},${location.longitude}`;
+        if (location.accuracy) {
+          headers['X-Location-Accuracy'] = location.accuracy.toString();
+        }
+      } else {
+        console.log('❌ No valid location available for request');
+      }
+    } catch (error) {
+      console.log('❌ Location header error:', error instanceof Error ? error.message : String(error));
+      console.log('📍 Using request without location headers');
+    }
 
     // Add auth token if requested and available
     if (includeAuth) {

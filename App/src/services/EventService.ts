@@ -1,10 +1,9 @@
 import { Event } from "../types";
 import { apiService } from './ApiService';
 
-export const getEvents = async (language: string = 'pt'): Promise<Event[]> => {
+export const getEvents = async (): Promise<Event[]> => {
   try {
     const response = await apiService.get<Event[]>('/api/public/events', {
-      headers: { 'Accept-Language': language },
       includeAuth: false
     });
     

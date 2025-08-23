@@ -1,10 +1,9 @@
 import { Business } from "../types";
 import { apiService } from './ApiService';
 
-export const getBusinesses = async (language: string = 'pt'): Promise<Business[]> => {
+export const getBusinesses = async (): Promise<Business[]> => {
   try {
     const response = await apiService.get<Business[]>('/api/public/locations/businesses', {
-      headers: { 'Accept-Language': language },
       includeAuth: false
     });
     

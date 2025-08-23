@@ -55,7 +55,6 @@ const LocalizedTextInput: React.FC<LocalizedTextInputProps> = ({
     if (value && value.trim()) {
       if (!referenceId || referenceId === 0) {
         // Auto-create text reference when user types directly and field has no referenceId
-        console.log('Auto-creating text reference for:', value, 'Current referenceId:', referenceId);
         try {
           const newReferenceId = await localizedTextsService.createReference(value.trim(), []);
           console.log('Created text reference:', newReferenceId);

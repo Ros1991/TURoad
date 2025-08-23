@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text, Button, AudioStoriesPlayer } from '../components';
+import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCityById } from '../services/CityService';
 import { City } from '../types';
 
@@ -28,6 +29,12 @@ const CityScreen: React.FC = () => {
   useEffect(() => {
     loadCity();
   }, []);
+
+  // Refresh city data when language changes
+  useLanguageRefresh(() => {
+    console.log('🌐 CityScreen: Refreshing city data due to language change');
+    loadCity();
+  });
 
 
 

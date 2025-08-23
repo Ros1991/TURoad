@@ -23,7 +23,7 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleLoginRedirect = () => {
-    navigation.navigate('Welcome');
+    navigation.replace('Welcome');
   };
 
   const ProfileItem = ({ title, iconName, onPress, showArrow = true, textColor = '#1A1A1A', iconColor = '#666666' }: { 

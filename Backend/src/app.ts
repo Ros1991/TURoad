@@ -10,16 +10,19 @@ import { initializeDatabase } from '@/config/database';
 import { errorHandler } from '@/middleware/errorHandler';
 import { notFoundHandler } from '@/middleware/notFoundHandler';
 import { languageMiddleware } from '@/middleware/languageMiddleware';
+import { locationLoggingMiddleware } from '@/middleware/locationLoggingMiddleware';
 import { setupRoutes } from '@/utils/setupRoutes';
 
 class App {
   public app: express.Application;
 
   constructor() {
+    console.log('🚀 TURoad App constructor called - loading middlewares...');
     this.app = express();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
+    console.log('✅ TURoad App initialization completed');
   }
 
   private initializeMiddlewares(): void {
@@ -31,7 +34,7 @@ class App {
       origin: config.server.corsOrigin,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-Language'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-Language', 'X-User-Location', 'X-Location-Accuracy'],
     }));
 
     // Compression middleware
@@ -60,6 +63,11 @@ class App {
     
     // Language detection middleware
     this.app.use(languageMiddleware);
+
+    // Location headers logging middleware
+    console.log('🔧 Installing location logging middleware...');
+    this.app.use(locationLoggingMiddleware);
+    console.log('✅ Location logging middleware installed');
 
     // Static files
     this.app.use('/uploads', express.static('uploads'));

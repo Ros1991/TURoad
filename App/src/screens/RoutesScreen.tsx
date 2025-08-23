@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
 import { Box, Text, Card } from '../components';
+import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getRoutes } from '../services/RouteService';
 import { Route } from '../types';
 
@@ -23,6 +24,12 @@ const RoutesScreen: React.FC = () => {
   useEffect(() => {
     loadRoutes();
   }, []);
+
+  // Refresh data when language changes
+  useLanguageRefresh(() => {
+    console.log('🌐 RoutesScreen: Refreshing data due to language change');
+    loadRoutes();
+  });
 
   const loadRoutes = async () => {
     try {

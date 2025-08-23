@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -24,11 +24,20 @@ const WelcomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { isAuthenticated, loading } = useAuth();
+  const hasNavigated = useRef(false);
+  const instanceId = useRef(Math.random().toString(36).substr(2, 9));
+  
+  console.log('🏠 WelcomeScreen INSTANCE CREATED:', instanceId.current);
 
   useEffect(() => {
+    console.log(`🏠 WelcomeScreen[${instanceId.current}]: useEffect triggered`, { loading, isAuthenticated, hasNavigated: hasNavigated.current });
     // If user is authenticated and we're done loading, navigate to home
-    if (!loading && isAuthenticated) {
+    if (!loading && isAuthenticated && !hasNavigated.current) {
+      hasNavigated.current = true;
+      console.log(`🏠 WelcomeScreen[${instanceId.current}]: Navigating to MainTabs (auto-login)`);
       navigation.replace('MainTabs');
+    } else if (!loading && isAuthenticated) {
+      console.log(`⚠️ WelcomeScreen[${instanceId.current}]: Skipping navigation - already navigated`);
     }
   }, [loading, isAuthenticated, navigation]);
 

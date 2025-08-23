@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { RequestWithLanguage } from '../middleware/languageMiddleware';
 import { AppDataSource } from '@/config/database';
 import { Category } from '@/entities/Category';
 import { Route } from '@/entities/Route';
@@ -15,14 +16,6 @@ import { Type } from '@/entities/Type';
 import { Like, In } from 'typeorm';
 
 export class PublicController {
-  private getLanguageFromRequest(req: Request): string {
-    const acceptLanguage = req.headers['accept-language'] || 'pt';
-    // Extract the primary language code (e.g., 'pt' from 'pt-BR')
-    const languageParts = acceptLanguage.split(',')[0];
-    const language = languageParts ? languageParts.split('-')[0].toLowerCase() : 'pt';
-    // Support only pt, en, es
-    return ['pt', 'en', 'es'].includes(language) ? language : 'pt';
-  }
 
   private async getLocalizedText(textRefId: number | undefined, language: string): Promise<string | null> {
     if (!textRefId) return null;
@@ -48,9 +41,9 @@ export class PublicController {
     return localizedText?.textContent || null;
   }
 
-  async getCategories(req: Request, res: Response): Promise<void> {
+  async getCategories(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const showOnlyPrimary = req.query.primary === 'true';
       
       const categoryRepo = AppDataSource.getRepository(Category);
@@ -94,9 +87,9 @@ export class PublicController {
     }
   }
 
-  async getRoutes(req: Request, res: Response): Promise<void> {
+  async getRoutes(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const categoryId = req.query.categoryId as string;
       
       const routeRepo = AppDataSource.getRepository(Route);
@@ -171,9 +164,9 @@ export class PublicController {
     }
   }
 
-  async getCities(req: Request, res: Response): Promise<void> {
+  async getCities(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       
       const cityRepo = AppDataSource.getRepository(City);
       const storyCityRepo = AppDataSource.getRepository(StoryCity);
@@ -224,9 +217,9 @@ export class PublicController {
     }
   }
 
-  async getEvents(req: Request, res: Response): Promise<void> {
+  async getEvents(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const cityId = req.query.cityId as string;
       
       const eventRepo = AppDataSource.getRepository(Event);
@@ -292,9 +285,9 @@ export class PublicController {
     }
   }
 
-  async getBusinesses(req: Request, res: Response): Promise<void> {
+  async getBusinesses(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const cityId = req.query.cityId as string;
       
       const locationRepo = AppDataSource.getRepository(Location);
@@ -354,9 +347,9 @@ export class PublicController {
     }
   }
 
-  async getHistoricalPlaces(req: Request, res: Response): Promise<void> {
+  async getHistoricalPlaces(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const cityId = req.query.cityId as string;
       
       const locationRepo = AppDataSource.getRepository(Location);
@@ -423,9 +416,9 @@ export class PublicController {
     }
   }
 
-  async searchCities(req: Request, res: Response): Promise<void> {
+  async searchCities(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
-      const language = this.getLanguageFromRequest(req);
+      const language = req.language || 'pt';
       const query = req.query.q as string;
       
       if (!query || query.length < 2) {

@@ -1,11 +1,10 @@
 import { Category, Route } from '../types';
 import { apiService } from './ApiService';
 
-export const getCategories = async (showOnlyPrimary: boolean = false, language: string = 'pt'): Promise<Category[]> => {
+export const getCategories = async (showOnlyPrimary: boolean = false): Promise<Category[]> => {
   try {
     const response = await apiService.get<Category[]>('/api/public/categories', {
       params: { primary: showOnlyPrimary },
-      headers: { 'Accept-Language': language },
       includeAuth: false // Public endpoint doesn't need authentication
     });
     
@@ -20,7 +19,7 @@ export const getCategories = async (showOnlyPrimary: boolean = false, language: 
   }
 };
 
-export const getRoutes = async (categoryId?: string, language: string = 'pt'): Promise<Route[]> => {
+export const getRoutes = async (categoryId?: string): Promise<Route[]> => {
   try {
     const params: any = {};
     if (categoryId) {
@@ -29,7 +28,6 @@ export const getRoutes = async (categoryId?: string, language: string = 'pt'): P
     
     const response = await apiService.get<Route[]>('/api/public/routes', {
       params,
-      headers: { 'Accept-Language': language },
       includeAuth: false // Public endpoint doesn't need authentication
     });
     
