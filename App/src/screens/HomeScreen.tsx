@@ -107,60 +107,81 @@ const HomeScreen: React.FC = () => {
     try {
       setIsLoading(true);
       
-      // Load categories
-      try {
-        const categoriesData = await getCategories(false, searchQuery);
-        setCategories(categoriesData || []);
-      } catch (error) {
-        console.error('❌ Error loading categories:', error);
+      // Execute all API calls in parallel
+      const results = await Promise.allSettled([
+        getCategories(false, searchQuery),
+        getRoutes(undefined, searchQuery),
+        getCities(searchQuery),
+        getEvents(searchQuery),
+        getBusinesses(searchQuery),
+        getHistoricalPlaces(searchQuery)
+      ]);
+
+      // Process results and handle errors individually
+      const [categoriesResult, routesResult, citiesResult, eventsResult, businessesResult, historicalPlacesResult] = results;
+
+      // Categories
+      if (categoriesResult.status === 'fulfilled') {
+        setCategories(categoriesResult.value || []);
+      } else {
+        console.error('❌ Error loading categories:', categoriesResult.reason);
+        setCategories([]);
       }
 
-      // Load routes
-      try {
-        const routesData = await getRoutes(undefined, searchQuery);
-        setRoutes(routesData || []);
-      } catch (error) {
-        console.error('❌ Error loading routes:', error);
+      // Routes
+      if (routesResult.status === 'fulfilled') {
+        setRoutes(routesResult.value || []);
+      } else {
+        console.error('❌ Error loading routes:', routesResult.reason);
+        setRoutes([]);
       }
 
-      // Load cities
-      try {
-        const citiesData = await getCities(searchQuery);
-        setCities(citiesData || []);
+      // Cities
+      if (citiesResult.status === 'fulfilled') {
+        const citiesData = citiesResult.value || [];
+        setCities(citiesData);
         // Keep all cities for city search modal only if no search is active
         if (!searchQuery) {
-          setAllCities(citiesData || []);
+          setAllCities(citiesData);
         }
-      } catch (error) {
-        console.error('❌ Error loading cities:', error);
+      } else {
+        console.error('❌ Error loading cities:', citiesResult.reason);
+        setCities([]);
       }
 
-      // Load events
-      try {
-        const eventsData = await getEvents(searchQuery);
-        setEvents(eventsData || []);
-      } catch (error) {
-        console.error('❌ Error loading events:', error);
+      // Events
+      if (eventsResult.status === 'fulfilled') {
+        setEvents(eventsResult.value || []);
+      } else {
+        console.error('❌ Error loading events:', eventsResult.reason);
+        setEvents([]);
       }
 
-      // Load businesses
-      try {
-        const businessesData = await getBusinesses(searchQuery);
-        setBusinesses(businessesData || []);
-      } catch (error) {
-        console.error('❌ Error loading businesses:', error);
+      // Businesses
+      if (businessesResult.status === 'fulfilled') {
+        setBusinesses(businessesResult.value || []);
+      } else {
+        console.error('❌ Error loading businesses:', businessesResult.reason);
+        setBusinesses([]);
       }
 
-      // Load historical places
-      try {
-        const historicalPlacesData = await getHistoricalPlaces(searchQuery);
-        setHistoricalPlaces(historicalPlacesData || []);
-      } catch (error) {
-        console.error('❌ Error loading historical places:', error);
+      // Historical Places
+      if (historicalPlacesResult.status === 'fulfilled') {
+        setHistoricalPlaces(historicalPlacesResult.value || []);
+      } else {
+        console.error('❌ Error loading historical places:', historicalPlacesResult.reason);
+        setHistoricalPlaces([]);
       }
 
     } catch (error) {
       console.error('❌ Error loading data:', error);
+      // Reset all states on general error
+      setCategories([]);
+      setRoutes([]);
+      setCities([]);
+      setEvents([]);
+      setBusinesses([]);
+      setHistoricalPlaces([]);
     } finally {
       setIsLoading(false);
     }
@@ -922,7 +943,7 @@ const HomeScreen: React.FC = () => {
       </Box>
 
       {/* Content with White Background */}
-      <Box backgroundColor="white" borderTopLeftRadius={20} borderTopRightRadius={20} style={{ marginTop: -20, flex: 1, minHeight: '100%' }}>
+      <Box backgroundColor="white" borderTopLeftRadius={20} borderTopRightRadius={20} style={{ marginTop: -20, flex: 1, minHeight: '100%', paddingTop: 24}}>
         {/* Check if no data found */}
         {categories.length === 0 && routes.length === 0 && cities.length === 0 && events.length === 0 && businesses.length === 0 && historicalPlaces.length === 0 && !isLoading && searchTerm && (
           <Box 
@@ -961,7 +982,7 @@ const HomeScreen: React.FC = () => {
         {/* Categories */}
         {categories.length > 0 && (
           <>
-            <Box paddingHorizontal="l" paddingTop="l">
+            <Box paddingHorizontal="l">
               <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
                 <Text variant="sectionTitle">
                   {t('home.exploreByCategory')}
@@ -982,7 +1003,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
@@ -990,7 +1011,7 @@ const HomeScreen: React.FC = () => {
         {/* Featured Routes */}
         {routes.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.discoverPaths')}
               </Text>
@@ -1004,7 +1025,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
@@ -1012,7 +1033,7 @@ const HomeScreen: React.FC = () => {
         {/* Popular Cities */}
         {cities.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m"  marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.popularCities')}
               </Text>
@@ -1026,7 +1047,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
               removeClippedSubviews={false}
               initialNumToRender={3}
             />
@@ -1036,7 +1057,7 @@ const HomeScreen: React.FC = () => {
         {/* Routes by Category */}
         {categories.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.routesByCategory')}
               </Text>
@@ -1050,7 +1071,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
@@ -1058,7 +1079,7 @@ const HomeScreen: React.FC = () => {
         {/* Events */}
         {events.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.events')}
               </Text>
@@ -1072,7 +1093,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
@@ -1080,7 +1101,7 @@ const HomeScreen: React.FC = () => {
         {/* Businesses and Services */}
         {businesses.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.businessesAndServices')}
               </Text>
@@ -1094,7 +1115,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
@@ -1102,7 +1123,7 @@ const HomeScreen: React.FC = () => {
         {/* Historical Places */}
         {historicalPlaces.length > 0 && (
           <>
-            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+            <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
                 {t('home.historicalPlaces')}
               </Text>
@@ -1116,7 +1137,7 @@ const HomeScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 20 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 200 }}
             />
           </>
         )}
