@@ -24,7 +24,7 @@ export class CategoryRepository extends BaseRepository<Category> {
    * Get all categories with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findAllWithLocalizedTexts(language: string = 'pt', search?: string, showOnlyPrimary?: boolean): Promise<any[]> {
+  async findAllWithLocalizedTexts(language: string = 'pt', search?: string, showOnlyPrimary?: boolean, cityId?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([

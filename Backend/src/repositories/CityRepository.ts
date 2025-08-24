@@ -23,7 +23,7 @@ export class CityRepository extends BaseRepository<City> {
    * Get all cities with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findAllWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+  async findAllWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -54,6 +54,11 @@ export class CityRepository extends BaseRepository<City> {
         '(COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search OR c.state ILIKE :search)',
         { search: `%${search.trim()}%` }
       );
+    }
+
+    // Filter by city if provided (for related cities functionality)
+    if (cityId) {
+      qb.andWhere('c.city_id != :cityId', { cityId });
     }
     
     return await qb.getRawMany();

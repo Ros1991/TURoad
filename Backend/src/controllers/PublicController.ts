@@ -64,8 +64,9 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
       
-      const categories = await this.categoryService.getAllWithLocalizedTexts(language, search);
+      const categories = await this.categoryService.getAllWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
       
       const categoriesWithData = categories.map(category => ({
         id: category.id.toString(),
@@ -94,8 +95,9 @@ export class PublicController {
       const language = req.language || 'pt';
       const categoryId = req.query.categoryId as string;
       const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
       
-      const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search);
+      const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search, cityId ? parseInt(cityId) : undefined);
       
       const routesWithData = routes.map(route => ({
         id: route.id.toString(),
@@ -125,8 +127,9 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
       
-      const cities = await this.cityService.getAllWithLocalizedTexts(language, search);
+      const cities = await this.cityService.getAllWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
       
       const citiesWithData = cities.map(city => ({
         id: city.id.toString(),
@@ -196,8 +199,9 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
       
-      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search);
+      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
       
       const businessesWithData = businesses.map(business => ({
         id: business.id.toString(),
@@ -226,8 +230,9 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
       
-      const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search);
+      const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
       const historicalPlacesWithData = historicalPlaces.map(place => ({
         id: place.id.toString(),
         name: place.name || 'Unnamed Place',

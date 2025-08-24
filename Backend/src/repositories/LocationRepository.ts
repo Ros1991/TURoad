@@ -155,7 +155,7 @@ export class LocationRepository extends BaseRepository<Location> {
    * Get all businesses with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findBusinessesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+  async findBusinessesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -183,6 +183,11 @@ export class LocationRepository extends BaseRepository<Location> {
         { search: `%${search.trim()}%` }
       );
     }
+
+    // Filter by city if provided
+    if (cityId) {
+      qb.andWhere('l.city_id = :cityId', { cityId });
+    }
     
     return await qb.limit(10).getRawMany();
   }
@@ -191,7 +196,7 @@ export class LocationRepository extends BaseRepository<Location> {
    * Get all historical places with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+  async findHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -225,6 +230,11 @@ export class LocationRepository extends BaseRepository<Location> {
         '(COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search)',
         { search: `%${search.trim()}%` }
       );
+    }
+
+    // Filter by city if provided
+    if (cityId) {
+      qb.andWhere('l.city_id = :cityId', { cityId });
     }
     
     return await qb.limit(10).getRawMany();

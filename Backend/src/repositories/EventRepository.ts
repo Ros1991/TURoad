@@ -104,7 +104,7 @@ export class EventRepository extends BaseRepository<Event> {
    * Get all events with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findAllWithLocalizedTexts(language: string = 'pt', cityId?: string, search?: string): Promise<any[]> {
+  async findAllWithLocalizedTexts(language: string = 'pt', cityId?: number, search?: string): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -134,11 +134,8 @@ export class EventRepository extends BaseRepository<Event> {
       .setParameter('language', language);
 
     // Filter by city if provided
-    if (cityId && cityId.trim()) {
-      const cityIdNum = parseInt(cityId);
-      if (!isNaN(cityIdNum)) {
-        qb.andWhere('e.city_id = :cityId', { cityId: cityIdNum });
-      }
+    if (cityId) {
+      qb.andWhere('e.city_id = :cityId', { cityId });
     }
 
     // Add search filter if provided

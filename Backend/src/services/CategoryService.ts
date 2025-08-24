@@ -10,7 +10,7 @@ export class CategoryService extends BaseService<Category> {
     this.repository = categoryRepository;
   }
 
-  async getAllWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
-    return await categoryRepository.findAllWithLocalizedTexts(language, search);
+  async getAllWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
+    return await categoryRepository.findAllWithLocalizedTexts(language, search, undefined, cityId);
   }
 }

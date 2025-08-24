@@ -23,7 +23,7 @@ export class RouteRepository extends BaseRepository<Route> {
    * Get all routes with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findAllWithLocalizedTexts(language: string = 'pt', categoryId?: string, search?: string): Promise<any[]> {
+  async findAllWithLocalizedTexts(language: string = 'pt', categoryId?: string, search?: string, cityId?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -62,6 +62,12 @@ export class RouteRepository extends BaseRepository<Route> {
         '(COALESCE(lt_title_lang.text_content, lt_title_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search)',
         { search: `%${search.trim()}%` }
       );
+    }
+
+    // Filter by city if provided
+    if (cityId) {
+      qb.andWhere('EXISTS (SELECT 1 FROM route_cities WHERE route_id = r.route_id AND city_id = :cityId)', 
+        { cityId });
     }
     
     return await qb.getRawMany();
