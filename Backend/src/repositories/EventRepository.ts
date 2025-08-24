@@ -2,6 +2,7 @@ import { BaseRepository } from '@/core/base/BaseRepository';
 import { Event } from '@/entities/Event';
 import { SelectQueryBuilder, FindManyOptions } from 'typeorm';
 import { PaginationRequestVO, ListResponseVO } from '@/core/base/BaseVO';
+import { AppDataSource } from '@/config/database';
 
 export class EventRepository extends BaseRepository<Event> {
   constructor() {
@@ -97,6 +98,58 @@ export class EventRepository extends BaseRepository<Event> {
     if(search && search.cityId) {
       qb.andWhere('entity.city_id = :cityId', { cityId: search.cityId });
     }
+  }
+
+  /**
+   * Get all events with localized texts using database JOINs
+   * Falls back to Portuguese if the requested language doesn't exist
+   */
+  async findAllWithLocalizedTexts(language: string = 'pt', cityId?: string, search?: string): Promise<any[]> {
+    const qb = AppDataSource
+      .createQueryBuilder()
+      .select([
+        'e.event_id as id',
+        'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+        'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+        'COALESCE(lt_location_lang.text_content, lt_location_pt.text_content) as location',
+        'COALESCE(lt_time_lang.text_content, lt_time_pt.text_content) as time',
+        'e.event_date as eventDate',
+        'e.image_url as image',
+        'COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content, \'Evento\') as type'
+      ])
+      .from('events', 'e')
+      .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = e.name_text_ref_id AND lt_name_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = e.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = e.description_text_ref_id AND lt_desc_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = e.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_location_lang', 'lt_location_lang.reference_id = e.location_text_ref_id AND lt_location_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_location_pt', 'lt_location_pt.reference_id = e.location_text_ref_id AND lt_location_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_time_lang', 'lt_time_lang.reference_id = e.time_text_ref_id AND lt_time_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_time_pt', 'lt_time_pt.reference_id = e.time_text_ref_id AND lt_time_pt.language_code = \'pt\'')
+      .leftJoin('event_categories', 'ec', 'ec.event_id = e.event_id')
+      .leftJoin('categories', 'cat', 'cat.category_id = ec.category_id')
+      .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
+      .where('e."deletedAt" IS NULL')
+      .setParameter('language', language);
+
+    // Filter by city if provided
+    if (cityId && cityId.trim()) {
+      const cityIdNum = parseInt(cityId);
+      if (!isNaN(cityIdNum)) {
+        qb.andWhere('e.city_id = :cityId', { cityId: cityIdNum });
+      }
+    }
+
+    // Add search filter if provided
+    if (search && search.trim()) {
+      qb.andWhere(
+        '(COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search OR COALESCE(lt_location_lang.text_content, lt_location_pt.text_content) ILIKE :search)',
+        { search: `%${search.trim()}%` }
+      );
+    }
+    
+    return await qb.getRawMany();
   }
 }
 

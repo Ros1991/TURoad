@@ -84,4 +84,8 @@ export class EventService extends BaseService<Event> {
 
     return this.storyEventRepository.delete(storyId);
   }
+
+  async getAllWithLocalizedTexts(language: string = 'pt', cityId?: number, search?: string): Promise<any[]> {
+    return await eventRepository.findAllWithLocalizedTexts(language, cityId?.toString(), search);
+  }
 }

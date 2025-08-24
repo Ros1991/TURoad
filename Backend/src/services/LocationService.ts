@@ -84,4 +84,12 @@ export class LocationService extends BaseService<Location> {
 
     return this.storyLocationRepository.delete(storyId);
   }
+
+  async getBusinessesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    return await locationRepository.findBusinessesWithLocalizedTexts(language, search);
+  }
+
+  async getHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    return await locationRepository.findHistoricalPlacesWithLocalizedTexts(language, search);
+  }
 }

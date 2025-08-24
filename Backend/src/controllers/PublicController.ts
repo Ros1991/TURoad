@@ -15,8 +15,26 @@ import { StoryLocation } from '@/entities/StoryLocation';
 import { Type } from '@/entities/Type';
 import { Like, In } from 'typeorm';
 import { faqService } from '@/services/FAQService';
+import { CategoryService } from '@/services/CategoryService';
+import { RouteService } from '@/services/RouteService';
+import { CityService } from '@/services/CityService';
+import { EventService } from '@/services/EventService';
+import { LocationService } from '@/services/LocationService';
 
 export class PublicController {
+  private categoryService: CategoryService;
+  private routeService: RouteService;
+  private cityService: CityService;
+  private eventService: EventService;
+  private locationService: LocationService;
+
+  constructor() {
+    this.categoryService = new CategoryService();
+    this.routeService = new RouteService();
+    this.cityService = new CityService();
+    this.eventService = new EventService();
+    this.locationService = new LocationService();
+  }
 
   private async getLocalizedText(textRefId: number | undefined, language: string): Promise<string | null> {
     if (!textRefId) return null;
@@ -45,34 +63,17 @@ export class PublicController {
   async getCategories(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
-      const showOnlyPrimary = req.query.primary === 'true';
+      const search = req.query.search as string;
       
-      const categoryRepo = AppDataSource.getRepository(Category);
-      const routeCategoryRepo = AppDataSource.getRepository(RouteCategory);
+      const categories = await this.categoryService.getAllWithLocalizedTexts(language, search);
       
-      // Get all categories or only primary ones
-      const categories = await categoryRepo.find();
-      
-      // Filter primary categories if requested (assuming we add an isPrimary field)
-      // For now, we'll return all categories
-      
-      // Get route counts for each category
-      const categoriesWithData = await Promise.all(categories.map(async (category) => {
-        const routeCount = await routeCategoryRepo.count({
-          where: { categoryId: category.categoryId }
-        });
-        
-        const name = await this.getLocalizedText(category.nameTextRefId, language);
-        const description = await this.getLocalizedText(category.descriptionTextRefId, language);
-        
-        return {
-          id: category.categoryId.toString(),
-          name: name || 'Unnamed Category',
-          description: description,
-          image: category.imageUrl,
-          routeCount: routeCount,
-          isPrimary: true // TODO: Add this field to the database
-        };
+      const categoriesWithData = categories.map(category => ({
+        id: category.id.toString(),
+        name: category.name || 'Unnamed Category',
+        description: category.description,
+        image: category.image,
+        routeCount: parseInt(category.routeCount) || 0,
+        isPrimary: true
       }));
       
       res.json({
@@ -92,64 +93,19 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const categoryId = req.query.categoryId as string;
+      const search = req.query.search as string;
       
-      const routeRepo = AppDataSource.getRepository(Route);
-      const routeCategoryRepo = AppDataSource.getRepository(RouteCategory);
-      const routeCityRepo = AppDataSource.getRepository(RouteCity);
-      const storyRouteRepo = AppDataSource.getRepository(StoryRoute);
+      const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search);
       
-      // Get routes, optionally filtered by category
-      let routeQuery = routeRepo.createQueryBuilder('route')
-        .where('route.deletedAt IS NULL');
-      
-      if (categoryId) {
-        const routeCategories = await routeCategoryRepo.find({
-          where: { categoryId: parseInt(categoryId) }
-        });
-        const routeIds = routeCategories.map(rc => rc.routeId);
-        if (routeIds.length > 0) {
-          routeQuery = routeQuery.andWhere('route.routeId IN (:...routeIds)', { routeIds });
-        }
-      }
-      
-      const routes = await routeQuery.getMany();
-      
-      // Get detailed data for each route
-      const routesWithData = await Promise.all(routes.map(async (route) => {
-        const title = await this.getLocalizedText(route.titleTextRefId, language);
-        const description = await this.getLocalizedText(route.descriptionTextRefId, language);
-        
-        // Get categories for this route
-        const routeCategories = await routeCategoryRepo.find({
-          where: { routeId: route.routeId },
-          relations: ['category']
-        });
-        
-        const categories = routeCategories.map(rc => rc.categoryId.toString());
-        
-        // Get cities count (stops)
-        const citiesCount = await routeCityRepo.count({
-          where: { routeId: route.routeId }
-        });
-        
-        // Get stories count
-        const storiesCount = await storyRouteRepo.count({
-          where: { routeId: route.routeId }
-        });
-        
-        // Calculate total distance (placeholder - would need actual calculation)
-        const totalDistance = `${citiesCount * 50}km`; // Placeholder calculation
-        
-        return {
-          id: route.routeId.toString(),
-          title: title || 'Unnamed Route',
-          description: description,
-          image: route.imageUrl,
-          categories: categories,
-          stops: citiesCount,
-          totalDistance: totalDistance,
-          stories: storiesCount
-        };
+      const routesWithData = routes.map(route => ({
+        id: route.id.toString(),
+        title: route.title || 'Unnamed Route',
+        description: route.description,
+        image: route.image,
+        categories: route.categories ? route.categories.map((cat: number) => cat.toString()) : [],
+        stops: parseInt(route.stops) || 0,
+        totalDistance: `${(parseInt(route.stops) || 0) * 50}km`,
+        stories: parseInt(route.stories) || 0
       }));
       
       res.json({
@@ -168,43 +124,22 @@ export class PublicController {
   async getCities(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
+      const search = req.query.search as string;
       
-      const cityRepo = AppDataSource.getRepository(City);
-      const storyCityRepo = AppDataSource.getRepository(StoryCity);
-      const routeCityRepo = AppDataSource.getRepository(RouteCity);
+      const cities = await this.cityService.getAllWithLocalizedTexts(language, search);
       
-      const cities = await cityRepo.find();
-      
-      const citiesWithData = await Promise.all(cities.map(async (city) => {
-        const name = await this.getLocalizedText(city.nameTextRefId, language);
-        const description = await this.getLocalizedText(city.descriptionTextRefId, language);
-        
-        // Get stories count
-        const storiesCount = await storyCityRepo.count({
-          where: { cityId: city.cityId }
-        });
-        
-        // Get routes count for distance calculation
-        const routesCount = await routeCityRepo.count({
-          where: { cityId: city.cityId }
-        });
-        
-        // Calculate total distance (placeholder)
-        const totalDistance = `${routesCount * 30}km de rotas`;
-        
-        return {
-          id: city.cityId.toString(),
-          name: name || 'Unnamed City',
-          description: description,
-          state: city.state,
-          image: city.imageUrl,
-          latitude: parseFloat(city.latitude.toString()),
-          longitude: parseFloat(city.longitude.toString()),
-          totalDistance: totalDistance,
-          stories: storiesCount
-        };
+      const citiesWithData = cities.map(city => ({
+        id: city.id.toString(),
+        name: city.name || 'Unnamed City',
+        description: city.description,
+        state: city.state,
+        image: city.image,
+        latitude: parseFloat(city.latitude) || 0,
+        longitude: parseFloat(city.longitude) || 0,
+        totalDistance: `${(parseInt(city.routes) || 0) * 30}km de rotas`,
+        stories: parseInt(city.stories) || 0
       }));
-      
+      console.log(citiesWithData);
       res.json({
         success: true,
         data: citiesWithData
@@ -222,56 +157,28 @@ export class PublicController {
     try {
       const language = req.language || 'pt';
       const cityId = req.query.cityId as string;
+      const search = req.query.search as string;
       
-      const eventRepo = AppDataSource.getRepository(Event);
-      const categoryRepo = AppDataSource.getRepository(Category);
+      const events = await this.eventService.getAllWithLocalizedTexts(language, cityId ? parseInt(cityId) : undefined, search);
       
-      let eventQuery = eventRepo.createQueryBuilder('event')
-        .leftJoinAndSelect('event.city', 'city')
-        .leftJoinAndSelect('event.eventCategories', 'eventCategories')
-        .leftJoinAndSelect('eventCategories.category', 'category')
-        .where('event.deletedAt IS NULL');
-      
-      if (cityId) {
-        eventQuery = eventQuery.andWhere('event.cityId = :cityId', { cityId: parseInt(cityId) });
-      }
-      
-      const events = await eventQuery.getMany();
-      
-      const eventsWithData = await Promise.all(events.map(async (event) => {
-        const name = await this.getLocalizedText(event.nameTextRefId, language);
-        const description = await this.getLocalizedText(event.descriptionTextRefId, language);
-        const location = await this.getLocalizedText(event.locationTextRefId, language);
-        
-        // Get event type from first category
-        let eventType = 'Evento';
-        if (event.eventCategories && event.eventCategories.length > 0) {
-          const firstCategory = event.eventCategories[0];
-          const categoryName = firstCategory ? await this.getLocalizedText(
-            firstCategory.category.nameTextRefId, 
-            language
-          ) : null;
-          eventType = categoryName || 'Evento';
-        }
-        
-        // Format date and time
-        const eventDate = new Date(event.eventDate);
+      const eventsWithData = events.map(event => {
+        const eventDate = new Date(event.eventdate);
         const formattedDate = eventDate.toLocaleDateString('pt-BR', {
           day: 'numeric',
           month: 'long'
         });
         
         return {
-          id: event.eventId.toString(),
-          name: name || 'Unnamed Event',
-          description: description,
-          type: eventType,
-          location: location || 'Local não especificado',
+          id: event.id.toString(),
+          name: event.name || 'Unnamed Event',
+          description: event.description,
+          type: event.type || 'Evento',
+          location: event.location || 'Local não especificado',
           date: formattedDate,
-          time: await this.getLocalizedText(event.timeTextRefId, language),
-          image: event.imageUrl
+          time: event.time,
+          image: event.image
         };
-      }));
+      });
       
       res.json({
         success: true,
@@ -289,50 +196,18 @@ export class PublicController {
   async getBusinesses(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
-      const cityId = req.query.cityId as string;
+      const search = req.query.search as string;
       
-      const locationRepo = AppDataSource.getRepository(Location);
-      const typeRepo = AppDataSource.getRepository(Type);
+      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search);
       
-      // Get business type ID
-      const businessType = await typeRepo.findOne({
-        where: { nameTextRefId: In([4]) } // Placeholder - need to identify business type IDs
-      });
-      
-      let locationQuery = locationRepo.createQueryBuilder('location')
-        .leftJoinAndSelect('location.city', 'city')
-        .where('location.deletedAt IS NULL');
-      
-      if (businessType) {
-        locationQuery = locationQuery.andWhere('location.typeId = :typeId', { 
-          typeId: businessType.typeId 
-        });
-      }
-      
-      if (cityId) {
-        locationQuery = locationQuery.andWhere('location.cityId = :cityId', { 
-          cityId: parseInt(cityId) 
-        });
-      }
-      
-      const locations = await locationQuery.limit(10).getMany();
-      
-      const businessesWithData = await Promise.all(locations.map(async (location) => {
-        const name = await this.getLocalizedText(location.nameTextRefId, language);
-        const description = await this.getLocalizedText(location.descriptionTextRefId, language);
-        
-        // Calculate distance (placeholder)
-        const distance = `A ${Math.floor(Math.random() * 10) + 1}km de distância`;
-        
-        return {
-          id: location.locationId.toString(),
-          name: name || 'Unnamed Business',
-          description: description,
-          distance: distance,
-          image: location.imageUrl,
-          latitude: location.latitude ? parseFloat(location.latitude.toString()) : null,
-          longitude: location.longitude ? parseFloat(location.longitude.toString()) : null
-        };
+      const businessesWithData = businesses.map(business => ({
+        id: business.id.toString(),
+        name: business.name || 'Unnamed Business',
+        description: business.description,
+        distance: `A ${Math.floor(Math.random() * 10) + 1}km de distância`,
+        image: business.image,
+        latitude: business.latitude ? parseFloat(business.latitude) : null,
+        longitude: business.longitude ? parseFloat(business.longitude) : null
       }));
       
       res.json({
@@ -351,57 +226,18 @@ export class PublicController {
   async getHistoricalPlaces(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
-      const cityId = req.query.cityId as string;
+      const search = req.query.search as string;
       
-      const locationRepo = AppDataSource.getRepository(Location);
-      const storyLocationRepo = AppDataSource.getRepository(StoryLocation);
-      const typeRepo = AppDataSource.getRepository(Type);
-      
-      // Get historical place type ID
-      const historicalType = await typeRepo.findOne({
-        where: { nameTextRefId: In([3]) } // Placeholder - need to identify historical type IDs
-      });
-      
-      let locationQuery = locationRepo.createQueryBuilder('location')
-        .leftJoinAndSelect('location.city', 'city')
-        .where('location.deletedAt IS NULL');
-      
-      if (historicalType) {
-        locationQuery = locationQuery.andWhere('location.typeId = :typeId', { 
-          typeId: historicalType.typeId 
-        });
-      }
-      
-      if (cityId) {
-        locationQuery = locationQuery.andWhere('location.cityId = :cityId', { 
-          cityId: parseInt(cityId) 
-        });
-      }
-      
-      const locations = await locationQuery.limit(10).getMany();
-      
-      const historicalPlacesWithData = await Promise.all(locations.map(async (location) => {
-        const name = await this.getLocalizedText(location.nameTextRefId, language);
-        const description = await this.getLocalizedText(location.descriptionTextRefId, language);
-        const cityName = location.city ? await this.getLocalizedText(location.city.nameTextRefId, language) : null;
-        
-        // Get stories count
-        const storiesCount = await storyLocationRepo.count({
-          where: { locationId: location.locationId }
-        });
-        
-        const locationText = location.city ? `${cityName || location.city.state}, ${location.city.state}` : 'Location unknown';
-        
-        return {
-          id: location.locationId.toString(),
-          name: name || 'Unnamed Place',
-          description: description,
-          location: locationText,
-          storiesCount: storiesCount,
-          image: location.imageUrl,
-          latitude: location.latitude ? parseFloat(location.latitude.toString()) : null,
-          longitude: location.longitude ? parseFloat(location.longitude.toString()) : null
-        };
+      const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search);
+      const historicalPlacesWithData = historicalPlaces.map(place => ({
+        id: place.id.toString(),
+        name: place.name || 'Unnamed Place',
+        description: place.description,
+        location: place.location,
+        storiesCount: parseInt(place.storiesCount) || 0,
+        image: place.image,
+        latitude: place.latitude ? parseFloat(place.latitude) : null,
+        longitude: place.longitude ? parseFloat(place.longitude) : null
       }));
       
       res.json({

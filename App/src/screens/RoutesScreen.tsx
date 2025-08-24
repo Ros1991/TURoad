@@ -94,7 +94,7 @@ const RoutesScreen: React.FC = () => {
         <FlatList
           data={historicalRoutes}
           renderItem={renderRoute}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `historical-route-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           style={{ marginBottom: 32 }}
@@ -115,7 +115,7 @@ const RoutesScreen: React.FC = () => {
         <FlatList
           data={ecologicalRoutes}
           renderItem={renderRoute}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `ecological-route-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
         />

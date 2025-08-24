@@ -290,6 +290,7 @@ const HomeScreen: React.FC = () => {
 
   const renderCity = ({ item }: { item: City }) => {
     if (!item) return null;
+
     
     // Aplicar tradução baseada no idioma atual
     const currentLanguage = i18n.language || 'pt';
@@ -318,6 +319,9 @@ const HomeScreen: React.FC = () => {
             borderBottomRightRadius: 12,
             marginBottom: 12
           }}
+          resizeMode="cover"
+          onLoad={() => console.log(`✅ City image loaded: ${item.name}`)}
+          onError={(error) => console.log(`❌ City image error: ${item.name}`, error.nativeEvent.error)}
         />
         
         {/* Conteúdo */}
@@ -865,7 +869,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={categories}
           renderItem={renderCategory}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `category-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}
@@ -883,7 +887,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={routes}
           renderItem={renderRoute}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `route-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}
@@ -901,11 +905,13 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={cities}
           renderItem={renderCity}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `city-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
+          contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
           style={{ marginBottom: 24 }}
+          removeClippedSubviews={false}
+          initialNumToRender={3}
         />
 
         {/* Routes by Category */}
@@ -919,7 +925,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={categories}
           renderItem={renderCategoryByRoute}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `category-route-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}
@@ -937,7 +943,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={events}
           renderItem={renderEvent}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `event-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}
@@ -955,7 +961,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={businesses}
           renderItem={renderBusiness}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `business-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}
@@ -973,7 +979,7 @@ const HomeScreen: React.FC = () => {
         <FlatList
           data={historicalPlaces}
           renderItem={renderHistoricalPlace}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `historical-${index}-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingLeft: 20 }}

@@ -2,6 +2,7 @@ import { BaseRepository } from '@/core/base/BaseRepository';
 import { Location } from '@/entities/Location';
 import { SelectQueryBuilder, FindManyOptions } from 'typeorm';
 import { PaginationRequestVO, ListResponseVO } from '@/core/base/BaseVO';
+import { AppDataSource } from '@/config/database';
 
 export class LocationRepository extends BaseRepository<Location> {
   constructor() {
@@ -148,6 +149,85 @@ export class LocationRepository extends BaseRepository<Location> {
     if(search && search.typeId) {
       qb.andWhere('entity.type_id = :typeId', { typeId: search.typeId });
     }
+  }
+
+  /**
+   * Get all businesses with localized texts using database JOINs
+   * Falls back to Portuguese if the requested language doesn't exist
+   */
+  async findBusinessesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    const qb = AppDataSource
+      .createQueryBuilder()
+      .select([
+        'l.location_id as id',
+        'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+        'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+        'l.image_url as image',
+        'l.latitude as latitude',
+        'l.longitude as longitude'
+      ])
+      .from('locations', 'l')
+      .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = l.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = l.description_text_ref_id AND lt_desc_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = l.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('types', 't', 't.type_id = l.type_id')
+      .where('l."deletedAt" IS NULL')
+      .andWhere('t.type_id = :businessTypeId', { businessTypeId: 4 })
+      .setParameter('language', language);
+
+    // Add search filter if provided
+    if (search && search.trim()) {
+      qb.andWhere(
+        '(COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search)',
+        { search: `%${search.trim()}%` }
+      );
+    }
+    
+    return await qb.limit(10).getRawMany();
+  }
+
+  /**
+   * Get all historical places with localized texts using database JOINs
+   * Falls back to Portuguese if the requested language doesn't exist
+   */
+  async findHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    const qb = AppDataSource
+      .createQueryBuilder()
+      .select([
+        'l.location_id as id',
+        'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+        'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+        'l.image_url as image',
+        'l.latitude as latitude',
+        'l.longitude as longitude',
+        'COUNT(DISTINCT sl.story_location_id) as "storiesCount"',
+        'COALESCE(COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || \', \' || c.state, \'Location unknown\') as location'
+      ])
+      .from('locations', 'l')
+      .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = l.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = l.description_text_ref_id AND lt_desc_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = l.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('cities', 'c', 'c.city_id = l.city_id')
+      .leftJoin('localized_texts', 'lt_city_lang', 'lt_city_lang.reference_id = c.name_text_ref_id AND lt_city_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_city_pt', 'lt_city_pt.reference_id = c.name_text_ref_id AND lt_city_pt.language_code = \'pt\'')
+      .leftJoin('story_locations', 'sl', 'sl.location_id = l.location_id')
+      .leftJoin('types', 't', 't.type_id = l.type_id')
+      .where('l."deletedAt" IS NULL')
+      .andWhere('t.type_id = :historicalTypeId', { historicalTypeId: 3 })
+      .groupBy('l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, lt_city_lang.text_content, lt_city_pt.text_content, c.state')
+      .setParameter('language', language);
+
+    // Add search filter if provided
+    if (search && search.trim()) {
+      qb.andWhere(
+        '(COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) ILIKE :search OR COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) ILIKE :search)',
+        { search: `%${search.trim()}%` }
+      );
+    }
+    
+    return await qb.limit(10).getRawMany();
   }
 }
 

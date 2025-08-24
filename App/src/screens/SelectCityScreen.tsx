@@ -140,7 +140,7 @@ const SelectCityScreen: React.FC = () => {
             <FlatList
               data={searchResults}
               renderItem={renderSearchResult}
-              keyExtractor={(item) => item.id}
+              keyExtractor={(item, index) => `search-${index}-${item.id}`}
               scrollEnabled={false}
             />
           </Box>
@@ -152,7 +152,7 @@ const SelectCityScreen: React.FC = () => {
             <FlatList
               data={recentSearches}
               renderItem={renderRecentSearch}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(item, index) => `recent-${index}`}
               scrollEnabled={false}
             />
           </Box>

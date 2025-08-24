@@ -85,4 +85,8 @@ export class CityService extends BaseService<City> {
 
     return this.storyCityRepository.delete(storyId);
   }
+
+  async getAllWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    return await cityRepository.findAllWithLocalizedTexts(language, search);
+  }
 }

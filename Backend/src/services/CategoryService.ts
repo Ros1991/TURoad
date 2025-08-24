@@ -9,4 +9,8 @@ export class CategoryService extends BaseService<Category> {
     // Use the singleton instance that has the proper applySearch implementation
     this.repository = categoryRepository;
   }
+
+  async getAllWithLocalizedTexts(language: string = 'pt', search?: string): Promise<any[]> {
+    return await categoryRepository.findAllWithLocalizedTexts(language, search);
+  }
 }
