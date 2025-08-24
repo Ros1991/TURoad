@@ -43,7 +43,7 @@
   },
   "home": {
     "title": "TURoad",
-    "location": "Aracaju, SE",
+    "location": "Choose a city",
     "searchPlaceholder": "Find stories, routes, events and more...",
     "exploreByCategory": "Explore routes by category",
     "seeAll": "See all",
