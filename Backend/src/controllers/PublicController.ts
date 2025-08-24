@@ -296,7 +296,7 @@ export class PublicController {
       
       // Get business type ID
       const businessType = await typeRepo.findOne({
-        where: { nameTextRefId: In([1, 2, 3]) } // Placeholder - need to identify business type IDs
+        where: { nameTextRefId: In([4]) } // Placeholder - need to identify business type IDs
       });
       
       let locationQuery = locationRepo.createQueryBuilder('location')
@@ -359,7 +359,7 @@ export class PublicController {
       
       // Get historical place type ID
       const historicalType = await typeRepo.findOne({
-        where: { nameTextRefId: In([4, 5, 6]) } // Placeholder - need to identify historical type IDs
+        where: { nameTextRefId: In([3]) } // Placeholder - need to identify historical type IDs
       });
       
       let locationQuery = locationRepo.createQueryBuilder('location')
