@@ -7,11 +7,14 @@ const recentSearches = [
   "Itabaiana, Sergipe",
 ];
 
-export const getCities = async (search?: string): Promise<City[]> => {
+export const getCities = async (search?: string, cityId?: string): Promise<City[]> => {
   try {
     const params: any = {};
     if (search) {
       params.search = search;
+    }
+    if (cityId) {
+      params.cityId = cityId;
     }
     
     const response = await apiService.get<City[]>('/api/public/cities', {

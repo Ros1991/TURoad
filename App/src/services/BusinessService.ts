@@ -1,11 +1,14 @@
 import { Business } from "../types";
 import { apiService } from './ApiService';
 
-export const getBusinesses = async (search?: string): Promise<Business[]> => {
+export const getBusinesses = async (search?: string, cityId?: string): Promise<Business[]> => {
   try {
     const params: any = {};
     if (search) {
       params.search = search;
+    }
+    if (cityId) {
+      params.cityId = cityId;
     }
     
     const response = await apiService.get<Business[]>('/api/public/locations/businesses', {

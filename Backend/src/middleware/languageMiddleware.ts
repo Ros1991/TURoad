@@ -39,8 +39,5 @@ export const languageMiddleware = (req: RequestWithLanguage, res: Response, next
   if (!supportedLanguages.includes(req.language)) {
     req.language = 'pt';
   }
-  
-  console.log(`🌍 Language middleware: ${req.method} ${req.path} -> language: ${req.language} (from headers: x-language=${req.headers['x-language']}, accept-language=${req.headers['accept-language']})`);
-  
   next();
 };

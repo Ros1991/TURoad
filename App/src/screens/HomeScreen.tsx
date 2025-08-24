@@ -75,6 +75,13 @@ const HomeScreen: React.FC = () => {
     loadData(searchTerm);
   });
 
+  // Refresh data when selected city changes
+  useEffect(() => {
+    if (selectedCity) {
+      loadData(searchTerm);
+    }
+  }, [selectedCity]);
+
   // Debounced search function
   const handleSearchChange = (text: string) => {
     setSearchTerm(text);
@@ -130,6 +137,17 @@ const HomeScreen: React.FC = () => {
     }
   };
 
+  // Clear selected city
+  const clearSelectedCity = async () => {
+    try {
+      await AsyncStorage.removeItem('selectedCity');
+      setSelectedCity(null);
+      loadData(searchTerm); // Reload data without city filter
+    } catch (error) {
+      console.error('Error clearing selected city:', error);
+    }
+  };
+
   // Handle city search with debounce
   const handleCitySearchChange = (text: string) => {
     setCitySearchText(text);
@@ -176,14 +194,17 @@ const HomeScreen: React.FC = () => {
     try {
       setIsLoading(true);
       
+      // Get selected city ID for filtering
+      const cityId = selectedCity?.id;
+      
       // Execute all API calls in parallel
       const results = await Promise.allSettled([
-        getCategories(false, searchQuery),
-        getRoutes(undefined, searchQuery),
-        getCities(searchQuery),
-        getEvents(searchQuery),
-        getBusinesses(searchQuery),
-        getHistoricalPlaces(searchQuery)
+        getCategories(false, searchQuery, cityId),
+        getRoutes(undefined, searchQuery, cityId),
+        getCities(searchQuery, cityId),
+        getEvents(searchQuery, cityId),
+        getBusinesses(searchQuery, cityId),
+        getHistoricalPlaces(searchQuery, cityId)
       ]);
 
       // Process results and handle errors individually
@@ -1107,7 +1128,7 @@ const HomeScreen: React.FC = () => {
           <>
             <Box paddingHorizontal="l" marginBottom="m">
               <Text variant="sectionTitle">
-                {t('home.popularCities')}
+                {selectedCity ? t('home.nearbyCities') : t('home.popularCities')}
               </Text>
             </Box>
             
@@ -1261,6 +1282,59 @@ const HomeScreen: React.FC = () => {
             <Text style={{ fontSize: 24, color: '#002043' }}>×</Text>
           </TouchableOpacity>
 
+          {/* Cidade Selecionada Atual */}
+          {selectedCity && (
+            <Box
+              style={{
+                backgroundColor: '#E8F4F8',
+                borderRadius: 8,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                marginBottom: 0,
+                marginTop: 35,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <Box style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontFamily: 'Asap',
+                    fontSize: 14,
+                    color: '#666',
+                    marginBottom: 2
+                  }}
+                >
+                  {t('home.selectedCity')}:
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: 'Asap',
+                    fontSize: 16,
+                    color: '#035A6E',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {selectedCity.name}, {selectedCity.state}
+                </Text>
+              </Box>
+              <TouchableOpacity
+                onPress={clearSelectedCity}
+                style={{
+                  backgroundColor: '#035A6E',
+                  borderRadius: 12,
+                  width: 24,
+                  height: 24,
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Text style={{ color: 'white', fontSize: 16, fontWeight: 'bold' }}>×</Text>
+              </TouchableOpacity>
+            </Box>
+          )}
+
           {/* Campo de Busca com ícone de lupa */}
           <Box 
             style={{
@@ -1271,7 +1345,7 @@ const HomeScreen: React.FC = () => {
               flexDirection: 'row',
               alignItems: 'center',
               marginBottom: 16,
-              marginTop: 35
+              marginTop: selectedCity ? 10 : 35
             }}
           >
             <Text style={{ fontSize: 18, color: '#035A6E', marginRight: 8 }}>⌕</Text>

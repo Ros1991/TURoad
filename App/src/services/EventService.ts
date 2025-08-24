@@ -1,11 +1,14 @@
 import { Event } from "../types";
 import { apiService } from './ApiService';
 
-export const getEvents = async (search?: string): Promise<Event[]> => {
+export const getEvents = async (search?: string, cityId?: string): Promise<Event[]> => {
   try {
     const params: any = {};
     if (search) {
       params.search = search;
+    }
+    if (cityId) {
+      params.cityId = cityId;
     }
     
     const response = await apiService.get<Event[]>('/api/public/events', {

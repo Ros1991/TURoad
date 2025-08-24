@@ -1,11 +1,14 @@
 import { HistoricalPlace } from "../types";
 import { apiService } from './ApiService';
 
-export const getHistoricalPlaces = async (search?: string): Promise<HistoricalPlace[]> => {
+export const getHistoricalPlaces = async (search?: string, cityId?: string): Promise<HistoricalPlace[]> => {
   try {
     const params: any = {};
     if (search) {
       params.search = search;
+    }
+    if (cityId) {
+      params.cityId = cityId;
     }
     
     const response = await apiService.get<HistoricalPlace[]>('/api/public/locations/historical', {
