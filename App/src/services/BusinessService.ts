@@ -1,10 +1,16 @@
 import { Business } from "../types";
 import { apiService } from './ApiService';
 
-export const getBusinesses = async (): Promise<Business[]> => {
+export const getBusinesses = async (search?: string): Promise<Business[]> => {
   try {
+    const params: any = {};
+    if (search) {
+      params.search = search;
+    }
+    
     const response = await apiService.get<Business[]>('/api/public/locations/businesses', {
-      includeAuth: false
+      params,
+      includeAuth: false // Public endpoint doesn't need authentication
     });
     
     if (response.success && response.data) {

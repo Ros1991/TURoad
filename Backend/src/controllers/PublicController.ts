@@ -139,7 +139,6 @@ export class PublicController {
         totalDistance: `${(parseInt(city.routes) || 0) * 30}km de rotas`,
         stories: parseInt(city.stories) || 0
       }));
-      console.log(citiesWithData);
       res.json({
         success: true,
         data: citiesWithData

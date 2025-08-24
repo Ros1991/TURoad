@@ -1,10 +1,16 @@
 import { Event } from "../types";
 import { apiService } from './ApiService';
 
-export const getEvents = async (): Promise<Event[]> => {
+export const getEvents = async (search?: string): Promise<Event[]> => {
   try {
+    const params: any = {};
+    if (search) {
+      params.search = search;
+    }
+    
     const response = await apiService.get<Event[]>('/api/public/events', {
-      includeAuth: false
+      params,
+      includeAuth: false // Public endpoint doesn't need authentication
     });
     
     if (response.success && response.data) {

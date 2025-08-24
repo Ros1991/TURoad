@@ -1,10 +1,16 @@
 import { HistoricalPlace } from "../types";
 import { apiService } from './ApiService';
 
-export const getHistoricalPlaces = async (): Promise<HistoricalPlace[]> => {
+export const getHistoricalPlaces = async (search?: string): Promise<HistoricalPlace[]> => {
   try {
+    const params: any = {};
+    if (search) {
+      params.search = search;
+    }
+    
     const response = await apiService.get<HistoricalPlace[]>('/api/public/locations/historical', {
-      includeAuth: false
+      params,
+      includeAuth: false // Public endpoint doesn't need authentication
     });
     
     if (response.success && response.data) {

@@ -1,10 +1,15 @@
 import { Category, Route } from '../types';
 import { apiService } from './ApiService';
 
-export const getCategories = async (showOnlyPrimary: boolean = false): Promise<Category[]> => {
+export const getCategories = async (showOnlyPrimary: boolean = false, search?: string): Promise<Category[]> => {
   try {
+    const params: any = { primary: showOnlyPrimary };
+    if (search) {
+      params.search = search;
+    }
+    
     const response = await apiService.get<Category[]>('/api/public/categories', {
-      params: { primary: showOnlyPrimary },
+      params,
       includeAuth: false // Public endpoint doesn't need authentication
     });
     
@@ -19,11 +24,14 @@ export const getCategories = async (showOnlyPrimary: boolean = false): Promise<C
   }
 };
 
-export const getRoutes = async (categoryId?: string): Promise<Route[]> => {
+export const getRoutes = async (categoryId?: string, search?: string): Promise<Route[]> => {
   try {
     const params: any = {};
     if (categoryId) {
       params.categoryId = categoryId;
+    }
+    if (search) {
+      params.search = search;
     }
     
     const response = await apiService.get<Route[]>('/api/public/routes', {

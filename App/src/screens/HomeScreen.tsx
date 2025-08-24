@@ -44,6 +44,11 @@ const HomeScreen: React.FC = () => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [historicalPlaces, setHistoricalPlaces] = useState<HistoricalPlace[]>([]);
   
+  // Estados para a busca geral
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const searchDebounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
   // Estados para o modal de busca de cidades
   const [isCitySearchModalVisible, setIsCitySearchModalVisible] = useState(false);
   const [citySearchText, setCitySearchText] = useState('');
@@ -62,17 +67,49 @@ const HomeScreen: React.FC = () => {
 
   // Refresh data when language changes
   useLanguageRefresh(() => {
-    loadData();
+    loadData(searchTerm);
   });
 
-  const loadData = async () => {
+  // Debounced search function
+  const handleSearchChange = (text: string) => {
+    setSearchTerm(text);
+    
+    // Clear existing timer
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
+    
+    // Set new timer for debounced search
+    searchDebounceTimer.current = setTimeout(() => {
+      loadData(text);
+    }, 500); // 500ms debounce delay
+  };
+
+  // Clear search function
+  const clearSearch = () => {
+    setSearchTerm('');
+    if (searchDebounceTimer.current) {
+      clearTimeout(searchDebounceTimer.current);
+    }
+    loadData(''); // Load data without filter
+  };
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceTimer.current) {
+        clearTimeout(searchDebounceTimer.current);
+      }
+    };
+  }, []);
+
+  const loadData = async (searchQuery?: string) => {
     try {
-      // Obter idioma atual da aplicação
-      const currentLanguage = i18n.language || 'pt';
+      setIsLoading(true);
       
-      // Load categories first
+      // Load categories
       try {
-        const categoriesData = await getCategories();
+        const categoriesData = await getCategories(false, searchQuery);
         setCategories(categoriesData || []);
       } catch (error) {
         console.error('❌ Error loading categories:', error);
@@ -80,7 +117,7 @@ const HomeScreen: React.FC = () => {
 
       // Load routes
       try {
-        const routesData = await getRoutes();
+        const routesData = await getRoutes(undefined, searchQuery);
         setRoutes(routesData || []);
       } catch (error) {
         console.error('❌ Error loading routes:', error);
@@ -88,16 +125,19 @@ const HomeScreen: React.FC = () => {
 
       // Load cities
       try {
-        const citiesData = await getCities();
+        const citiesData = await getCities(searchQuery);
         setCities(citiesData || []);
-        setAllCities(citiesData || []);
+        // Keep all cities for city search modal only if no search is active
+        if (!searchQuery) {
+          setAllCities(citiesData || []);
+        }
       } catch (error) {
         console.error('❌ Error loading cities:', error);
       }
 
       // Load events
       try {
-        const eventsData = await getEvents();
+        const eventsData = await getEvents(searchQuery);
         setEvents(eventsData || []);
       } catch (error) {
         console.error('❌ Error loading events:', error);
@@ -105,7 +145,7 @@ const HomeScreen: React.FC = () => {
 
       // Load businesses
       try {
-        const businessesData = await getBusinesses();
+        const businessesData = await getBusinesses(searchQuery);
         setBusinesses(businessesData || []);
       } catch (error) {
         console.error('❌ Error loading businesses:', error);
@@ -113,7 +153,7 @@ const HomeScreen: React.FC = () => {
 
       // Load historical places
       try {
-        const historicalPlacesData = await getHistoricalPlaces();
+        const historicalPlacesData = await getHistoricalPlaces(searchQuery);
         setHistoricalPlaces(historicalPlacesData || []);
       } catch (error) {
         console.error('❌ Error loading historical places:', error);
@@ -121,6 +161,8 @@ const HomeScreen: React.FC = () => {
 
     } catch (error) {
       console.error('❌ Error loading data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -841,12 +883,42 @@ const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </Box>
 
-        <Input
-          placeholder={t('home.searchPlaceholder')}
-          style={{ backgroundColor: 'white', borderRadius: 12 }}
-          marginBottom="l"
-          leftIcon={<Icon name="magnify" size={18} color="#035A6E" />}
-        />
+        <Box marginBottom="l">
+          <Box 
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: 'white',
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#E0E0E0',
+              paddingHorizontal: 16,
+              paddingVertical: 12
+            }}
+          >
+            <Icon name="magnify" size={18} color="#035A6E" style={{ marginRight: 8 }} />
+            <TextInput
+              style={{
+                flex: 1,
+                fontSize: 16,
+                color: 'black',
+                fontWeight: 'bold'
+              }}
+              placeholder={t('home.searchPlaceholder')}
+              placeholderTextColor="#999"
+              value={searchTerm}
+              onChangeText={handleSearchChange}
+            />
+            {isLoading && (
+              <ActivityIndicator size="small" color="#035A6E" style={{ marginLeft: 8 }} />
+            )}
+            {searchTerm && !isLoading && (
+              <TouchableOpacity onPress={clearSearch} style={{ marginLeft: 8 }}>
+                <Icon name="close-circle" size={18} color="#999" />
+              </TouchableOpacity>
+            )}
+          </Box>
+        </Box>
       </Box>
 
       {/* Content with White Background */}
