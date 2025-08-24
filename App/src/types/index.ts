@@ -12,16 +12,19 @@ export interface City {
   id: string;
   name: string;
   state: string;
-  descriptionTranslations: {
+  description?: string;
+  descriptionTranslations?: {
     pt: string;
     en: string;
     es: string;
   };
   totalDistance: string;
   image: string;
-  stories: Story[];
+  stories: Story[] | number;
   highlights?: string[];
   isPopular?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Story {

@@ -56,10 +56,15 @@ const HomeScreen: React.FC = () => {
   const [allCities, setAllCities] = useState<City[]>([]);
   const [recentSearches, setRecentSearches] = useState<Array<{text: string, cityId: string, cityName: string}>>([]);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Estado para cidade selecionada
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [isCitySearchLoading, setIsCitySearchLoading] = useState(false);
 
   useEffect(() => {
     loadData();
     loadRecentSearches();
+    loadSelectedCity();
     // Cleanup function para detectar quando instância é destruída
     return () => {
     };
@@ -102,6 +107,70 @@ const HomeScreen: React.FC = () => {
       }
     };
   }, []);
+
+  // Load selected city from AsyncStorage
+  const loadSelectedCity = async () => {
+    try {
+      const savedCity = await AsyncStorage.getItem('selectedCity');
+      if (savedCity) {
+        setSelectedCity(JSON.parse(savedCity));
+      }
+    } catch (error) {
+      console.error('Error loading selected city:', error);
+    }
+  };
+
+  // Save selected city to AsyncStorage
+  const saveSelectedCity = async (city: City) => {
+    try {
+      await AsyncStorage.setItem('selectedCity', JSON.stringify(city));
+      setSelectedCity(city);
+    } catch (error) {
+      console.error('Error saving selected city:', error);
+    }
+  };
+
+  // Handle city search with debounce
+  const handleCitySearchChange = (text: string) => {
+    setCitySearchText(text);
+    
+    // Clear existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+    
+    // Set new timer for debounced search
+    debounceTimer.current = setTimeout(async () => {
+      await searchCitiesInModal(text);
+    }, 300); // 300ms debounce delay for city search
+  };
+
+  // Search cities using server endpoint
+  const searchCitiesInModal = async (query: string) => {
+    try {
+      setIsCitySearchLoading(true);
+      if (query.trim().length === 0) {
+        setCitySearchResults([]);
+        return;
+      }
+      
+      const results = await getCities(query);
+      setCitySearchResults(results || []);
+    } catch (error) {
+      console.error('Error searching cities:', error);
+      setCitySearchResults([]);
+    } finally {
+      setIsCitySearchLoading(false);
+    }
+  };
+
+  // Handle city selection
+  const handleCitySelect = async (city: City) => {
+    await saveSelectedCity(city);
+    setIsCitySearchModalVisible(false);
+    setCitySearchText('');
+    setCitySearchResults([]);
+  };
 
   const loadData = async (searchQuery?: string) => {
     try {
@@ -383,8 +452,6 @@ const HomeScreen: React.FC = () => {
             marginBottom: 12
           }}
           resizeMode="cover"
-          onLoad={() => console.log(`✅ City image loaded: ${item.name}`)}
-          onError={(error) => console.log(`❌ City image error: ${item.name}`, error.nativeEvent.error)}
         />
         
         {/* Conteúdo */}
@@ -443,7 +510,7 @@ const HomeScreen: React.FC = () => {
                   marginLeft: 4
                 }}
               >
-                {(item.stories || []).length} {t('home.audioStories')}
+                {typeof item.stories === 'number' ? item.stories : (item.stories || []).length} {t('home.audioStories')}
               </Text>
             </Box>
           </Box>
@@ -544,14 +611,19 @@ const HomeScreen: React.FC = () => {
   };
 
   // Função para lidar com a seleção de uma cidade
-  const handleCitySelection = (city: City) => {
+  const handleCitySelection = async (city: City) => {
     // Salvar busca recente
     if (citySearchText.trim()) {
       saveRecentSearch(citySearchText, city.id, `${city.name}, ${city.state}`);
     }
+    
+    // Salvar cidade selecionada
+    await saveSelectedCity(city);
+    
+    // Fechar modal e limpar busca
+    setCitySearchText('');
+    setCitySearchResults([]);
     closeCitySearchModal();
-    // TODO: Navegar para a tela da cidade quando implementada
-    console.log('Selected city:', city.name, city.state);
   };
 
   // Renderizar categorias (tamanho 150px)
@@ -899,7 +971,7 @@ const HomeScreen: React.FC = () => {
           </Text>
           <TouchableOpacity onPress={openCitySearchModal}>
             <Text style={{ fontSize: 14, color: 'white' }}>
-              {t('home.location')} <Icon name="chevron-right" size={14} color="white" />
+              {selectedCity ? `${selectedCity.name}, ${selectedCity.state}` : t('home.location')} <Icon name="chevron-right" size={14} color="white" />
             </Text>
           </TouchableOpacity>
         </Box>
@@ -1216,7 +1288,7 @@ const HomeScreen: React.FC = () => {
               placeholder={t('home.searchCityPlaceholder')}
               placeholderTextColor="#999"
               value={citySearchText}
-              onChangeText={handleCitySearchTextChange}
+              onChangeText={handleCitySearchChange}
               autoFocus={true}
               multiline={false}
               numberOfLines={1}
@@ -1267,8 +1339,17 @@ const HomeScreen: React.FC = () => {
             </Box>
           )}
 
+          {/* Loading indicator */}
+          {isCitySearchLoading && (
+            <Box style={{ alignItems: 'center', paddingVertical: 20 }}>
+              <Text style={{ fontFamily: 'Asap', fontSize: 14, color: '#666' }}>
+                {t('common.loading')}...
+              </Text>
+            </Box>
+          )}
+
           {/* Resultados da Busca */}
-          {citySearchText && citySearchResults.length > 0 && (
+          {citySearchText && citySearchResults && citySearchResults.length > 0 && !isCitySearchLoading && (
             <ScrollView style={{ maxHeight: 300 }}>
               {citySearchResults.map((city) => (
                 <TouchableOpacity
@@ -1298,7 +1379,7 @@ const HomeScreen: React.FC = () => {
                       marginTop: 4
                     }}
                   >
-                    {city.descriptionTranslations[i18n.language as keyof typeof city.descriptionTranslations] || ''}
+                    {city.description || ''}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -1306,7 +1387,7 @@ const HomeScreen: React.FC = () => {
           )}
 
           {/* Mensagem quando não há resultados */}
-          {citySearchText && citySearchResults.length === 0 && (
+          {citySearchText && citySearchResults && citySearchResults.length === 0 && !isCitySearchLoading && (
             <Box style={{ alignItems: 'center', paddingVertical: 20 }}>
               <Text
                 style={{
