@@ -922,141 +922,204 @@ const HomeScreen: React.FC = () => {
       </Box>
 
       {/* Content with White Background */}
-      <Box backgroundColor="white" borderTopLeftRadius={20} borderTopRightRadius={20} style={{ marginTop: -20, flex: 1 }}>
-        {/* Categories */}
-        <Box paddingHorizontal="l" paddingTop="l">
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
-            <Text variant="sectionTitle">
-              {t('home.exploreByCategory')}
+      <Box backgroundColor="white" borderTopLeftRadius={20} borderTopRightRadius={20} style={{ marginTop: -20, flex: 1, minHeight: '100%' }}>
+        {/* Check if no data found */}
+        {categories.length === 0 && routes.length === 0 && cities.length === 0 && events.length === 0 && businesses.length === 0 && historicalPlaces.length === 0 && !isLoading && searchTerm && (
+          <Box 
+            padding="xl" 
+            alignItems="center" 
+            justifyContent="flex-start" 
+            style={{ 
+              flex: 1,
+              minHeight: 300,
+              paddingTop: 100,
+              paddingBottom: 0
+            }}
+          >
+            <Icon name="magnify" size={48} color="#ccc" style={{ marginBottom: 16 }} />
+            <Text style={{ 
+              fontSize: 18, 
+              color: '#666', 
+              textAlign: 'center', 
+              marginBottom: 8,
+              fontFamily: 'Asap',
+              fontWeight: 'bold'
+            }}>
+              {t('home.noResultsFound')}
             </Text>
-            <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 12, color: 'black' }}>
-                {t('home.seeAll')}
-              </Text>
-            </TouchableOpacity>
+            <Text style={{ 
+              fontSize: 14, 
+              color: '#999', 
+              textAlign: 'center',
+              fontFamily: 'Asap'
+            }}>
+              {t('home.tryDifferentSearch')}
+            </Text>
           </Box>
-        </Box>
-        
-        {/* Categories Carousel - Full Width */}
-        <FlatList
-          data={categories}
-          renderItem={renderCategory}
-          keyExtractor={(item, index) => `category-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        )}
+
+        {/* Categories */}
+        {categories.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" paddingTop="l">
+              <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
+                <Text variant="sectionTitle">
+                  {t('home.exploreByCategory')}
+                </Text>
+                <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 12, color: 'black' }}>
+                    {t('home.seeAll')}
+                  </Text>
+                </TouchableOpacity>
+              </Box>
+            </Box>
+            
+            {/* Categories Carousel - Full Width */}
+            <FlatList
+              data={categories}
+              renderItem={renderCategory}
+              keyExtractor={(item, index) => `category-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
 
         {/* Featured Routes */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.discoverPaths')}
-          </Text>
-        </Box>
-        
-        {/* Routes Carousel - Full Width */}
-        <FlatList
-          data={routes}
-          renderItem={renderRoute}
-          keyExtractor={(item, index) => `route-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        {routes.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.discoverPaths')}
+              </Text>
+            </Box>
+            
+            {/* Routes Carousel - Full Width */}
+            <FlatList
+              data={routes}
+              renderItem={renderRoute}
+              keyExtractor={(item, index) => `route-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
 
         {/* Popular Cities */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.popularCities')}
-          </Text>
-        </Box>
-        
-        {/* Cities Carousel - Full Width */}
-        <FlatList
-          data={cities}
-          renderItem={renderCity}
-          keyExtractor={(item, index) => `city-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
-          style={{ marginBottom: 24 }}
-          removeClippedSubviews={false}
-          initialNumToRender={3}
-        />
+        {cities.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m"  marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.popularCities')}
+              </Text>
+            </Box>
+            
+            {/* Cities Carousel - Full Width */}
+            <FlatList
+              data={cities}
+              renderItem={renderCity}
+              keyExtractor={(item, index) => `city-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20, paddingRight: 20 }}
+              style={{ marginBottom: 24 }}
+              removeClippedSubviews={false}
+              initialNumToRender={3}
+            />
+          </>
+        )}
 
         {/* Routes by Category */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.routesByCategory')}
-          </Text>
-        </Box>
-        
-        {/* Categories Carousel - 150px */}
-        <FlatList
-          data={categories}
-          renderItem={renderCategoryByRoute}
-          keyExtractor={(item, index) => `category-route-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        {categories.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.routesByCategory')}
+              </Text>
+            </Box>
+            
+            {/* Categories Carousel - 150px */}
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryByRoute}
+              keyExtractor={(item, index) => `category-route-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
 
         {/* Events */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.events')}
-          </Text>
-        </Box>
-        
-        {/* Events Carousel */}
-        <FlatList
-          data={events}
-          renderItem={renderEvent}
-          keyExtractor={(item, index) => `event-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        {events.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.events')}
+              </Text>
+            </Box>
+            
+            {/* Events Carousel */}
+            <FlatList
+              data={events}
+              renderItem={renderEvent}
+              keyExtractor={(item, index) => `event-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
 
         {/* Businesses and Services */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.businessesAndServices')}
-          </Text>
-        </Box>
-        
-        {/* Businesses Carousel */}
-        <FlatList
-          data={businesses}
-          renderItem={renderBusiness}
-          keyExtractor={(item, index) => `business-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        {businesses.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.businessesAndServices')}
+              </Text>
+            </Box>
+            
+            {/* Businesses Carousel */}
+            <FlatList
+              data={businesses}
+              renderItem={renderBusiness}
+              keyExtractor={(item, index) => `business-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
 
         {/* Historical Places */}
-        <Box paddingHorizontal="l" marginBottom="m">
-          <Text variant="sectionTitle">
-            {t('home.historicalPlaces')}
-          </Text>
-        </Box>
-        
-        {/* Historical Places Carousel */}
-        <FlatList
-          data={historicalPlaces}
-          renderItem={renderHistoricalPlace}
-          keyExtractor={(item, index) => `historical-${index}-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 20 }}
-          style={{ marginBottom: 24 }}
-        />
+        {historicalPlaces.length > 0 && (
+          <>
+            <Box paddingHorizontal="l" marginBottom="m" marginTop="l">
+              <Text variant="sectionTitle">
+                {t('home.historicalPlaces')}
+              </Text>
+            </Box>
+            
+            {/* Historical Places Carousel */}
+            <FlatList
+              data={historicalPlaces}
+              renderItem={renderHistoricalPlace}
+              keyExtractor={(item, index) => `historical-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 20 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
+        )}
       </Box>
     </ScrollView>
 
