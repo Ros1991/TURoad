@@ -1,57 +1,50 @@
-import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
+import FAQService, { FAQ } from '../services/FAQService';
+import { useLanguageRefresh } from '../hooks/useDataRefresh';
 
 const FAQScreen: React.FC = () => {
   const navigation = useNavigation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [expandedItems, setExpandedItems] = useState<{ [key: string]: boolean }>({});
+  const [faqData, setFaqData] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const faqData = [
-    {
-      id: '1',
-      question: 'Como funciona o modo "Rota ativa"?',
-      answer: 'O app acompanha sua localização em tempo real e exibe conteúdos (áudios, imagens e textos) automaticamente conforme você se aproxima dos pontos turísticos da rota.',
-    },
-    {
-      id: '2', 
-      question: 'Posso usar o TURoad sem internet?',
-      answer: 'Sim! Você pode baixar as rotas e conteúdos para usar offline. Apenas certifique-se de fazer o download enquanto estiver conectado à internet.',
-    },
-    {
-      id: '3',
-      question: 'Como escolher uma rota para começar?',
-      answer: 'Na tela inicial, navegue pelas rotas disponíveis e toque em "Iniciar Rota". Você também pode filtrar por localização, duração ou interesse.',
-    },
-    {
-      id: '4',
-      question: 'O que são as sugestões baseadas na minha localização?',
-      answer: 'Com base em onde você está, o app sugere rotas próximas, pontos de interesse e experiências culturais relevantes para sua região.',
-    },
-    {
-      id: '5',
-      question: 'Como salvo meus pontos favoritos?', 
-      answer: 'Toque no ícone de coração em qualquer ponto turístico, cidade ou rota. Todos os favoritos ficam salvos na seção "Favoritos" do seu perfil.',
-    },
-    {
-      id: '6',
-      question: 'Como altero meu idioma no app?',
-      answer: 'Vá em Perfil > Configurações > Idioma. Você também pode alterar o idioma específico dos áudios diretamente no player.',
-    },
-    {
-      id: '7',
-      question: 'Posso usar o app como visitante?',
-      answer: 'Sim! É possível explorar o conteúdo sem criar uma conta, mas para salvar favoritos e personalizar sua experiência, recomendamos fazer login.',
-    },
-    {
-      id: '8',
-      question: 'Como o TURoad protege meus dados?',
-      answer: 'Seus dados são protegidos com criptografia e seguimos as melhores práticas de segurança. Não compartilhamos informações pessoais com terceiros.',
-    },
-  ];
+  // Load FAQs from backend
+  const loadFAQs = async () => {
+    try {
+      setError(null);
+      const data = await FAQService.getFAQs();
+      setFaqData(data);
+    } catch (err) {
+      console.error('Error loading FAQs:', err);
+      setError('Failed to load FAQs');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Load FAQs on mount and when language changes
+  useEffect(() => {
+    loadFAQs();
+  }, []);
+
+  // Refresh data when language changes
+  useLanguageRefresh(() => {
+    loadFAQs();
+  });
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    loadFAQs();
+  };
 
   const toggleExpanded = (id: string) => {
     setExpandedItems(prev => ({
@@ -60,11 +53,11 @@ const FAQScreen: React.FC = () => {
     }));
   };
 
-  const FAQItem = ({ item }: { item: any }) => {
-    const isExpanded = expandedItems[item.id];
+  const FAQItem = ({ item }: { item: FAQ }) => {
+    const isExpanded = expandedItems[item.id.toString()];
 
     return (
-      <TouchableOpacity onPress={() => toggleExpanded(item.id)}>
+      <TouchableOpacity onPress={() => toggleExpanded(item.id.toString())}>
         <Box
           backgroundColor="white"
           marginBottom="s"
@@ -136,14 +129,39 @@ const FAQScreen: React.FC = () => {
         </Box>
 
         {/* Content */}
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <Box padding="m">
-            {faqData.map((item) => (
-              <FAQItem key={item.id} item={item} />
-            ))}
+        {loading ? (
+          <Box flex={1} justifyContent="center" alignItems="center">
+            <ActivityIndicator size="large" color="#035A6E" />
           </Box>
-          <Box height={20} />
-        </ScrollView>
+        ) : error ? (
+          <Box flex={1} justifyContent="center" alignItems="center" padding="m">
+            <Text style={{ color: '#666666', textAlign: 'center' }}>{error}</Text>
+            <TouchableOpacity onPress={loadFAQs} style={{ marginTop: 16 }}>
+              <Text style={{ color: '#035A6E', fontWeight: '600' }}>Try Again</Text>
+            </TouchableOpacity>
+          </Box>
+        ) : (
+          <ScrollView 
+            style={{ flex: 1 }} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
+            <Box padding="m">
+              {faqData.length === 0 ? (
+                <Box padding="xl" alignItems="center">
+                  <Text style={{ color: '#666666', textAlign: 'center' }}>No FAQs available</Text>
+                </Box>
+              ) : (
+                faqData.map((item) => (
+                  <FAQItem key={item.id.toString()} item={item} />
+                ))
+              )}
+            </Box>
+            <Box height={20} />
+          </ScrollView>
+        )}
       </Box>
   );
 };

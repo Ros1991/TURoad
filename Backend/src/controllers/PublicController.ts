@@ -14,6 +14,7 @@ import { StoryCity } from '@/entities/StoryCity';
 import { StoryLocation } from '@/entities/StoryLocation';
 import { Type } from '@/entities/Type';
 import { Like, In } from 'typeorm';
+import { faqService } from '@/services/FAQService';
 
 export class PublicController {
 
@@ -487,6 +488,27 @@ export class PublicController {
       res.status(500).json({
         success: false,
         message: 'Error searching cities'
+      });
+    }
+  }
+
+  /**
+   * Get all FAQs with localized texts using efficient database JOINs
+   */
+  async getFAQs(req: RequestWithLanguage, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const search = req.query.search as string;
+
+      const faqs = await faqService.getAllWithLocalizedTexts(language, search);
+      res.json({
+        success: true,
+        data: faqs
+      });
+    } catch (error) {
+      console.error('Error fetching FAQs:', error);
+      res.status(500).json({
+        error: 'Failed to fetch FAQs'
       });
     }
   }

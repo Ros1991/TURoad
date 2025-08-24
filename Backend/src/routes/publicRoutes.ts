@@ -15,4 +15,7 @@ router.get('/locations/historical', publicController.getHistoricalPlaces.bind(pu
 // Search endpoints
 router.get('/cities/search', publicController.searchCities.bind(publicController));
 
+// FAQ endpoint
+router.get('/faqs', publicController.getFAQs.bind(publicController));
+
 export default router;
