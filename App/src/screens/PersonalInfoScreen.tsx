@@ -91,7 +91,7 @@ const PersonalInfoScreen: React.FC = () => {
       );
 
       if (response.success && response.data) {
-        const newProfileImage = response.data.profileImage;
+        const newProfileImage = (response.data as any).profileImage;
         
         // Update user context with new profile image
         const updatedUser = { ...user, profileImage: newProfileImage };
