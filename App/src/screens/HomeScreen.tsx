@@ -422,6 +422,21 @@ const HomeScreen: React.FC = () => {
                 {item.totalDistance}
               </Text>
             </Box>
+
+            {/* Tempo */}
+            <Box flexDirection="row" alignItems="center" marginBottom="s">
+              <Icon name="clock-outline" as any size={16} color="#5A5A5A"/>
+              <Text
+                style={{
+                  fontFamily: 'Asap',
+                  fontSize: 16,
+                  color: '#5A5A5A',
+                  marginLeft: 4
+                }}
+              >
+                {item.totalTime}
+              </Text>
+            </Box>
             
             {/* Histórias em áudio */}
             <Box flexDirection="row" alignItems="center">

@@ -34,7 +34,7 @@ export class RouteRepository extends BaseRepository<Route> {
         'COUNT(DISTINCT rc_city.city_id) as stops',
         'SUM(DISTINCT rc_city.distance_km) as totalDistance',
         'SUM(DISTINCT rc_city.travel_time_minutes) as totalTime',
-        'COUNT(DISTINCT sr.story_route_id) as stories',
+        '(COUNT(DISTINCT sr.story_route_id) + COUNT(DISTINCT sc.story_city_id)) as stories',
         'ARRAY_AGG(DISTINCT rc_cat.category_id) FILTER (WHERE rc_cat.category_id IS NOT NULL) as categories'
       ])
       .from('routes', 'r')
@@ -44,6 +44,7 @@ export class RouteRepository extends BaseRepository<Route> {
       .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = r.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
       .leftJoin('route_cities', 'rc_city', 'rc_city.route_id = r.route_id')
       .leftJoin('story_routes', 'sr', 'sr.route_id = r.route_id')
+      .leftJoin('story_cities', 'sc', 'sc.city_id = rc_city.city_id')
       .leftJoin('route_categories', 'rc_cat', 'rc_cat.route_id = r.route_id')
       .where('r."deletedAt" IS NULL')
       .groupBy('r.route_id, lt_title_lang.text_content, lt_title_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, r.image_url')

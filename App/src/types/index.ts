@@ -67,6 +67,7 @@ export interface Route {
   };
   categories: string[]; // IDs das categorias
   totalDistance: string;
+  totalTime: string;
   estimatedDuration: string;
   stops: number;
   cities: City[];
