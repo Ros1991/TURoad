@@ -117,7 +117,7 @@ export class PublicController {
         image: route.image,
         categories: route.categories ? route.categories.map((cat: number) => cat.toString()) : [],
         stops: parseInt(route.stops) || 0,
-        totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(2)} km`,
+        totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(0)} km`,
         totalTime: this.formatTime(parseInt(route.totaltime) || 0),
         stories: parseInt(route.stories) || 0
       }));
