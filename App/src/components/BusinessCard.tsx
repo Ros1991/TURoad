@@ -11,6 +11,7 @@ interface BusinessCardProps {
 }
 
 const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
+  const { t } = useTranslation();
 
   if (!item) return null;
 
@@ -93,7 +94,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
               marginLeft: 4
             }}
           >
-            {item.distance || 'N/A'}
+            {item.distance ? `${item.distance} ${t('explore.distanceAway')}` : 'N/A'}
           </Text>
         </Box>
       </Box>
