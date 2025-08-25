@@ -67,7 +67,6 @@ export class PublicController {
       const cityId = req.query.cityId as string;
       
       const categories = await this.categoryService.getAllWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
-      
       const categoriesWithData = categories.map(category => ({
         id: category.id.toString(),
         name: category.name || 'Unnamed Category',
@@ -76,7 +75,7 @@ export class PublicController {
         routeCount: parseInt(category.routeCount) || 0,
         isPrimary: true
       }));
-      
+     
       res.json({
         success: true,
         data: categoriesWithData

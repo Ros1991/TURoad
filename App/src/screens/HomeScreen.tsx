@@ -142,7 +142,8 @@ const HomeScreen: React.FC = () => {
     try {
       await AsyncStorage.removeItem('selectedCity');
       setSelectedCity(null);
-      loadData(searchTerm); // Reload data without city filter
+      // Force reload data without city filter by passing null cityId explicitly
+      await loadData(searchTerm, null);
     } catch (error) {
       console.error('Error clearing selected city:', error);
     }
@@ -190,12 +191,13 @@ const HomeScreen: React.FC = () => {
     setCitySearchResults([]);
   };
 
-  const loadData = async (searchQuery?: string) => {
+  const loadData = async (searchQuery?: string, forceCityId?: number | null) => {
     try {
       setIsLoading(true);
       
-      // Get selected city ID for filtering
-      const cityId = selectedCity?.id;
+      // Get selected city ID for filtering (use forceCityId if provided, null means no filter)
+      const cityIdNum = forceCityId !== undefined ? forceCityId : selectedCity?.id;
+      const cityId = cityIdNum ? String(cityIdNum) : undefined;
       
       // Execute all API calls in parallel
       const results = await Promise.allSettled([
@@ -1088,9 +1090,9 @@ const HomeScreen: React.FC = () => {
               </Box>
             </Box>
             
-            {/* Categories Carousel - Full Width */}
+            {/* Categories Carousel - Full Width (first 5 only) */}
             <FlatList
-              data={categories}
+              data={categories.slice(0, 5)}
               renderItem={renderCategory}
               keyExtractor={(item, index) => `category-${index}-${item.id}`}
               horizontal
