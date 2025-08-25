@@ -50,6 +50,7 @@ export interface Story {
     es: string;
   };
   narrator: string;
+  durationSeconds: number;
 }
 
 export interface Route {

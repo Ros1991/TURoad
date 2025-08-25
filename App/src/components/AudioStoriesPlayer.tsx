@@ -269,8 +269,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
         
         {/* Story List */}
         {stories.map((story, index) => {
-          const mockDuration = parseFloat(story.duration?.replace(' min', '') || '3') * 60;
-          const displayDuration = formatTime(mockDuration);
+          const displayDuration = formatTime(story.durationSeconds);
 
           return (
             <TouchableOpacity key={story.id} onPress={() => goToStory(index)}>
