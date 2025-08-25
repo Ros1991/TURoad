@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Image, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
+import { ScrollView, Image, TouchableOpacity, Linking, Platform, Alert, FlatList } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -7,11 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { Box, Text, AudioStoriesPlayer } from '../components';
+import { Box, Text, AudioStoriesPlayer, BusinessCard } from '../components';
 import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCityById } from '../services/CityService';
 import { FavoriteService } from '../services/FavoriteService';
-import { City, Story } from '../types';
+import { getBusinesses } from '../services/BusinessService';
+import { City, Story, Business } from '../types';
 
 type RootStackParamList = {
   City: { cityId: string };
@@ -29,9 +30,9 @@ const CityScreen: React.FC = () => {
   const [city, setCity] = useState<City | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
-  const [isFavorited, setIsFavorited] = useState(false);
+  const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isWhatToObserveExpanded, setIsWhatToObserveExpanded] = useState(false);
   const [isAboutLocationExpanded, setIsAboutLocationExpanded] = useState(false);
 
@@ -55,22 +56,30 @@ const CityScreen: React.FC = () => {
       // Set initial favorite status from API response
       if (cityData && 'isFavorite' in cityData) {
         console.log('🤍 Setting initial favorite status:', cityData.isFavorite);
-        setIsFavorited(cityData.isFavorite || false);
+        setIsFavorite(cityData.isFavorite || false);
       } else {
         console.log('🤍 No isFavorite found in cityData, setting to false');
-        setIsFavorited(false);
+        setIsFavorite(false);
       }
+      
+      // Load businesses for this city
+      await loadBusinesses();
     } catch (error) {
       console.error('Error loading city:', error);
     }
   };
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+  const loadBusinesses = async () => {
+    try {
+      const businessData = await getBusinesses();
+      // For now, show all businesses (same as HomeScreen)
+      // In the future, this could be filtered by city location/region
+      setBusinesses(businessData);
+    } catch (error) {
+      console.error('Error loading businesses:', error);
+    }
   };
+
 
   const toggleFavorite = async () => {
     if (!user?.id || !city) return;
@@ -79,8 +88,8 @@ const CityScreen: React.FC = () => {
       console.log('🤍 Toggling favorite for city:', city.id);
       
       // Optimistically update UI
-      const newFavoriteState = !isFavorited;
-      setIsFavorited(newFavoriteState);
+      const newFavoriteState = !isFavorite;
+      setIsFavorite(newFavoriteState);
       
       // Call backend API
       const result = await FavoriteService.toggleFavoriteCity(
@@ -89,14 +98,14 @@ const CityScreen: React.FC = () => {
       );
       
       // Update state based on API response
-      setIsFavorited(result.isFavorited);
+      setIsFavorite(result.isFavorited);
       
       console.log('🤍 Favorite toggled successfully:', result.isFavorited);
     } catch (error) {
       console.error('Error toggling favorite:', error);
       
       // Revert optimistic update on error
-      setIsFavorited(prev => !prev);
+      setIsFavorite(prev => !prev);
     }
   };
 
@@ -160,7 +169,11 @@ const CityScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
+    <ScrollView 
+      style={{ flex: 1, backgroundColor: 'white' }}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 100 }}
+    >
       {/* Header with background image */}
       <Box height={300} position="relative">
         <Image
@@ -251,14 +264,14 @@ const CityScreen: React.FC = () => {
                       justifyContent="center"
                       alignItems="center"
                       style={{ 
-                        backgroundColor: isFavorited ? '#FF0000' : '#F5F5F5'
+                        backgroundColor: isFavorite ? '#FF0000' : '#F5F5F5'
                       }}
                     >
                       <Icon 
-                        name={isFavorited ? "heart" : "heart-outline"} 
+                        name={isFavorite ? "heart" : "heart-outline"} 
                         as any 
                         size={20} 
-                        color={isFavorited ? "#FFFFFF" : "#FF0000"} 
+                        color={isFavorite ? "#FFFFFF" : "#FF0000"} 
                       />
                     </Box>
                   </TouchableOpacity>
@@ -391,6 +404,28 @@ const CityScreen: React.FC = () => {
               </Box>
             )}
           </Box>
+        )}
+
+        {/* Commerce and Services Section */}
+        {businesses.length > 0 && (
+          <>
+            <Box marginTop="l" marginBottom="m">
+              <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
+                {t('home.businessesAndServices')}
+              </Text>
+            </Box>
+            
+            {/* Businesses Carousel */}
+            <FlatList
+              data={businesses}
+              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              keyExtractor={(item, index) => `business-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 0, paddingRight: 16 }}
+              style={{ marginBottom: 24 }}
+            />
+          </>
         )}
       </Box>
 

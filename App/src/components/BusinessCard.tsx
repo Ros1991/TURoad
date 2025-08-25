@@ -8,9 +8,10 @@ import { Business } from '../types';
 interface BusinessCardProps {
   item: Business;
   onPress?: (business: Business) => void;
+  showStories?: boolean;
 }
 
-const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
+const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress, showStories = false }) => {
   const { t } = useTranslation();
 
   if (!item) return null;
@@ -97,6 +98,21 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
             {item.distance ? `${item.distance} ${t('common.distanceAway')}` : 'N/A'}
           </Text>
         </Box>
+        {showStories && (
+          <Box flexDirection="row" alignItems="center">
+            <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
+            <Text
+              style={{
+                fontFamily: 'Asap',
+                fontSize: 14,
+                color: '#5A5A5A',
+                marginLeft: 4
+              }}
+            >
+              {item.stories ? `${item.stories} ${t('common.stories')}` : 'N/A'}
+            </Text>
+          </Box>
+        )}
       </Box>
     </TouchableOpacity>
   );
