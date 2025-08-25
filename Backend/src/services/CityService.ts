@@ -89,4 +89,19 @@ export class CityService extends BaseService<City> {
   async getAllWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
     return await cityRepository.findAllWithLocalizedTexts(language, search, cityId, userLatitude, userLongitude);
   }
+
+  async getCityByIdWithStories(cityId: number, language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any | null> {
+    const city = await cityRepository.findByIdWithLocalizedTexts(cityId, language, userLatitude, userLongitude);
+    if (!city) {
+      return null;
+    }
+
+    // Get stories for this city
+    const stories = await this.getStoriesByCityId(cityId);
+    
+    return {
+      ...city,
+      stories: stories || []
+    };
+  }
 }

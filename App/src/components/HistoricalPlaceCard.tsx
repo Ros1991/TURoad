@@ -121,7 +121,7 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
                 marginLeft: 4
               }}
             >
-              {item.distance} {t('explore.distanceAway')}
+              {item.distance} {t('common.distanceAway')}
             </Text>
           </Box>
         </Box>

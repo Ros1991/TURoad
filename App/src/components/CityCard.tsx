@@ -82,7 +82,7 @@ const CityCard: React.FC<CityCardProps> = ({ item, onPress }) => {
                 marginLeft: 4
               }}
             >
-              {item.totalDistance}
+              {item.totalDistance} {t('common.distanceAway')}
             </Text>
           </Box>
           

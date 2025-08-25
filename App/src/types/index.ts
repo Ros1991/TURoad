@@ -19,6 +19,7 @@ export interface City {
     es: string;
   };
   totalDistance: string;
+  distance: string;
   image: string;
   stories: Story[] | number;
   highlights?: string[];
@@ -29,7 +30,7 @@ export interface City {
 
 export interface Story {
   id: string;
-  title: string;
+  name: string;
   titleTranslations: {
     pt: string;
     en: string;

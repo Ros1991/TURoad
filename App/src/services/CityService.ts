@@ -35,8 +35,15 @@ export const getCities = async (search?: string, cityId?: string): Promise<City[
 
 export const getCityById = async (id: string): Promise<City | null> => {
   try {
-    const cities = await getCities();
-    return cities.find(c => c.id === id) || null;
+    const response = await apiService.get<City>(`/api/public/cities/${id}`, {
+      includeAuth: false
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return null;
   } catch (error) {
     console.error('Error fetching city by id:', error);
     return null;

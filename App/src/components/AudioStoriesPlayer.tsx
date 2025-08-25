@@ -294,10 +294,10 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                         color: index === currentStoryIndex ? '#035A6E' : '#1A1A1A',
                         fontWeight: index === currentStoryIndex ? '500' : '400'
                       }}>
-                        {story.titleTranslations ? story.titleTranslations[selectedLanguage] : story.title}
+                        {story.name}
                       </Text>
                       <Text style={{ fontSize: 12, color: '#666666' }}>
-                        Contada por {story.narrator}
+                        {story.description}
                       </Text>
                     </Box>
                   </Box>
@@ -305,7 +305,8 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                     <Text style={{ 
                       fontSize: 12, 
                       color: '#666666',
-                      fontWeight: '500'
+                      fontWeight: '500',
+                      marginLeft: 5
                     }}>
                       {displayDuration}
                     </Text>

@@ -92,6 +92,57 @@ export class CityRepository extends BaseRepository<City> {
     
     return await qb.getRawMany();
   }
+
+  async findByIdWithLocalizedTexts(cityId: number, language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any | null> {
+    const selectFields = [
+      'c.city_id as id',
+      'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+      'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+      'c.state as state',
+      'c.image_url as image',
+      'c.latitude as latitude',
+      'c.longitude as longitude',
+      'COUNT(DISTINCT sc.story_city_id) as stories',
+      'COUNT(DISTINCT rc.route_id) as routes'
+    ];
+
+    // Add distance calculation if user location is provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      selectFields.push(
+        `(
+          6371 * acos(
+            cos(radians(:userLat)) * cos(radians(c.latitude)) *
+            cos(radians(c.longitude) - radians(:userLng)) +
+            sin(radians(:userLat)) * sin(radians(c.latitude))
+          )
+        ) as distance`
+      );
+    }
+
+    const qb = AppDataSource
+      .createQueryBuilder()
+      .select(selectFields)
+      .from('cities', 'c')
+      .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = c.name_text_ref_id AND lt_name_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = c.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = c.description_text_ref_id AND lt_desc_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = c.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('story_cities', 'sc', 'sc.city_id = c.city_id')
+      .leftJoin('route_cities', 'rc', 'rc.city_id = c.city_id')
+      .where('c."deletedAt" IS NULL')
+      .andWhere('c.city_id = :cityId', { cityId })
+      .groupBy('c.city_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, c.state, c.image_url, c.latitude, c.longitude')
+      .setParameter('language', language);
+
+    // Set location parameters if provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.setParameter('userLat', userLatitude)
+        .setParameter('userLng', userLongitude);
+    }
+
+    const result = await qb.getRawOne();
+    return result || null;
+  }
 }
 
 // Export singleton instance

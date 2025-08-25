@@ -126,6 +126,45 @@ export class PublicController {
     }
   }
 
+  async getCityById(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const cityId = req.params.cityId;
+      
+      if (!cityId) {
+        res.status(400).json({
+          success: false,
+          message: 'City ID is required'
+        });
+        return;
+      }
+
+      // Use user's current location from middleware for distance calculation
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
+
+      const city = await this.cityService.getCityByIdWithStories(parseInt(cityId), language, userLatitude, userLongitude);
+      if (!city) {
+        res.status(404).json({
+          success: false,
+          message: 'City not found'
+        });
+        return;
+      }
+
+      res.json({
+        success: true,
+        data: city
+      });
+    } catch (error) {
+      console.error('Error fetching city by ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching city'
+      });
+    }
+  }
+
   async getCities(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';

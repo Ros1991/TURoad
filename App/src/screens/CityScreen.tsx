@@ -6,10 +6,10 @@ import { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import LinearGradient from 'react-native-linear-gradient';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { Box, Text, Button, AudioStoriesPlayer } from '../components';
+import { Box, Text, AudioStoriesPlayer } from '../components';
 import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCityById } from '../services/CityService';
-import { City } from '../types';
+import { City, Story } from '../types';
 
 type RootStackParamList = {
   City: { cityId: string };
@@ -76,6 +76,7 @@ const CityScreen: React.FC = () => {
               width={40}
               height={40}
               borderRadius={20}
+              marginTop="m"
               backgroundColor="white"
               justifyContent="center"
               alignItems="center"
@@ -132,7 +133,7 @@ const CityScreen: React.FC = () => {
                   <Box flexDirection="row" alignItems="center">
                     <Icon name="map-marker-outline" size={14} color="#666666" />
                     <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4 }}>
-                      A {city.totalDistance} de distância
+                      {(parseFloat(city.distance) || 0).toFixed(1)} {t('common.distanceAway')}
                     </Text>
                   </Box>
                 </Box>
@@ -165,10 +166,10 @@ const CityScreen: React.FC = () => {
               </Box>
               
               {/* Audio Player Component */}
-              {city.stories.length > 0 && (
+              {(city.stories as Story[]).length > 0 && (
                 <AudioStoriesPlayer 
                   title="Histórias" 
-                  stories={city.stories}
+                  stories={city.stories as Story[]}
                 />
               )}
               

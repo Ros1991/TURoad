@@ -94,7 +94,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
               marginLeft: 4
             }}
           >
-            {item.distance ? `${item.distance} ${t('explore.distanceAway')}` : 'N/A'}
+            {item.distance ? `${item.distance} ${t('common.distanceAway')}` : 'N/A'}
           </Text>
         </Box>
       </Box>
