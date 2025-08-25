@@ -39,7 +39,6 @@ export const locationLoggingMiddleware = (req: RequestWithLocation, res: Respons
             }
           }
           
-          console.log('📍 User location parsed:', req.userLocation);
         } else {
           console.log('❌ Invalid coordinates in location header:', userLocationHeader);
         }

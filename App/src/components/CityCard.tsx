@@ -11,13 +11,9 @@ interface CityCardProps {
 }
 
 const CityCard: React.FC<CityCardProps> = ({ item, onPress }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   if (!item) return null;
-
-  // Aplicar tradução baseada no idioma atual
-  const currentLanguage = i18n.language || 'pt';
-  const cityDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
 
   return (
     <TouchableOpacity 
@@ -70,7 +66,7 @@ const CityCard: React.FC<CityCardProps> = ({ item, onPress }) => {
             lineHeight: 22
           }}
         >
-          {cityDescription}
+          {item.description}
         </Text>
         
         {/* Quantitativos - cada um em uma linha */}

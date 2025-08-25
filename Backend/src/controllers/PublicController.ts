@@ -11,6 +11,7 @@ import { RouteService } from '@/services/RouteService';
 import { CityService } from '@/services/CityService';
 import { EventService } from '@/services/EventService';
 import { LocationService } from '@/services/LocationService';
+import { CityResponseDto } from '@/dtos/CityDto';
 
 export class PublicController {
   private categoryService: CategoryService;
@@ -108,7 +109,7 @@ export class PublicController {
         image: route.image,
         categories: route.categories ? route.categories.map((cat: number) => cat.toString()) : [],
         stops: parseInt(route.stops) || 0,
-        totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(0)} km`,
+        totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(1)} km`,
         totalTime: this.formatTime(parseInt(route.totaltime) || 0),
         stories: parseInt(route.stories) || 0
       }));
@@ -132,16 +133,28 @@ export class PublicController {
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
       
-      // Get user location from middleware
-      const userLatitude = req.userLocation?.latitude;
-      const userLongitude = req.userLocation?.longitude;
+      let referenceLatitude: number | undefined;
+      let referenceLongitude: number | undefined;
+      
+      // If cityId is provided, use that city's location as reference
+      if (cityId) {
+        const referenceCity = await this.cityService.findById(parseInt(cityId)) as CityResponseDto;
+        if (referenceCity) {
+          referenceLatitude = parseFloat(referenceCity.latitude.toString());
+          referenceLongitude = parseFloat(referenceCity.longitude.toString());
+        }
+      } else {
+        // Otherwise use user's current location from middleware
+        referenceLatitude = req.userLocation?.latitude;
+        referenceLongitude = req.userLocation?.longitude;
+      }
       
       const cities = await this.cityService.getAllWithLocalizedTexts(
         language, 
         search, 
         cityId ? parseInt(cityId) : undefined,
-        userLatitude,
-        userLongitude
+        referenceLatitude,
+        referenceLongitude
       );
       
       const citiesWithData = cities.map(city => ({
@@ -155,7 +168,6 @@ export class PublicController {
         stories: parseInt(city.stories) || 0,
         totalDistance: city.distance ? `${parseFloat(city.distance).toFixed(1)} km` : undefined
       }));
-      console.log(citiesWithData);
       res.json({
         success: true,
         data: citiesWithData
