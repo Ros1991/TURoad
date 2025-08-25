@@ -57,6 +57,10 @@ interface FirebaseConfig {
   clientEmail: string;
 }
 
+interface GoogleMapsConfig {
+  apiKey: string;
+}
+
 interface Config {
   database: DatabaseConfig;
   jwt: JwtConfig;
@@ -66,6 +70,7 @@ interface Config {
   rateLimit: RateLimitConfig;
   log: LogConfig;
   firebase: FirebaseConfig;
+  googleMaps: GoogleMapsConfig;
 }
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
@@ -135,6 +140,9 @@ export const config: Config = {
     projectId: getEnvVar('FIREBASE_PROJECT_ID', ''),
     privateKey: getEnvVar('FIREBASE_PRIVATE_KEY', ''),
     clientEmail: getEnvVar('FIREBASE_CLIENT_EMAIL', ''),
+  },
+  googleMaps: {
+    apiKey: getEnvVar('GOOGLE_MAPS_API_KEY', ''),
   },
 };
 

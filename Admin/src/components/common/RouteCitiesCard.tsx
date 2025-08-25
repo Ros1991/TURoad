@@ -80,7 +80,7 @@ const RouteCitiesCard: React.FC<RouteCitiesCardProps> = ({
 
     try {
       await onReorderCities(newCities);
-      toast.success('Ordem das cidades atualizada');
+      // Success toast is handled by parent component
     } catch (error) {
       toast.error('Erro ao reordenar cidades');
     }

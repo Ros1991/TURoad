@@ -127,14 +127,8 @@ export class BaseRepository<T extends ObjectLiteral> {
    * Update entity
    */
   async update(id: number, data: DeepPartial<T>): Promise<T | null> {
-    console.log(`BaseRepository.update - ID: ${id}`);
-    console.log('BaseRepository.update - data:', JSON.stringify(data, null, 2));
-    
     const result = await this.repository.update(id, data as any);
-    console.log('BaseRepository.update - update result:', result);
-    
     const updatedEntity = await this.findById(id);
-    console.log('BaseRepository.update - updated entity:', JSON.stringify(updatedEntity, null, 2));
     
     return updatedEntity;
   }

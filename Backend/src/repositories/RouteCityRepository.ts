@@ -72,4 +72,29 @@ export class RouteCityRepository extends BaseRepository<RouteCity> {
     
     return this.repository.manager.query(query, [routeId]);
   }
+
+  async getAllRouteCitiesWithCoordinates(routeId?: number): Promise<any[]> {
+    const query = `
+      SELECT 
+        rc.route_city_id,
+        rc.route_id,
+        rc.city_id,
+        rc."order",
+        c.latitude,
+        c.longitude
+      FROM route_cities rc
+      JOIN cities c ON rc.city_id = c.city_id
+      ${routeId ? 'WHERE rc.route_id = $1' : ''}
+      ORDER BY rc.route_id, rc."order" ASC
+    `;
+    
+    return this.repository.manager.query(query, routeId ? [routeId] : []);
+  }
+
+  async updateDistanceAndTime(routeCityId: number, distanceKm: number, travelTimeMinutes: number): Promise<void> {
+    await this.repository.update(routeCityId, {
+      distanceKm,
+      travelTimeMinutes
+    });
+  }
 }

@@ -7,6 +7,8 @@ export interface RouteCityDto extends IDto {
   routeId: number;
   cityId: number;
   order: number;
+  distanceKm?: number;
+  travelTimeMinutes?: number;
   city?: {
     cityId: number;
     name: string;
@@ -24,6 +26,8 @@ export class RouteCityMapper extends BaseMapper<RouteCity> {
       routeId: entity.routeId,
       cityId: entity.cityId,
       order: entity.order,
+      distanceKm: entity.distanceKm,
+      travelTimeMinutes: entity.travelTimeMinutes,
       city: entity.city ? {
         cityId: entity.city.cityId,
         name: (entity.city as any).name || `City ${entity.city.cityId}`
@@ -41,6 +45,8 @@ export class RouteCityMapper extends BaseMapper<RouteCity> {
     entity.routeId = dto.routeId;
     entity.cityId = dto.cityId;
     entity.order = dto.order;
+    entity.distanceKm = dto.distanceKm;
+    entity.travelTimeMinutes = dto.travelTimeMinutes;
     return entity;
   }
 }

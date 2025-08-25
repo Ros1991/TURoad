@@ -248,15 +248,10 @@ export class BaseService<Entity extends ObjectLiteral> {
    * Update entity
    */
   async update(id: number, updateDto: IDto): Promise<IDto> {
-    console.log(`BaseService.update - ${this.entityName} ID: ${id}`);
-    console.log('BaseService.update - updateDto:', JSON.stringify(updateDto, null, 2));
-    
     const existingEntity = await this.repository.findById(id);
     if (!existingEntity) {
       throw new AppError(`${this.entityName} with id ${id} not found`, 404);
     }
-    
-    console.log('BaseService.update - existingEntity:', JSON.stringify(existingEntity, null, 2));
     
     await this.validateBeforeUpdate(id, updateDto, existingEntity);
     
@@ -266,22 +261,16 @@ export class BaseService<Entity extends ObjectLiteral> {
     // Copy non-localized fields from DTO
     for (const key in updateDto) {
       if (updateDto.hasOwnProperty(key)) {
-        console.log(`BaseService.update - Copying field ${key}: ${(updateDto as any)[key]}`);
         entityData[key] = (updateDto as any)[key];
       }
     }
     
-    console.log('BaseService.update - entityData before localized text handling:', JSON.stringify(entityData, null, 2));
-    
-    // Handle localized text fields before updating entity
     await this.handleLocalizedTextFieldsForUpdate(updateDto, entityData);
     
-    // Remove the string fields that were converted to reference IDs
     if (this.EntityClass && LocalizedTextHelper.hasLocalizedTextFields(this.EntityClass)) {
       const fields = LocalizedTextHelper.getLocalizedTextFields(this.EntityClass);
       fields.forEach(field => {
         const dtoFieldName = field.propertyName.replace(/(Text)?RefId$/, '');
-        console.log(`BaseService.update - Removing localized field: ${dtoFieldName}`);
         delete entityData[dtoFieldName];
       });
     }
@@ -291,19 +280,14 @@ export class BaseService<Entity extends ObjectLiteral> {
     const relationFields = ['city', 'type', 'stories', 'locationCategories', 'categories'];
     relationFields.forEach(field => {
       if (entityData[field]) {
-        console.log(`BaseService.update - Removing relation object: ${field}`);
         delete entityData[field];
       }
     });
-    
-    console.log('BaseService.update - Final entityData to be saved:', JSON.stringify(entityData, null, 2));
     
     const entity = await this.repository.update(id, entityData as any);
     if (!entity) {
       throw new AppError(`Failed to update ${this.entityName} with id ${id}`, 500);
     }
-    
-    console.log('BaseService.update - Updated entity from DB:', JSON.stringify(entity, null, 2));
     
     await this.afterUpdate(entity);
     

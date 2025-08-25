@@ -50,7 +50,8 @@
     "pg": "^8.11.3",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.3.17",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
