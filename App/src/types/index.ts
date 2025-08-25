@@ -109,6 +109,7 @@ export interface Event {
     es: string;
   };
   location: string;
+  description: string;
   locationTranslations: {
     pt: string;
     en: string;

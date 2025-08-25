@@ -113,7 +113,7 @@ export class PublicController {
         totalTime: this.formatTime(parseInt(route.totaltime) || 0),
         stories: parseInt(route.stories) || 0
       }));
-      
+      console.log(routesWithData);
       res.json({
         success: true,
         data: routesWithData
