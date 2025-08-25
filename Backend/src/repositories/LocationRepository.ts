@@ -155,18 +155,33 @@ export class LocationRepository extends BaseRepository<Location> {
    * Get all businesses with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findBusinessesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
+  async findBusinessesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
+    const selectFields = [
+      'l.location_id as id',
+      'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+      'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+      'l.image_url as image',
+      'l.latitude as latitude',
+      'l.longitude as longitude',
+      'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
+    ];
+
+    // Add distance calculation if user location is provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      selectFields.push(
+        `(
+          6371 * acos(
+            cos(radians(:userLat)) * cos(radians(l.latitude)) *
+            cos(radians(l.longitude) - radians(:userLng)) +
+            sin(radians(:userLat)) * sin(radians(l.latitude))
+          )
+        ) as distance`
+      );
+    }
+
     const qb = AppDataSource
       .createQueryBuilder()
-      .select([
-        'l.location_id as id',
-        'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
-        'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
-        'l.image_url as image',
-        'l.latitude as latitude',
-        'l.longitude as longitude',
-        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
-      ])
+      .select(selectFields)
       .from('locations', 'l')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = l.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
@@ -182,6 +197,12 @@ export class LocationRepository extends BaseRepository<Location> {
       .andWhere('t.type_id = :businessTypeId', { businessTypeId: 4 })
       .setParameter('language', language);
 
+    // Set location parameters if provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.setParameter('userLat', userLatitude)
+        .setParameter('userLng', userLongitude);
+    }
+
     // Add search filter if provided
     if (search && search.trim()) {
       qb.andWhere(
@@ -195,6 +216,13 @@ export class LocationRepository extends BaseRepository<Location> {
       qb.andWhere('l.city_id = :cityId', { cityId });
     }
     
+    // Order by distance if user location is provided, otherwise by name
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.orderBy('distance', 'ASC');
+    } else {
+      qb.orderBy('COALESCE(lt_name_lang.text_content, lt_name_pt.text_content)', 'ASC');
+    }
+    
     return await qb.getRawMany();
   }
 
@@ -202,20 +230,35 @@ export class LocationRepository extends BaseRepository<Location> {
    * Get all historical places with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
+  async findHistoricalPlacesWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
+    const selectFields = [
+      'l.location_id as id',
+      'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
+      'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+      'l.image_url as image',
+      'l.latitude as latitude',
+      'l.longitude as longitude',
+      'COUNT(DISTINCT sl.story_location_id) as "storiesCount"',
+      'COALESCE(COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || \', \' || c.state, \'Location unknown\') as location',
+      'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
+    ];
+
+    // Add distance calculation if user location is provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      selectFields.push(
+        `(
+          6371 * acos(
+            cos(radians(:userLat)) * cos(radians(l.latitude)) *
+            cos(radians(l.longitude) - radians(:userLng)) +
+            sin(radians(:userLat)) * sin(radians(l.latitude))
+          )
+        ) as distance`
+      );
+    }
+
     const qb = AppDataSource
       .createQueryBuilder()
-      .select([
-        'l.location_id as id',
-        'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
-        'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
-        'l.image_url as image',
-        'l.latitude as latitude',
-        'l.longitude as longitude',
-        'COUNT(DISTINCT sl.story_location_id) as "storiesCount"',
-        'COALESCE(COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || \', \' || c.state, \'Location unknown\') as location',
-        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
-      ])
+      .select(selectFields)
       .from('locations', 'l')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = l.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
@@ -235,6 +278,12 @@ export class LocationRepository extends BaseRepository<Location> {
       .groupBy('l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, lt_city_lang.text_content, lt_city_pt.text_content, c.state')
       .setParameter('language', language);
 
+    // Set location parameters if provided
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.setParameter('userLat', userLatitude)
+        .setParameter('userLng', userLongitude);
+    }
+
     // Add search filter if provided
     if (search && search.trim()) {
       qb.andWhere(
@@ -246,6 +295,13 @@ export class LocationRepository extends BaseRepository<Location> {
     // Filter by city if provided
     if (cityId) {
       qb.andWhere('l.city_id = :cityId', { cityId });
+    }
+    
+    // Order by distance if user location is provided, otherwise by name
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.orderBy('distance', 'ASC');
+    } else {
+      qb.orderBy('COALESCE(lt_name_lang.text_content, lt_name_pt.text_content)', 'ASC');
     }
     
     return await qb.getRawMany();

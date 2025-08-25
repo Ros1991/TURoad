@@ -219,19 +219,35 @@ export class PublicController {
     }
   }
 
-  async getBusinesses(req: RequestWithLanguage, res: Response): Promise<void> {
+  async getBusinesses(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
       
-      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
+      let referenceLatitude: number | undefined;
+      let referenceLongitude: number | undefined;
+      
+      // If cityId is provided, use that city's location as reference
+      if (cityId) {
+        const referenceCity = await this.cityService.findById(parseInt(cityId)) as CityResponseDto;
+        if (referenceCity) {
+          referenceLatitude = parseFloat(referenceCity.latitude.toString());
+          referenceLongitude = parseFloat(referenceCity.longitude.toString());
+        }
+      } else {
+        // Otherwise use user's current location from middleware
+        referenceLatitude = req.userLocation?.latitude;
+        referenceLongitude = req.userLocation?.longitude;
+      }
+      
+      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
       
       const businessesWithData = businesses.map(business => ({
         id: business.id.toString(),
         name: business.name || 'Unnamed Business',
         description: business.description,
-        distance: `A ${Math.floor(Math.random() * 10) + 1}km de distância`,
+        distance: business.distance ? `${parseFloat(business.distance).toFixed(1)}km ` : undefined,
         image: business.image,
         latitude: business.latitude ? parseFloat(business.latitude) : null,
         longitude: business.longitude ? parseFloat(business.longitude) : null,
@@ -251,13 +267,29 @@ export class PublicController {
     }
   }
 
-  async getHistoricalPlaces(req: RequestWithLanguage, res: Response): Promise<void> {
+  async getHistoricalPlaces(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
       
-      const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
+      let referenceLatitude: number | undefined;
+      let referenceLongitude: number | undefined;
+      
+      // If cityId is provided, use that city's location as reference
+      if (cityId) {
+        const referenceCity = await this.cityService.findById(parseInt(cityId)) as CityResponseDto;
+        if (referenceCity) {
+          referenceLatitude = parseFloat(referenceCity.latitude.toString());
+          referenceLongitude = parseFloat(referenceCity.longitude.toString());
+        }
+      } else {
+        // Otherwise use user's current location from middleware
+        referenceLatitude = req.userLocation?.latitude;
+        referenceLongitude = req.userLocation?.longitude;
+      }
+      
+      const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
       const historicalPlacesWithData = historicalPlaces.map(place => ({
         id: place.id.toString(),
         name: place.name || 'Unnamed Place',
@@ -267,7 +299,8 @@ export class PublicController {
         image: place.image,
         latitude: place.latitude ? parseFloat(place.latitude) : null,
         longitude: place.longitude ? parseFloat(place.longitude) : null,
-        categories: place.categories || []
+        categories: place.categories || [],
+        distance: place.distance ? `${parseFloat(place.distance).toFixed(1)} km ` : undefined
       }));
       
       res.json({

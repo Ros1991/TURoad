@@ -163,4 +163,5 @@ export interface HistoricalPlace {
   storiesCount: number;
   image: string;
   categories: string[];
+  distance: string;
 }
