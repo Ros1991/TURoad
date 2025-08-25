@@ -137,6 +137,7 @@ export interface Business {
   };
   distance: string;
   image: string;
+  categories: string[];
 }
 
 export interface HistoricalPlace {
@@ -161,4 +162,5 @@ export interface HistoricalPlace {
   };
   storiesCount: number;
   image: string;
+  categories: string[];
 }

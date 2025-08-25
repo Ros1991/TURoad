@@ -11,13 +11,8 @@ interface BusinessCardProps {
 }
 
 const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
-  const { i18n } = useTranslation();
-  
+
   if (!item) return null;
-  
-  const currentLanguage = i18n.language || 'pt';
-  const businessName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || 'Negócio';
-  const businessDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
 
   return (
     <TouchableOpacity 
@@ -48,8 +43,35 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
             marginBottom: 8
           }}
         >
-          {businessName}
+          {item.name}
         </Text>
+
+        {/* Badges de categorias */}
+        {/* <Box flexDirection="row" flexWrap="wrap" marginBottom="s">
+          {item.categories.map((categoryName, index) => (
+            <Box
+              key={index}
+              style={{
+                backgroundColor: '#E6E6E6',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 12,
+                marginRight: 6,
+                marginBottom: 6
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: 'Asap',
+                  fontSize: 12,
+                  color: '#444444'
+                }}
+              >
+                {categoryName}
+              </Text>
+            </Box>
+          ))}
+        </Box> */}
         <Text 
           style={{
             fontFamily: 'Asap',
@@ -59,7 +81,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress }) => {
             lineHeight: 18
           }}
         >
-          {businessDescription}
+          {item.description}
         </Text>
         <Box flexDirection="row" alignItems="center">
           <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>

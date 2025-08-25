@@ -234,7 +234,8 @@ export class PublicController {
         distance: `A ${Math.floor(Math.random() * 10) + 1}km de distância`,
         image: business.image,
         latitude: business.latitude ? parseFloat(business.latitude) : null,
-        longitude: business.longitude ? parseFloat(business.longitude) : null
+        longitude: business.longitude ? parseFloat(business.longitude) : null,
+        categories: business.categories || []
       }));
       
       res.json({
@@ -265,7 +266,8 @@ export class PublicController {
         storiesCount: parseInt(place.storiesCount) || 0,
         image: place.image,
         latitude: place.latitude ? parseFloat(place.latitude) : null,
-        longitude: place.longitude ? parseFloat(place.longitude) : null
+        longitude: place.longitude ? parseFloat(place.longitude) : null,
+        categories: place.categories || []
       }));
       
       res.json({

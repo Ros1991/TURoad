@@ -164,7 +164,8 @@ export class LocationRepository extends BaseRepository<Location> {
         'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
         'l.image_url as image',
         'l.latitude as latitude',
-        'l.longitude as longitude'
+        'l.longitude as longitude',
+        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
       ])
       .from('locations', 'l')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
@@ -172,7 +173,12 @@ export class LocationRepository extends BaseRepository<Location> {
       .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = l.description_text_ref_id AND lt_desc_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = l.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
       .leftJoin('types', 't', 't.type_id = l.type_id')
+      .leftJoin('location_categories', 'lc', 'lc.location_id = l.location_id')
+      .leftJoin('categories', 'cat', 'cat.category_id = lc.category_id AND cat."deletedAt" IS NULL')
+      .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
       .where('l."deletedAt" IS NULL')
+      .groupBy('l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude')
       .andWhere('t.type_id = :businessTypeId', { businessTypeId: 4 })
       .setParameter('language', language);
 
@@ -207,7 +213,8 @@ export class LocationRepository extends BaseRepository<Location> {
         'l.latitude as latitude',
         'l.longitude as longitude',
         'COUNT(DISTINCT sl.story_location_id) as "storiesCount"',
-        'COALESCE(COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || \', \' || c.state, \'Location unknown\') as location'
+        'COALESCE(COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || \', \' || c.state, \'Location unknown\') as location',
+        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories'
       ])
       .from('locations', 'l')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = l.name_text_ref_id AND lt_name_lang.language_code = :language')
@@ -219,6 +226,10 @@ export class LocationRepository extends BaseRepository<Location> {
       .leftJoin('localized_texts', 'lt_city_pt', 'lt_city_pt.reference_id = c.name_text_ref_id AND lt_city_pt.language_code = \'pt\'')
       .leftJoin('story_locations', 'sl', 'sl.location_id = l.location_id')
       .leftJoin('types', 't', 't.type_id = l.type_id')
+      .leftJoin('location_categories', 'lc', 'lc.location_id = l.location_id')
+      .leftJoin('categories', 'cat', 'cat.category_id = lc.category_id AND cat."deletedAt" IS NULL')
+      .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
       .where('l."deletedAt" IS NULL')
       .andWhere('t.type_id = :historicalTypeId', { historicalTypeId: 3 })
       .groupBy('l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, lt_city_lang.text_content, lt_city_pt.text_content, c.state')

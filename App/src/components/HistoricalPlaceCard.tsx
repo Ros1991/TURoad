@@ -11,14 +11,9 @@ interface HistoricalPlaceCardProps {
 }
 
 const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   if (!item) return null;
-  
-  const currentLanguage = i18n.language || 'pt';
-  const placeName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || 'Local Histórico';
-  const placeDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
-  const placeLocation = item.locationTranslations?.[currentLanguage as keyof typeof item.locationTranslations] || 'Local não informado';
 
   return (
     <TouchableOpacity 
@@ -49,8 +44,34 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
             marginBottom: 8
           }}
         >
-          {placeName}
+          {item.name}
         </Text>
+        {/* Badges de categorias */}
+        <Box flexDirection="row" flexWrap="wrap" marginBottom="s">
+          {item.categories.map((categoryName, index) => (
+            <Box
+              key={index}
+              style={{
+                backgroundColor: '#E6E6E6',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 12,
+                marginRight: 6,
+                marginBottom: 6
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: 'Asap',
+                  fontSize: 16,
+                  color: '#444444'
+                }}
+              >
+                {categoryName}
+              </Text>
+            </Box>
+          ))}
+        </Box>
         <Text 
           style={{
             fontFamily: 'Asap',
@@ -60,7 +81,7 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
             lineHeight: 22
           }}
         >
-          {placeDescription}
+          {item.description}
         </Text>
         <Box>
           <Box flexDirection="row" alignItems="center" marginBottom="s">
@@ -73,7 +94,7 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
                 marginLeft: 4
               }}
             >
-              {placeLocation}
+              {item.location}
             </Text>
           </Box>
           <Box flexDirection="row" alignItems="center">
