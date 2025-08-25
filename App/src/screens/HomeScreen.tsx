@@ -523,7 +523,7 @@ const HomeScreen: React.FC = () => {
             {/* Routes Carousel - Full Width */}
             <FlatList
               data={routes}
-              renderItem={({ item }) => <RouteCard item={item} categories={categories} onPress={(route) => navigation.navigate('RouteDetail', { routeId: route.id })} />}
+              renderItem={({ item }) => <RouteCard item={item} onPress={(route) => navigation.navigate('RouteDetail', { routeId: route.id })} />}
               keyExtractor={(item, index) => `route-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}

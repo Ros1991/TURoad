@@ -7,25 +7,13 @@ import { Route, Category } from '../types';
 
 interface RouteCardProps {
   item: Route;
-  categories: Category[];
   onPress: (route: Route) => void;
 }
 
-const RouteCard: React.FC<RouteCardProps> = ({ item, categories, onPress }) => {
-  const { t, i18n } = useTranslation();
+const RouteCard: React.FC<RouteCardProps> = ({ item, onPress }) => {
+  const { t } = useTranslation();
   
   if (!item) return null;
-  
-  // Aplicar tradução baseada no idioma atual
-  const currentLanguage = i18n.language || 'pt';
-  const routeTitle = item.titleTranslations?.[currentLanguage as keyof typeof item.titleTranslations] || item.title || 'Rota sem nome';
-  const routeDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || item.description || 'Descrição não disponível';
-  
-  // Buscar categorias traduzidas
-  const routeCategories = (item.categories || []).map(categoryId => {
-    const category = categories.find(cat => cat.id === categoryId);
-    return category ? (category.nameTranslations?.[currentLanguage as keyof typeof category.nameTranslations] || category.name) : '';
-  }).filter(Boolean);
 
   return (
     <TouchableOpacity 
@@ -64,12 +52,12 @@ const RouteCard: React.FC<RouteCardProps> = ({ item, categories, onPress }) => {
             marginBottom: 8
           }}
         >
-          {routeTitle}
+          {item.title}
         </Text>
         
         {/* Badges de categorias */}
         <Box flexDirection="row" flexWrap="wrap" marginBottom="s">
-          {routeCategories.map((categoryName, index) => (
+          {item.categories.map((categoryName, index) => (
             <Box
               key={index}
               style={{
@@ -104,7 +92,7 @@ const RouteCard: React.FC<RouteCardProps> = ({ item, categories, onPress }) => {
             lineHeight: 22
           }}
         >
-          {routeDescription}
+          {item.description}
         </Text>
         
         {/* Quantitativos - cada um em uma linha */}

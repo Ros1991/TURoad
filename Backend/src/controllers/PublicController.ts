@@ -107,13 +107,12 @@ export class PublicController {
         title: route.title || 'Unnamed Route',
         description: route.description,
         image: route.image,
-        categories: route.categories ? route.categories.map((cat: number) => cat.toString()) : [],
+        categories: route.categories || [],
         stops: parseInt(route.stops) || 0,
         totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(1)} km`,
         totalTime: this.formatTime(parseInt(route.totaltime) || 0),
         stories: parseInt(route.stories) || 0
       }));
-      console.log(routesWithData);
       res.json({
         success: true,
         data: routesWithData
@@ -207,7 +206,6 @@ export class PublicController {
           image: event.image
         };
       });
-      console.log(eventsWithData);
       res.json({
         success: true,
         data: eventsWithData

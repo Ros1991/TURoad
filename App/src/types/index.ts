@@ -65,7 +65,7 @@ export interface Route {
     en: string;
     es: string;
   };
-  categories: string[]; // IDs das categorias
+  categories: string[];
   totalDistance: string;
   totalTime: string;
   estimatedDuration: string;
@@ -118,6 +118,7 @@ export interface Event {
   date: string;
   time: string;
   image: string;
+  categories: string[];
 }
 
 export interface Business {

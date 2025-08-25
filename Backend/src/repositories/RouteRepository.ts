@@ -35,7 +35,7 @@ export class RouteRepository extends BaseRepository<Route> {
         'SUM(DISTINCT rc_city.distance_km) as totalDistance',
         'SUM(DISTINCT rc_city.travel_time_minutes) as totalTime',
         '(COUNT(DISTINCT sr.story_route_id) + COUNT(DISTINCT sc.story_city_id)) as stories',
-        'ARRAY_AGG(DISTINCT rc_cat.category_id) FILTER (WHERE rc_cat.category_id IS NOT NULL) as categories'
+        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE rc_cat.category_id IS NOT NULL) as categories'
       ])
       .from('routes', 'r')
       .leftJoin('localized_texts', 'lt_title_lang', 'lt_title_lang.reference_id = r.title_text_ref_id AND lt_title_lang.language_code = :language')
@@ -46,6 +46,9 @@ export class RouteRepository extends BaseRepository<Route> {
       .leftJoin('story_routes', 'sr', 'sr.route_id = r.route_id')
       .leftJoin('story_cities', 'sc', 'sc.city_id = rc_city.city_id')
       .leftJoin('route_categories', 'rc_cat', 'rc_cat.route_id = r.route_id')
+      .leftJoin('categories', 'cat', 'cat.category_id = rc_cat.category_id AND cat."deletedAt" IS NULL')
+      .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
       .where('r."deletedAt" IS NULL')
       .groupBy('r.route_id, lt_title_lang.text_content, lt_title_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, r.image_url')
       .setParameter('language', language);
