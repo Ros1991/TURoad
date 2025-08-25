@@ -32,6 +32,8 @@ const CityScreen: React.FC = () => {
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
   const [isFavorited, setIsFavorited] = useState(false);
+  const [isWhatToObserveExpanded, setIsWhatToObserveExpanded] = useState(false);
+  const [isAboutLocationExpanded, setIsAboutLocationExpanded] = useState(false);
 
   useEffect(() => {
     loadCity();
@@ -192,132 +194,208 @@ const CityScreen: React.FC = () => {
             height: 120,
           }}
         />
-        
-        {/* City Description Card overlapping image */}
-        <Box position="absolute" top={160} left={16} right={16}>
-          <Box
-            style={{ 
-              backgroundColor: 'white',
-              borderRadius: 16,
-              shadowColor: '#000',
-              shadowOffset: {
-                width: 0,
-                height: 4,
-              },
-              shadowOpacity: 0.1,
-              shadowRadius: 12,
-              elevation: 8,
-            }}
-          >
-            <Box padding="m">
-              <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="m">
-                <Box flex={1}>
-                  <Text 
-                    style={{ 
-                      fontSize: 28, 
-                      fontWeight: '700', 
-                      color: '#1A1A1A',
-                      marginBottom: 4
-                    }}
-                  >
-                    {city.name}
-                  </Text>
-                  <Text style={{ fontSize: 16, color: '#666666', marginBottom: 12 }}>
-                    {city.state}
-                  </Text>
-                  <Box flexDirection="row" alignItems="center">
-                    <Icon name="map-marker-outline" size={14} color="#666666" />
-                    <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4 }}>
-                      {(parseFloat(city.distance) || 0).toFixed(1)}km {t('common.distanceAway')}
-                    </Text>
-                  </Box>
-                </Box>
+      </Box>
+      
+      {/* City Description Card overlapping image */}
+      <Box style={{ marginTop: -140 }} paddingHorizontal="m" marginBottom="l">
+        <Box
+          style={{ 
+            backgroundColor: 'white',
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: '#E0E0E0',
+          }}
+        >
+          <Box padding="m">
+            <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="m">
+              <Box flex={1}>
+                <Text 
+                  style={{ 
+                    fontSize: 28, 
+                    fontWeight: '700', 
+                    color: '#1A1A1A',
+                    marginBottom: 4
+                  }}
+                >
+                  {city.name}
+                </Text>
+                <Text style={{ fontSize: 16, color: '#666666', marginBottom: 12 }}>
+                  {city.state}
+                </Text>
                 <Box flexDirection="row" alignItems="center">
-                  <TouchableOpacity style={{ marginRight: 16 }}>
+                  <Icon name="map-marker-outline" size={14} color="#666666" />
+                  <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4 }}>
+                    {(parseFloat(city.distance) || 0).toFixed(1)}km {t('common.distanceAway')}
+                  </Text>
+                </Box>
+              </Box>
+              <Box flexDirection="row" alignItems="center">
+                <TouchableOpacity style={{ marginRight: 16 }}>
+                  <Box
+                    width={40}
+                    height={40}
+                    borderRadius={20}
+                    justifyContent="center"
+                    alignItems="center"
+                    style={{ backgroundColor: '#F5F5F5' }}
+                  >
+                    <Icon name="share-variant" size={18} color="#666666" />
+                  </Box>
+                </TouchableOpacity>
+                {isAuthenticated && (
+                  <TouchableOpacity onPress={toggleFavorite}>
                     <Box
                       width={40}
                       height={40}
                       borderRadius={20}
                       justifyContent="center"
                       alignItems="center"
-                      style={{ backgroundColor: '#F5F5F5' }}
+                      style={{ 
+                        backgroundColor: isFavorited ? '#FF0000' : '#F5F5F5'
+                      }}
                     >
-                      <Icon name="share-variant" size={18} color="#666666" />
+                      <Icon 
+                        name={isFavorited ? "heart" : "heart-outline"} 
+                        as any 
+                        size={20} 
+                        color={isFavorited ? "#FFFFFF" : "#FF0000"} 
+                      />
                     </Box>
                   </TouchableOpacity>
-                  {isAuthenticated && (
-                    <TouchableOpacity onPress={toggleFavorite}>
-                      <Box
-                        width={40}
-                        height={40}
-                        borderRadius={20}
-                        justifyContent="center"
-                        alignItems="center"
-                        style={{ 
-                          backgroundColor: isFavorited ? '#FF0000' : '#F5F5F5'
-                        }}
-                      >
-                        <Icon 
-                          name={isFavorited ? "heart" : "heart-outline"} 
-                          as any 
-                          size={20} 
-                          color={isFavorited ? "#FFFFFF" : "#FF0000"} 
-                        />
-                      </Box>
-                    </TouchableOpacity>
-                  )}
+                )}
+              </Box>
+            </Box>
+            
+            {/* Audio Player Component */}
+            {(city.stories as Story[]).length > 0 && (
+              <AudioStoriesPlayer 
+                stories={city.stories as Story[]}
+                currentStoryIndex={currentStoryIndex}
+                onStoryChange={setCurrentStoryIndex}
+                onDurationUpdate={(storyIndex, realDuration) => {
+                  // Update story duration when real audio duration is discovered
+                  const updatedStories = [...(city.stories as Story[])];
+                  if (updatedStories[storyIndex]) {
+                    updatedStories[storyIndex].durationSeconds = realDuration;
+                  }
+                }}
+              />
+            )}
+            
+            {/* Navigation Buttons at bottom of card */}
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginTop="l" paddingTop="m" style={{ borderTopWidth: 1, borderTopColor: '#F0F0F0' }}>
+              <TouchableOpacity style={{ flex: 1, marginRight: 8 }} onPress={openInMaps}>
+                <Box
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  paddingVertical="m"
+                  borderRadius={8}
+                  style={{ backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#E9ECEF' }}
+                >
+                  <Icon name="map-outline" size={16} color="#666666" />
+                  <Text style={{ fontSize: 14, color: '#666666', marginLeft: 8, fontWeight: '500' }}>{t('city.viewOnMap')}</Text>
                 </Box>
-              </Box>
-              
-              {/* Audio Player Component */}
-              {(city.stories as Story[]).length > 0 && (
-                <AudioStoriesPlayer 
-                  stories={city.stories as Story[]}
-                  currentStoryIndex={currentStoryIndex}
-                  onStoryChange={setCurrentStoryIndex}
-                  onDurationUpdate={(storyIndex, realDuration) => {
-                    // Update story duration when real audio duration is discovered
-                    const updatedStories = [...(city.stories as Story[])];
-                    if (updatedStories[storyIndex]) {
-                      updatedStories[storyIndex].durationSeconds = realDuration;
-                    }
-                  }}
-                />
-              )}
-              
-              {/* Navigation Buttons at bottom of card */}
-              <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginTop="l" paddingTop="m" style={{ borderTopWidth: 1, borderTopColor: '#F0F0F0' }}>
-                <TouchableOpacity style={{ flex: 1, marginRight: 8 }} onPress={openInMaps}>
-                  <Box
-                    flexDirection="row"
-                    alignItems="center"
-                    justifyContent="center"
-                    paddingVertical="m"
-                    borderRadius={8}
-                    style={{ backgroundColor: '#F8F9FA', borderWidth: 1, borderColor: '#E9ECEF' }}
-                  >
-                    <Icon name="map-outline" size={16} color="#666666" />
-                    <Text style={{ fontSize: 14, color: '#666666', marginLeft: 8, fontWeight: '500' }}>Ver no mapa</Text>
-                  </Box>
-                </TouchableOpacity>
-                <TouchableOpacity style={{ flex: 1, marginLeft: 8 }}>
-                  <Box
-                    flexDirection="row"
-                    alignItems="center"
-                    justifyContent="center"
-                    paddingVertical="m"
-                    borderRadius={8}
-                    style={{ backgroundColor: '#035A6E' }}
-                  >
-                    <Icon name="arrow-left" as any size={24} color="white" />
-                    <Text style={{ fontSize: 14, color: 'white', marginLeft: 8, fontWeight: '500' }}>Rota</Text>
-                  </Box>
-                </TouchableOpacity>
-              </Box>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flex: 1, marginLeft: 8 }}>
+                <Box
+                  flexDirection="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  paddingVertical="m"
+                  borderRadius={8}
+                  style={{ backgroundColor: '#035A6E' }}
+                >
+                  <Icon name="arrow-left" as any size={24} color="white" />
+                  <Text style={{ fontSize: 14, color: 'white', marginLeft: 8, fontWeight: '500' }}>{t('city.route')}</Text>
+                </Box>
+              </TouchableOpacity>
             </Box>
           </Box>
         </Box>
       </Box>
+
+      {/* Expander Cards Below Main Card */}
+      <Box paddingHorizontal="m">        
+        {/* O que há para observar? Card */}
+        {city.whattoobserve && (
+          <Box
+          style={{ 
+            backgroundColor: 'white',
+            borderRadius: 16,
+            borderWidth: 1,
+            borderColor: '#E0E0E0',
+            marginBottom: 16
+          }}
+        >
+          <TouchableOpacity 
+            onPress={() => setIsWhatToObserveExpanded(!isWhatToObserveExpanded)}
+            style={{ padding: 16 }}
+          >
+            <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+              <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A1A1A', flex: 1 }}>
+                {t('city.whatToObserve')}
+              </Text>
+              <Icon 
+                name={isWhatToObserveExpanded ? "chevron-up" : "chevron-down"} 
+                size={24} 
+                color="#666666" 
+              />
+            </Box>
+          </TouchableOpacity>
+          {isWhatToObserveExpanded && (
+            <Box paddingHorizontal="m" paddingBottom="m">
+              <Box style={{ borderTopWidth: 1, borderTopColor: '#F0F0F0', paddingTop: 12 }}>
+                <Text style={{ fontSize: 16, color: '#333333', lineHeight: 24 }}>
+                  {city.whattoobserve || "Dados não disponíveis"}
+                </Text>
+              </Box>
+            </Box>
+          )}
+        </Box>
+        )}
+
+        {/* Sobre o local Card */}
+        {city.description && city.description.trim() && (
+          <Box
+            style={{ 
+              backgroundColor: 'white',
+              borderRadius: 16,
+              borderWidth: 1,
+              borderColor: '#E0E0E0',
+              marginBottom: 16
+            }}
+          >
+            <TouchableOpacity 
+              onPress={() => setIsAboutLocationExpanded(!isAboutLocationExpanded)}
+              style={{ padding: 16 }}
+            >
+              <Box flexDirection="row" justifyContent="space-between" alignItems="center">
+                <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A1A1A', flex: 1 }}>
+                  {t('city.aboutLocation')}
+                </Text>
+                <Icon 
+                  name={isAboutLocationExpanded ? "chevron-up" : "chevron-down"} 
+                  size={24} 
+                  color="#666666" 
+                />
+              </Box>
+            </TouchableOpacity>
+            {isAboutLocationExpanded && (
+              <Box paddingHorizontal="m" paddingBottom="m">
+                <Box style={{ borderTopWidth: 1, borderTopColor: '#F0F0F0', paddingTop: 12 }}>
+                  <Text style={{ fontSize: 16, color: '#333333', lineHeight: 24 }}>
+                    {city.description}
+                  </Text>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      {/* Extra padding at bottom for better scrolling */}
+      <Box paddingBottom="xl" />
     </ScrollView>
   );
 };

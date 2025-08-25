@@ -19,6 +19,7 @@ export interface City {
     es: string;
   };
   totalDistance: string;
+  whattoobserve?: string;
   distance: string;
   image: string;
   stories: Story[] | number;

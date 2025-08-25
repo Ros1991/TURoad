@@ -154,7 +154,6 @@ export class PublicController {
         });
         return;
       }
-
       // Check if user is authenticated and get favorite status
       let isFavorite = false;
       if ((req as any).user?.userId) {

@@ -29,6 +29,7 @@ export class CityRepository extends BaseRepository<City> {
       'c.city_id as id',
       'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
       'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+      'COALESCE(lt_observe_lang.text_content, lt_observe_pt.text_content) as whatToObserve',
       'c.state as state',
       'c.image_url as image',
       'c.latitude as latitude',
@@ -58,10 +59,12 @@ export class CityRepository extends BaseRepository<City> {
       .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = c.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
       .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = c.description_text_ref_id AND lt_desc_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = c.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_observe_lang', 'lt_observe_lang.reference_id = c.what_to_observe_text_ref_id AND lt_observe_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_observe_pt', 'lt_observe_pt.reference_id = c.what_to_observe_text_ref_id AND lt_observe_pt.language_code = \'pt\'')
       .leftJoin('story_cities', 'sc', 'sc.city_id = c.city_id')
       .leftJoin('route_cities', 'rc', 'rc.city_id = c.city_id')
       .where('c."deletedAt" IS NULL')
-      .groupBy('c.city_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, c.state, c.image_url, c.latitude, c.longitude')
+      .groupBy('c.city_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, lt_observe_lang.text_content, lt_observe_pt.text_content, c.state, c.image_url, c.latitude, c.longitude')
       .setParameter('language', language);
 
     // Set location parameters if provided
@@ -98,6 +101,7 @@ export class CityRepository extends BaseRepository<City> {
       'c.city_id as id',
       'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
       'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
+      'COALESCE(lt_observe_lang.text_content, lt_observe_pt.text_content) as whatToObserve',
       'c.state as state',
       'c.image_url as image',
       'c.latitude as latitude',
@@ -127,11 +131,13 @@ export class CityRepository extends BaseRepository<City> {
       .leftJoin('localized_texts', 'lt_name_pt', 'lt_name_pt.reference_id = c.name_text_ref_id AND lt_name_pt.language_code = \'pt\'')
       .leftJoin('localized_texts', 'lt_desc_lang', 'lt_desc_lang.reference_id = c.description_text_ref_id AND lt_desc_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_desc_pt', 'lt_desc_pt.reference_id = c.description_text_ref_id AND lt_desc_pt.language_code = \'pt\'')
+      .leftJoin('localized_texts', 'lt_observe_lang', 'lt_observe_lang.reference_id = c.what_to_observe_text_ref_id AND lt_observe_lang.language_code = :language')
+      .leftJoin('localized_texts', 'lt_observe_pt', 'lt_observe_pt.reference_id = c.what_to_observe_text_ref_id AND lt_observe_pt.language_code = \'pt\'')
       .leftJoin('story_cities', 'sc', 'sc.city_id = c.city_id')
       .leftJoin('route_cities', 'rc', 'rc.city_id = c.city_id')
       .where('c."deletedAt" IS NULL')
       .andWhere('c.city_id = :cityId', { cityId })
-      .groupBy('c.city_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, c.state, c.image_url, c.latitude, c.longitude')
+      .groupBy('c.city_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, lt_observe_lang.text_content, lt_observe_pt.text_content, c.state, c.image_url, c.latitude, c.longitude')
       .setParameter('language', language);
 
     // Set location parameters if provided
