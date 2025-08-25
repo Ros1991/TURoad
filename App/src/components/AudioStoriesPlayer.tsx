@@ -1,29 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { TouchableOpacity, Animated, Dimensions, PanResponder } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 import { Story } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
+import Sound from 'react-native-sound';
 
 interface AudioStoriesPlayerProps {
-  title: string;
   stories: Story[];
-  initialStoryIndex?: number;
+  currentStoryIndex: number;
+  onStoryChange: (index: number) => void;
+  onDurationUpdate?: (storyIndex: number, realDuration: number) => void;
 }
 
-export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
-  title,
-  stories,
-  initialStoryIndex = 0
-}) => {
+export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStoryChange, onDurationUpdate }: AudioStoriesPlayerProps) {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [playStartTime, setPlayStartTime] = useState<number | null>(null);
+  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
+  
+  const soundRef = useRef<Sound | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressBarWidth = Dimensions.get('window').width - 64; // Account for padding
 
   const languageOptions = [
     { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
@@ -33,66 +38,254 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
 
   const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
+  // Initialize Sound library
   useEffect(() => {
-    // Simula carregamento da duração das histórias
-    if (stories.length > 0) {
-      const mockDuration = parseFloat(stories[currentStoryIndex]?.duration?.replace(' min', '') || '3') * 60;
-      setDuration(mockDuration);
-    }
+    Sound.setCategory('Playback');
+    return () => {
+      // Cleanup on unmount
+      if (soundRef.current) {
+        soundRef.current.release();
+      }
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+      }
+    };
   }, []);
 
+  // Load audio when story changes
   useEffect(() => {
-    if (stories.length > 0) {
-      const mockDuration = parseFloat(stories[currentStoryIndex]?.duration?.replace(' min', '') || '3') * 60;
-      setDuration(mockDuration);
-      setCurrentPosition(0);
-      setIsPlaying(false);
-    }
-  }, [currentStoryIndex, currentLanguage, stories]);
+    // Auto-play when changing stories (not on initial load)
+    setShouldAutoPlay(true);
+    loadAudio();
+  }, [currentStoryIndex]);
 
-  // Simula progresso do áudio quando está 'reproduzindo'
+  // Track progress when playing - usando abordagem híbrida
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval> | null = null;
-    
-    if (isPlaying) {
-      interval = setInterval(() => {
-        setCurrentPosition(prev => {
-          const newPosition = prev + 1;
-          if (newPosition >= duration) {
-            setIsPlaying(false);
-            return duration;
-          }
-          return newPosition;
-        });
-      }, 1000);
+    if (isPlaying && soundRef.current && playStartTime) {
+      progressIntervalRef.current = setInterval(() => {
+        if (soundRef.current && playStartTime) {
+          // Método 1: Tentar getCurrentTime
+          soundRef.current.getCurrentTime((seconds) => {
+            if (seconds > 0) {
+              // Se getCurrentTime funciona, usar ele
+              setCurrentPosition(seconds);
+              if (seconds >= duration && duration > 0) {
+                console.log('Audio finished via getCurrentTime');
+                onPlaybackFinished();
+              }
+            } else {
+              // Método 2: Fallback para timer manual
+              const elapsedTime = (Date.now() - playStartTime) / 1000;
+              const estimatedPosition = Math.min(elapsedTime + currentPosition, duration);
+              console.log('Using manual timer. Elapsed:', elapsedTime, 'Estimated position:', estimatedPosition);
+              setCurrentPosition(estimatedPosition);
+              
+              if (estimatedPosition >= duration && duration > 0) {
+                console.log('Audio finished via manual timer');
+                onPlaybackFinished();
+              }
+            }
+          });
+        }
+      }, 300);
+    } else {
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
     
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
       }
     };
-  }, [isPlaying, duration]);
+  }, [isPlaying, duration, playStartTime]);
 
 
 
+  const getCurrentAudioUrl = (): string | null => {
+    const currentStory = stories[currentStoryIndex];
+    if (!currentStory) return null;
+    
+    if(currentStory.audioUrl){
+      return currentStory.audioUrl;
+    }
+    // Check if story has audioUrlTranslations for current language
+    if (currentStory.audioUrlTranslations && currentStory.audioUrlTranslations[currentLanguage as keyof typeof currentStory.audioUrlTranslations]) {
+      return currentStory.audioUrlTranslations[currentLanguage as keyof typeof currentStory.audioUrlTranslations];
+    }
+    
+    // Fallback to Portuguese if current language not available
+    if (currentStory.audioUrlTranslations && currentStory.audioUrlTranslations.pt) {
+      return currentStory.audioUrlTranslations.pt;
+    }
+    
+    return null;
+  };
+
+  const loadAudio = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Release previous sound
+      if (soundRef.current) {
+        soundRef.current.release();
+        soundRef.current = null;
+      }
+      
+      const audioUrl = getCurrentAudioUrl();
+      if (!audioUrl) {
+        setError(t('audioPlayer.audioNotAvailable'));
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create new sound instance
+      soundRef.current = new Sound(audioUrl, Sound.MAIN_BUNDLE, (error) => {
+        setIsLoading(false);
+        
+        if (error) {
+          setError(t('audioPlayer.loadError'));
+          return;
+        }
+        
+        // Audio loaded successfully
+        const soundDuration = soundRef.current?.getDuration() || 0;
+        const backendDuration = stories[currentStoryIndex]?.durationSeconds || 0;
+        const audioDuration = soundDuration > 0 ? soundDuration : backendDuration;
+        
+        setDuration(audioDuration);
+        setCurrentPosition(0);
+        setIsPlaying(false);
+        setPlayStartTime(null);
+        
+        // Update story duration if real duration is different
+        if (soundDuration > 0 && soundDuration !== backendDuration && onDurationUpdate) {
+          onDurationUpdate(currentStoryIndex, soundDuration);
+        }
+        
+        // Auto-play only when shouldAutoPlay is true (story change, not initial load)
+        if (shouldAutoPlay) {
+          const startTime = Date.now();
+          setIsPlaying(true);
+          setPlayStartTime(startTime);
+          
+          soundRef.current?.play((success) => {
+            if (!success) {
+              setIsPlaying(false);
+              setPlayStartTime(null);
+            }
+          });
+          
+          setShouldAutoPlay(false); // Reset flag after auto-play
+        }
+      });
+      
+    } catch (err) {
+      setError(t('audioPlayer.initError'));
+      setIsLoading(false);
+    }
+  };
+  
   const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
+    if (!soundRef.current || isLoading) {
+      return;
+    }
+    
+    if (isPlaying) {
+      // Pause - definir estado imediatamente também
+      setIsPlaying(false);
+      setPlayStartTime(null);
+      
+      soundRef.current.pause();
+    } else {
+      // Play - definir estado imediatamente
+      const startTime = Date.now();
+      setIsPlaying(true);
+      setPlayStartTime(startTime);
+      
+      soundRef.current.play((success) => {
+        if (!success) {
+          console.log('Play failed, reverting state');
+          setIsPlaying(false);
+          setPlayStartTime(null);
+          setError(t('audioPlayer.playbackError'));
+        } else {
+          console.log('Play confirmed successful');
+        }
+      });
+    }
+  };
+  
+  const onPlaybackFinished = () => {
+    setIsPlaying(false);
+    setCurrentPosition(0);
+    setPlayStartTime(null);
+    
+    // Auto play next story if available
+    if (currentStoryIndex < stories.length - 1) {
+      setTimeout(() => {
+        goToNextStory();
+      }, 500);
+    }
+  };
+  
+  const seekToPosition = (position: number) => {
+    if (!soundRef.current || isLoading) return;
+    
+    const seekTime = Math.max(0, Math.min(position, duration));
+    soundRef.current.setCurrentTime(seekTime);
+    setCurrentPosition(seekTime);
+    
+    // Reset play start time se estiver tocando
+    if (isPlaying) {
+      setPlayStartTime(Date.now());
+      console.log('Seek performed, reset play start time');
+    }
   };
 
   const goToNextStory = () => {
     if (currentStoryIndex >= stories.length - 1) return;
-    setCurrentStoryIndex(currentStoryIndex + 1);
+    
+    // Stop current audio
+    if (soundRef.current && isPlaying) {
+      soundRef.current.stop(() => {
+        setIsPlaying(false);
+        onStoryChange(currentStoryIndex + 1);
+      });
+    } else {
+      onStoryChange(currentStoryIndex + 1);
+    }
   };
 
   const goToPreviousStory = () => {
     if (currentStoryIndex <= 0) return;
-    setCurrentStoryIndex(currentStoryIndex - 1);
+    
+    // Stop current audio
+    if (soundRef.current && isPlaying) {
+      soundRef.current.stop(() => {
+        setIsPlaying(false);
+        onStoryChange(currentStoryIndex - 1);
+      });
+    } else {
+      onStoryChange(currentStoryIndex - 1);
+    }
   };
 
   const goToStory = (index: number) => {
-    if (index < 0 || index >= stories.length) return;
-    setCurrentStoryIndex(index);
+    if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
+    
+    // Stop current audio
+    if (soundRef.current && isPlaying) {
+      soundRef.current.stop(() => {
+        setIsPlaying(false);
+        onStoryChange(index);
+      });
+    } else {
+      onStoryChange(index);
+    }
   };
 
 
@@ -136,7 +329,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
               </Box>
             </TouchableOpacity>
             
-            <TouchableOpacity onPress={togglePlayback}>
+            <TouchableOpacity onPress={togglePlayback} disabled={isLoading || !!error}>
               <Box
                 width={50}
                 height={50}
@@ -144,9 +337,15 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                 justifyContent="center"
                 alignItems="center"
                 marginHorizontal="m"
-                style={{ backgroundColor: '#035A6E' }}
+                style={{ 
+                  backgroundColor: (isLoading || error) ? '#CCCCCC' : '#035A6E' 
+                }}
               >
-                <Icon name={isPlaying ? 'pause' : 'play'} size={20} color="white" />
+                {isLoading ? (
+                  <Icon name="loading" size={20} color="white" />
+                ) : (
+                  <Icon name={isPlaying ? 'pause' : 'play'} size={20} color="white" />
+                )}
               </Box>
             </TouchableOpacity>
             
@@ -174,16 +373,43 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
             </TouchableOpacity>
           </Box>
           
-          {/* Progress Bar */}
+          {/* Interactive Progress Bar */}
           <Box marginBottom="s">
-            <Box height={4} borderRadius={2} style={{ backgroundColor: '#E0E0E0' }}>
-              <Box 
-                width={`${duration > 0 ? (currentPosition / duration) * 100 : 0}%`} 
-                height="100%" 
-                borderRadius={2} 
-                style={{ backgroundColor: '#035A6E' }} 
-              />
-            </Box>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={(event) => {
+                const { locationX } = event.nativeEvent;
+                const progress = Math.max(0, Math.min(1, locationX / progressBarWidth));
+                const newPosition = progress * duration;
+                seekToPosition(newPosition);
+              }}
+            >
+              <Box height={20} justifyContent="center" paddingVertical="s">
+                <Box height={5} borderRadius={2} style={{ backgroundColor: '#E0E0E0' }}>
+                  <Box 
+                    width={`${duration > 0 ? (currentPosition / duration) * 100 : 0}%`} 
+                    height="100%" 
+                    borderRadius={2} 
+                    style={{ backgroundColor: '#035A6E' }} 
+                  />
+                </Box>
+                {/* Progress Handle */}
+                <Box
+                  position="absolute"
+                  width={12}
+                  height={12}
+                  backgroundColor="success"
+                  borderRadius={8}
+                  borderWidth={2}
+                  borderColor="success"
+                  style={{
+                    left: Math.max(0, Math.min(progressBarWidth - 12, (currentPosition / duration) * progressBarWidth - 6)),
+                    top: 4,
+                  }}
+                />
+              </Box>
+            </TouchableOpacity>
+            
             <Box flexDirection="row" justifyContent="space-between" style={{ marginTop: 4 }}>
               <Text style={{ fontSize: 12, color: '#666666' }}>
                 {formatTime(currentPosition)}
@@ -192,6 +418,20 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                 {formatTime(duration)}
               </Text>
             </Box>
+            
+            {/* Loading indicator */}
+            {isLoading && (
+              <Box alignItems="center" marginTop="s">
+                <Text style={{ fontSize: 12, color: '#666666' }}>{t('audioPlayer.loading')}</Text>
+              </Box>
+            )}
+            
+            {/* Error message */}
+            {error && (
+              <Box alignItems="center" marginTop="s">
+                <Text style={{ fontSize: 12, color: '#DC3545' }}>{error}</Text>
+              </Box>
+            )}
           </Box>
         </Box>
       )}
@@ -200,7 +440,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
       <Box>
         <Box flexDirection="row" alignItems="center" justifyContent="space-between" marginBottom="s">
           <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A1A1A' }}>
-            {title}
+            {t('city.stories')}
           </Text>
           <Box position="relative">
             <TouchableOpacity onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}>
@@ -272,7 +512,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
           const displayDuration = formatTime(story.durationSeconds);
 
           return (
-            <TouchableOpacity key={story.id} onPress={() => goToStory(index)}>
+            <TouchableOpacity key={story.id || `story-${index}`} onPress={() => goToStory(index)}>
               <Box marginBottom="s" padding="s" style={{
                 backgroundColor: index === currentStoryIndex ? '#F8F9FF' : 'transparent',
                 borderRadius: 8,
@@ -321,4 +561,3 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
   );
 };
 
-export default AudioStoriesPlayer;

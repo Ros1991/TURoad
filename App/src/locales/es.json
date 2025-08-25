@@ -130,6 +130,13 @@
     "aboutLocation": "Sobre el lugar",
     "nearbyServices": "Comercios y servicios cercanos"
   },
+  "audioPlayer": {
+    "loading": "Cargando audio...",
+    "audioNotAvailable": "Audio no disponible para este idioma",
+    "loadError": "Error al cargar audio",
+    "initError": "Error al inicializar reproductor de audio",
+    "playbackError": "Error de reproducción"
+  },
   "profile": {
     "title": "Perfil",
     "navigation": "NAVEGACIÓN",

@@ -24,6 +24,9 @@ const CityScreen: React.FC = () => {
   const route = useRoute<CityScreenRouteProp>();
   const { t } = useTranslation();
   const [city, setCity] = useState<City | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
@@ -133,7 +136,7 @@ const CityScreen: React.FC = () => {
                   <Box flexDirection="row" alignItems="center">
                     <Icon name="map-marker-outline" size={14} color="#666666" />
                     <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4 }}>
-                      {(parseFloat(city.distance) || 0).toFixed(1)} {t('common.distanceAway')}
+                      {(parseFloat(city.distance) || 0).toFixed(1)}km {t('common.distanceAway')}
                     </Text>
                   </Box>
                 </Box>
@@ -168,8 +171,16 @@ const CityScreen: React.FC = () => {
               {/* Audio Player Component */}
               {(city.stories as Story[]).length > 0 && (
                 <AudioStoriesPlayer 
-                  title="Histórias" 
                   stories={city.stories as Story[]}
+                  currentStoryIndex={currentStoryIndex}
+                  onStoryChange={setCurrentStoryIndex}
+                  onDurationUpdate={(storyIndex, realDuration) => {
+                    // Update story duration when real audio duration is discovered
+                    const updatedStories = [...(city.stories as Story[])];
+                    if (updatedStories[storyIndex]) {
+                      updatedStories[storyIndex].durationSeconds = realDuration;
+                    }
+                  }}
                 />
               )}
               
