@@ -199,11 +199,11 @@ export class PublicController {
           id: event.id.toString(),
           name: event.name || 'Unnamed Event',
           description: event.description,
-          type: event.type || 'Evento',
           location: event.location || 'Local não especificado',
           date: formattedDate,
           time: event.time,
-          image: event.image
+          image: event.image,
+          categories: event.categories || []
         };
       });
       res.json({

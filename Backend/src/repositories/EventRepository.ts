@@ -115,7 +115,7 @@ export class EventRepository extends BaseRepository<Event> {
         'COALESCE(lt_time_lang.text_content, lt_time_pt.text_content) as time',
         'e.event_date as eventDate',
         'e.image_url as image',
-        'COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content, \'Evento\') as type'
+        'ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE ec.category_id IS NOT NULL) as categories'
       ])
       .from('events', 'e')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = e.name_text_ref_id AND lt_name_lang.language_code = :language')
@@ -127,10 +127,11 @@ export class EventRepository extends BaseRepository<Event> {
       .leftJoin('localized_texts', 'lt_time_lang', 'lt_time_lang.reference_id = e.time_text_ref_id AND lt_time_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_time_pt', 'lt_time_pt.reference_id = e.time_text_ref_id AND lt_time_pt.language_code = \'pt\'')
       .leftJoin('event_categories', 'ec', 'ec.event_id = e.event_id')
-      .leftJoin('categories', 'cat', 'cat.category_id = ec.category_id')
+      .leftJoin('categories', 'cat', 'cat.category_id = ec.category_id AND cat."deletedAt" IS NULL')
       .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
       .where('e."deletedAt" IS NULL')
+      .groupBy('e.event_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, lt_location_lang.text_content, lt_location_pt.text_content, lt_time_lang.text_content, lt_time_pt.text_content, e.event_date, e.image_url')
       .setParameter('language', language);
 
     // Filter by city if provided
