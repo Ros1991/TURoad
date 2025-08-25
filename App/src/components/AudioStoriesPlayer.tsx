@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 import { Story } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface AudioStoriesPlayerProps {
   title: string;
@@ -17,7 +18,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
   initialStoryIndex = 0
 }) => {
   const { t } = useTranslation();
-  const [selectedLanguage, setSelectedLanguage] = useState<'pt' | 'en' | 'es'>('pt');
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,7 +31,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
     { code: 'es' as const, flag: '🇪🇸', name: 'Español' }
   ];
 
-  const currentLanguage = languageOptions.find(lang => lang.code === selectedLanguage) || languageOptions[0];
+  const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
   useEffect(() => {
     // Simula carregamento da duração das histórias
@@ -47,7 +48,7 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
       setCurrentPosition(0);
       setIsPlaying(false);
     }
-  }, [currentStoryIndex, selectedLanguage, stories]);
+  }, [currentStoryIndex, currentLanguage, stories]);
 
   // Simula progresso do áudio quando está 'reproduzindo'
   useEffect(() => {
@@ -205,8 +206,8 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
             <TouchableOpacity onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}>
               <Box flexDirection="row" alignItems="center" paddingHorizontal="s" paddingVertical="s" borderRadius={8} style={{ backgroundColor: '#F5F5F5' }}>
                 <Icon name="web" size={14} color="#666666" />
-                <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4, marginRight: 4 }}>{currentLanguage.flag}</Text>
-                <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguage.name}</Text>
+                <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4, marginRight: 4 }}>{currentLanguageOption.flag}</Text>
+                <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguageOption.name}</Text>
                 <Icon name={showLanguageDropdown ? 'chevron-up' : 'chevron-down'} size={14} color="#666666" />
               </Box>
             </TouchableOpacity>
@@ -233,8 +234,8 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                 {languageOptions.map((option) => (
                   <TouchableOpacity 
                     key={option.code} 
-                    onPress={() => {
-                      setSelectedLanguage(option.code);
+                    onPress={async () => {
+                      await changeLanguage(option.code);
                       setShowLanguageDropdown(false);
                     }}
                   >
@@ -244,18 +245,18 @@ export const AudioStoriesPlayer: React.FC<AudioStoriesPlayerProps> = ({
                       paddingHorizontal="m" 
                       paddingVertical="s"
                       style={{ 
-                        backgroundColor: option.code === selectedLanguage ? '#F0F8FF' : 'transparent' 
+                        backgroundColor: option.code === currentLanguage ? '#F0F8FF' : 'transparent' 
                       }}
                     >
                       <Text style={{ fontSize: 14, marginRight: 8 }}>{option.flag}</Text>
                       <Text style={{ 
                         fontSize: 14, 
-                        color: option.code === selectedLanguage ? '#035A6E' : '#1A1A1A',
-                        fontWeight: option.code === selectedLanguage ? '500' : '400'
+                        color: option.code === currentLanguage ? '#035A6E' : '#1A1A1A',
+                        fontWeight: option.code === currentLanguage ? '500' : '400'
                       }}>
                         {option.name}
                       </Text>
-                      {option.code === selectedLanguage && (
+                      {option.code === currentLanguage && (
                         <Icon name="check" size={14} color="#035A6E" style={{ marginLeft: 'auto' }} />
                       )}
                     </Box>

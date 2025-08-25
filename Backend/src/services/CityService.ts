@@ -17,12 +17,13 @@ export class CityService extends BaseService<City> {
   }
 
   // Helper method to fetch localized texts for story entities
-  private async fetchLocalizedTextForStory(story: any): Promise<any> {
+  private async fetchLocalizedTextForStory(story: any, language: string = 'pt'): Promise<any> {
+    this.storyCityService.setLanguage(language);
     return await (this.storyCityService as any).fetchLocalizedTextForEntity(story);
   }
 
   // Story CRUD methods
-  async getStoriesByCityId(cityId: number, page?: number, limit?: number, search?: string) {
+  async getStoriesByCityId(cityId: number, language: string = 'pt', page?: number, limit?: number, search?: string) {
     // Verify city exists
     const city = await this.repository.findById(cityId);
     if (!city) {
@@ -32,7 +33,7 @@ export class CityService extends BaseService<City> {
     if (page && limit) {
       const result = await this.storyCityRepository.findByCityIdWithPagination(cityId, page, limit, search);
       const itemsWithLocalizedText = await Promise.all(
-        result.items.map(story => this.fetchLocalizedTextForStory(story))
+        result.items.map(story => this.fetchLocalizedTextForStory(story, language))
       );
       return {
         ...result,
@@ -41,7 +42,7 @@ export class CityService extends BaseService<City> {
     }
 
     const stories = await this.storyCityRepository.findByCityId(cityId);
-    return Promise.all(stories.map(story => this.fetchLocalizedTextForStory(story)));
+    return Promise.all(stories.map(story => this.fetchLocalizedTextForStory(story, language)));
   }
 
   async getStoryById(cityId: number, storyId: number) {
@@ -49,7 +50,7 @@ export class CityService extends BaseService<City> {
     if (!story || story.cityId !== cityId) {
       throw new Error('Story not found');
     }
-    return this.fetchLocalizedTextForStory(story);
+    return this.fetchLocalizedTextForStory(story, 'pt');
   }
 
   async createStory(cityId: number, storyData: Partial<StoryCity>) {
@@ -63,7 +64,7 @@ export class CityService extends BaseService<City> {
       ...storyData,
       cityId
     });
-    return this.fetchLocalizedTextForStory(story);
+    return this.fetchLocalizedTextForStory(story, 'pt');
   }
 
   async updateStory(cityId: number, storyId: number, storyData: Partial<StoryCity>) {
@@ -97,7 +98,7 @@ export class CityService extends BaseService<City> {
     }
 
     // Get stories for this city
-    const stories = await this.getStoriesByCityId(cityId);
+    const stories = await this.getStoriesByCityId(cityId, language);
     
     return {
       ...city,
