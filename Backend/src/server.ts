@@ -29,7 +29,7 @@ class TURoadServer {
     
     // CORS - Allow frontend connections
     this.app.use(cors({
-      origin: ['http://localhost:5174'],
+      origin: ['http://localhost:5174', 'http://10.254.200.24:5174', 'http://10.254.200.24:3001'],
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-User-Location', 'X-Location-Accuracy'],

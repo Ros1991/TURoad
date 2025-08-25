@@ -48,7 +48,7 @@ export default {
       updateUrl: process.env.EXPO_UPDATE_URL,
       storageUrl: process.env.EXPO_STORAGE_URL,
       // Environment variables for the app
-      apiUrl: process.env.API_URL || 'http://localhost:3001',
+      apiUrl: process.env.API_URL || 'http://10.254.200.24:3001',
       environment: process.env.NODE_ENV || 'development'
     },
     runtimeVersion: '1.0.0'

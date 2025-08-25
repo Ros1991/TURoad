@@ -14,7 +14,8 @@ class ApiService {
   constructor() {
     // Use localhost for development - can be configured later
     // Use 10.0.2.2 for Android emulator to connect to host's localhost
-    this.baseURL = 'http://10.0.2.2:3001';
+    // Use your actual IP for physical devices
+    this.baseURL = 'http://10.254.200.24:3001';
   }
 
   private async getAuthToken(): Promise<string | null> {
