@@ -159,7 +159,7 @@ const CityScreen: React.FC = () => {
                       alignItems="center"
                       style={{ backgroundColor: '#F5F5F5' }}
                     >
-                      <Icon name="heart-outline" as any size={20} color="white" />
+                      <Icon name="heart-outline" as any size={20} color="#FF0000" />
                     </Box>
                   </TouchableOpacity>
                 </Box>
