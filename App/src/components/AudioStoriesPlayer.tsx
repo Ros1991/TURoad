@@ -24,9 +24,9 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playStartTime, setPlayStartTime] = useState<number | null>(null);
-  const [shouldAutoPlay, setShouldAutoPlay] = useState(false);
   
   const soundRef = useRef<Sound | null>(null);
+  const isInitialLoadRef = useRef(true);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressBarWidth = Dimensions.get('window').width - 64; // Account for padding
 
@@ -54,8 +54,6 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
 
   // Load audio when story changes
   useEffect(() => {
-    // Auto-play when changing stories (not on initial load)
-    setShouldAutoPlay(true);
     loadAudio();
   }, [currentStoryIndex]);
 
@@ -70,18 +68,15 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
               // Se getCurrentTime funciona, usar ele
               setCurrentPosition(seconds);
               if (seconds >= duration && duration > 0) {
-                console.log('Audio finished via getCurrentTime');
                 onPlaybackFinished();
               }
             } else {
               // Método 2: Fallback para timer manual
               const elapsedTime = (Date.now() - playStartTime) / 1000;
               const estimatedPosition = Math.min(elapsedTime + currentPosition, duration);
-              console.log('Using manual timer. Elapsed:', elapsedTime, 'Estimated position:', estimatedPosition);
               setCurrentPosition(estimatedPosition);
               
               if (estimatedPosition >= duration && duration > 0) {
-                console.log('Audio finished via manual timer');
                 onPlaybackFinished();
               }
             }
@@ -166,7 +161,9 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
           onDurationUpdate(currentStoryIndex, soundDuration);
         }
         
-        // Auto-play only when shouldAutoPlay is true (story change, not initial load)
+        // Auto-play only when NOT initial load (story change)
+        const shouldAutoPlay = !isInitialLoadRef.current;
+        
         if (shouldAutoPlay) {
           const startTime = Date.now();
           setIsPlaying(true);
@@ -178,9 +175,11 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
               setPlayStartTime(null);
             }
           });
-          
-          setShouldAutoPlay(false); // Reset flag after auto-play
+        } else {
         }
+        
+        // Mark as no longer initial load
+        isInitialLoadRef.current = false;
       });
       
     } catch (err) {
@@ -208,12 +207,9 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
       
       soundRef.current.play((success) => {
         if (!success) {
-          console.log('Play failed, reverting state');
           setIsPlaying(false);
           setPlayStartTime(null);
           setError(t('audioPlayer.playbackError'));
-        } else {
-          console.log('Play confirmed successful');
         }
       });
     }
@@ -242,7 +238,6 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
     // Reset play start time se estiver tocando
     if (isPlaying) {
       setPlayStartTime(Date.now());
-      console.log('Seek performed, reset play start time');
     }
   };
 
