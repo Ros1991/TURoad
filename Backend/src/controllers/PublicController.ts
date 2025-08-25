@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { RequestWithLanguage } from '../middleware/languageMiddleware';
+import { RequestWithLocation } from '../middleware/locationLoggingMiddleware';
 import { AppDataSource } from '@/config/database';
 import { City } from '@/entities/City';
 import { LocalizedText } from '@/entities/LocalizedText';
@@ -125,13 +126,23 @@ export class PublicController {
     }
   }
 
-  async getCities(req: RequestWithLanguage, res: Response): Promise<void> {
+  async getCities(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
       
-      const cities = await this.cityService.getAllWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined);
+      // Get user location from middleware
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
+      
+      const cities = await this.cityService.getAllWithLocalizedTexts(
+        language, 
+        search, 
+        cityId ? parseInt(cityId) : undefined,
+        userLatitude,
+        userLongitude
+      );
       
       const citiesWithData = cities.map(city => ({
         id: city.id.toString(),
@@ -141,9 +152,10 @@ export class PublicController {
         image: city.image,
         latitude: parseFloat(city.latitude) || 0,
         longitude: parseFloat(city.longitude) || 0,
-        totalDistance: `${(parseInt(city.routes) || 0) * 30}km de rotas`,
-        stories: parseInt(city.stories) || 0
+        stories: parseInt(city.stories) || 0,
+        totalDistance: city.distance ? `${parseFloat(city.distance).toFixed(1)} km` : undefined
       }));
+      console.log(citiesWithData);
       res.json({
         success: true,
         data: citiesWithData
