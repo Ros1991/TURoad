@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text, AudioStoriesPlayer } from '../components';
@@ -23,11 +24,13 @@ const CityScreen: React.FC = () => {
   const navigation = useNavigation<CityScreenNavigationProp>();
   const route = useRoute<CityScreenRouteProp>();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const [city, setCity] = useState<City | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({});
+  const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
     loadCity();
@@ -55,6 +58,11 @@ const CityScreen: React.FC = () => {
       ...prev,
       [section]: !prev[section]
     }));
+  };
+
+  const toggleFavorite = () => {
+    setIsFavorited(prev => !prev);
+    console.log('🤍 Favorito toggled:', !isFavorited);
   };
 
   if (!city) {
@@ -153,18 +161,27 @@ const CityScreen: React.FC = () => {
                       <Icon name="share-variant" size={18} color="#666666" />
                     </Box>
                   </TouchableOpacity>
-                  <TouchableOpacity>
-                    <Box
-                      width={40}
-                      height={40}
-                      borderRadius={20}
-                      justifyContent="center"
-                      alignItems="center"
-                      style={{ backgroundColor: '#F5F5F5' }}
-                    >
-                      <Icon name="heart-outline" as any size={20} color="#FF0000" />
-                    </Box>
-                  </TouchableOpacity>
+                  {isAuthenticated && (
+                    <TouchableOpacity onPress={toggleFavorite}>
+                      <Box
+                        width={40}
+                        height={40}
+                        borderRadius={20}
+                        justifyContent="center"
+                        alignItems="center"
+                        style={{ 
+                          backgroundColor: isFavorited ? '#FF0000' : '#F5F5F5'
+                        }}
+                      >
+                        <Icon 
+                          name={isFavorited ? "heart" : "heart-outline"} 
+                          as any 
+                          size={20} 
+                          color={isFavorited ? "#FFFFFF" : "#FF0000"} 
+                        />
+                      </Box>
+                    </TouchableOpacity>
+                  )}
                 </Box>
               </Box>
               
