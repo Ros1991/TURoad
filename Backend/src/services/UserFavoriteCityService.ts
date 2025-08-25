@@ -61,4 +61,33 @@ export class UserFavoriteCityService {
       throw new AppError('Failed to fetch available cities', 500);
     }
   }
+
+  async isFavoriteCity(userId: number, cityId: number): Promise<boolean> {
+    try {
+      const existing = await this.userFavoriteCityRepository.findByUserIdAndCityId(userId, cityId);
+      return !!existing;
+    } catch (error) {
+      console.error('Error checking if city is favorite:', error);
+      throw new AppError('Failed to check favorite status', 500);
+    }
+  }
+
+  async toggleFavoriteCity(userId: number, cityId: number): Promise<{ isFavorited: boolean; favoriteCity?: UserFavoriteCity }> {
+    try {
+      const existing = await this.userFavoriteCityRepository.findByUserIdAndCityId(userId, cityId);
+      
+      if (existing) {
+        // Remove from favorites
+        await this.userFavoriteCityRepository.remove(userId, cityId);
+        return { isFavorited: false };
+      } else {
+        // Add to favorites
+        const favoriteCity = await this.userFavoriteCityRepository.create(userId, cityId);
+        return { isFavorited: true, favoriteCity };
+      }
+    } catch (error) {
+      console.error('Error toggling favorite city:', error);
+      throw new AppError('Failed to toggle favorite city', 500);
+    }
+  }
 }

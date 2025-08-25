@@ -39,12 +39,16 @@ router.get('/:id/favorite-cities', (req, res) => userFavoriteCityController.getU
 router.post('/:id/favorite-cities', (req, res) => userFavoriteCityController.addFavoriteCity(req, res));
 router.delete('/:id/favorite-cities/:cityId', (req, res) => userFavoriteCityController.removeFavoriteCity(req, res));
 router.get('/:id/available-cities', (req, res) => userFavoriteCityController.getAvailableCities(req, res));
+router.get('/:id/favorite-cities/:cityId/is-favorite', (req, res) => userFavoriteCityController.isFavoriteCity(req, res));
+router.post('/:id/favorite-cities/toggle', (req, res) => userFavoriteCityController.toggleFavoriteCity(req, res));
 
 // User Favorite Routes routes
 router.get('/:id/favorite-routes', (req, res) => userFavoriteRouteController.getUserFavoriteRoutes(req, res));
 router.post('/:id/favorite-routes', (req, res) => userFavoriteRouteController.addFavoriteRoute(req, res));
 router.delete('/:id/favorite-routes/:routeId', (req, res) => userFavoriteRouteController.removeFavoriteRoute(req, res));
 router.get('/:id/available-favorite-routes', (req, res) => userFavoriteRouteController.getAvailableRoutes(req, res));
+router.get('/:id/favorite-routes/:routeId/is-favorite', (req, res) => userFavoriteRouteController.isFavoriteRoute(req, res));
+router.post('/:id/favorite-routes/toggle', (req, res) => userFavoriteRouteController.toggleFavoriteRoute(req, res));
 
 // User Visited Routes routes
 router.get('/:id/visited-routes', (req, res) => userVisitedRouteController.getUserVisitedRoutes(req, res));

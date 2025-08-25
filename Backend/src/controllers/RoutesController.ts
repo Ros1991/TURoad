@@ -6,18 +6,64 @@ import { Route } from '@/entities/Route';
 import { RouteMapper } from '@/mappers/RouteMapper';
 import { RouteCategoryService } from '@/services/RouteCategoryService';
 import { RouteCityService } from '@/services/RouteCityService';
+import { UserFavoriteRouteService } from '@/services/UserFavoriteRouteService';
+import { RequestWithLanguage } from '../middleware/languageMiddleware';
 
 export class RoutesController extends BaseController<Route> {
   public override service: RouteService;
   private routeCategoryService: RouteCategoryService;
   private routeCityService: RouteCityService;
+  private userFavoriteRouteService: UserFavoriteRouteService;
 
   constructor() {
     super(Route, RouteMapper);
     this.service = new RouteService();
     this.routeCategoryService = new RouteCategoryService();
     this.routeCityService = new RouteCityService();
+    this.userFavoriteRouteService = new UserFavoriteRouteService();
   }
+
+  // Override getById to include isFavorite
+  override getById = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
+      
+      const id = parseInt(req.params['id'] as string, 10);
+
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          message: 'ID inválido',
+        });
+        return;
+      }
+
+      const result = await this.service.findById(id);
+      
+      // Check if user is authenticated and get favorite status
+      let isFavorite = false;
+      if (req.user?.userId) {
+        try {
+          isFavorite = await this.userFavoriteRouteService.isFavoriteRoute(req.user.userId, id);
+        } catch (error) {
+          // If error checking favorite status, just continue with false
+          console.warn('Error checking favorite status:', error);
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Obtido com sucesso',
+        data: result,
+        isFavorite
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  };
 
   // Story CRUD endpoints
   async getStories(req: Request, res: Response): Promise<Response> {

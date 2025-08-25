@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { authenticate } from '@/middleware/auth';
+import { authenticate, optionalAuthenticate } from '@/middleware/auth';
 import { RoutesController } from '@/controllers/RoutesController';
 
 const router = Router();
 const controller = new RoutesController();
 
-// Public routes
+// Public routes (with optional authentication for favorites)
 router.get('/', controller.list.bind(controller));
-router.get('/:id', controller.getById.bind(controller));
+router.get('/:id', optionalAuthenticate, controller.getById.bind(controller));
 
 // Protected routes
 router.post('/', authenticate, controller.create.bind(controller));

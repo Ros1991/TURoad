@@ -12,6 +12,7 @@ import { CityService } from '@/services/CityService';
 import { EventService } from '@/services/EventService';
 import { LocationService } from '@/services/LocationService';
 import { CityResponseDto } from '@/dtos/CityDto';
+import { UserFavoriteCityService } from '@/services/UserFavoriteCityService';
 
 export class PublicController {
   private categoryService: CategoryService;
@@ -19,6 +20,7 @@ export class PublicController {
   private cityService: CityService;
   private eventService: EventService;
   private locationService: LocationService;
+  private userFavoriteCityService: UserFavoriteCityService;
 
   constructor() {
     this.categoryService = new CategoryService();
@@ -26,6 +28,7 @@ export class PublicController {
     this.cityService = new CityService();
     this.eventService = new EventService();
     this.locationService = new LocationService();
+    this.userFavoriteCityService = new UserFavoriteCityService();
   }
 
   private async getLocalizedText(textRefId: number | undefined, language: string): Promise<string | null> {
@@ -152,9 +155,21 @@ export class PublicController {
         return;
       }
 
+      // Check if user is authenticated and get favorite status
+      let isFavorite = false;
+      if ((req as any).user?.userId) {
+        try {
+          isFavorite = await this.userFavoriteCityService.isFavoriteCity((req as any).user.userId, parseInt(cityId));
+        } catch (error) {
+          // If error checking favorite status, just continue with false
+          console.warn('Error checking favorite status:', error);
+        }
+      }
+
       res.json({
         success: true,
-        data: city
+        data: city,
+        isFavorite
       });
     } catch (error) {
       console.error('Error fetching city by ID:', error);

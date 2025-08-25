@@ -139,4 +139,75 @@ export class UserFavoriteCityController {
       }
     }
   }
+
+  async isFavoriteCity(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.params.id as string);
+      const cityId = parseInt(req.params.cityId as string);
+      
+      if (isNaN(userId)) {
+        throw new AppError('Invalid user ID', 400);
+      }
+
+      if (isNaN(cityId)) {
+        throw new AppError('Invalid city ID', 400);
+      }
+
+      const isFavorite = await this.userFavoriteCityService.isFavoriteCity(userId, cityId);
+      
+      res.status(200).json({
+        success: true,
+        data: { isFavorited: isFavorite }
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Error in isFavoriteCity:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  }
+
+  async toggleFavoriteCity(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = parseInt(req.params.id as string);
+      const { cityId } = req.body;
+      
+      if (isNaN(userId)) {
+        throw new AppError('Invalid user ID', 400);
+      }
+
+      if (!cityId || isNaN(parseInt(cityId))) {
+        throw new AppError('Valid city ID is required', 400);
+      }
+
+      const result = await this.userFavoriteCityService.toggleFavoriteCity(userId, parseInt(cityId));
+      
+      res.status(200).json({
+        success: true,
+        message: result.isFavorited ? 'City added to favorites' : 'City removed from favorites',
+        data: result
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Error in toggleFavoriteCity:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  }
 }

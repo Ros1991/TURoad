@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, Image, TouchableOpacity, Linking, Platform, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -10,6 +10,7 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text, AudioStoriesPlayer } from '../components';
 import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCityById } from '../services/CityService';
+import { FavoriteService } from '../services/FavoriteService';
 import { City, Story } from '../types';
 
 type RootStackParamList = {
@@ -24,7 +25,7 @@ const CityScreen: React.FC = () => {
   const navigation = useNavigation<CityScreenNavigationProp>();
   const route = useRoute<CityScreenRouteProp>();
   const { t } = useTranslation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [city, setCity] = useState<City | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,15 @@ const CityScreen: React.FC = () => {
     try {
       const cityData = await getCityById(route.params.cityId);
       setCity(cityData);
+      
+      // Set initial favorite status from API response
+      if (cityData && 'isFavorite' in cityData) {
+        console.log('🤍 Setting initial favorite status:', cityData.isFavorite);
+        setIsFavorited(cityData.isFavorite || false);
+      } else {
+        console.log('🤍 No isFavorite found in cityData, setting to false');
+        setIsFavorited(false);
+      }
     } catch (error) {
       console.error('Error loading city:', error);
     }
@@ -60,9 +70,83 @@ const CityScreen: React.FC = () => {
     }));
   };
 
-  const toggleFavorite = () => {
-    setIsFavorited(prev => !prev);
-    console.log('🤍 Favorito toggled:', !isFavorited);
+  const toggleFavorite = async () => {
+    if (!user?.id || !city) return;
+    
+    try {
+      console.log('🤍 Toggling favorite for city:', city.id);
+      
+      // Optimistically update UI
+      const newFavoriteState = !isFavorited;
+      setIsFavorited(newFavoriteState);
+      
+      // Call backend API
+      const result = await FavoriteService.toggleFavoriteCity(
+        parseInt(user.id), 
+        parseInt(city.id)
+      );
+      
+      // Update state based on API response
+      setIsFavorited(result.isFavorited);
+      
+      console.log('🤍 Favorite toggled successfully:', result.isFavorited);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      
+      // Revert optimistic update on error
+      setIsFavorited(prev => !prev);
+    }
+  };
+
+  const openInMaps = () => {
+    if (!city) return;
+
+    const { latitude, longitude } = city;
+    
+    // Check if coordinates are available
+    if (!latitude || !longitude) {
+      Alert.alert(
+        t('common.error'),
+        t('city.noCoordinatesAvailable', 'Coordenadas não disponíveis para esta cidade.'),
+        [{ text: t('common.ok') }]
+      );
+      return;
+    }
+
+    // Create Google Maps URL
+    const scheme = Platform.select({
+      ios: 'maps:0,0?q=',
+      android: 'geo:0,0?q='
+    });
+    
+    const latLng = `${latitude},${longitude}`;
+    const label = encodeURIComponent(city.name);
+    const url = Platform.select({
+      ios: `${scheme}${latLng}(${label})`,
+      android: `${scheme}${latLng}(${label})`
+    });
+
+    if (!url) return;
+
+    // Try to open in Google Maps app, fallback to browser
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          // Fallback to Google Maps web
+          const webUrl = `https://www.google.com/maps/search/?api=1&query=${latLng}&query_place_id=${label}`;
+          return Linking.openURL(webUrl);
+        }
+      })
+      .catch((err) => {
+        console.error('Error opening maps:', err);
+        Alert.alert(
+          t('common.error'),
+          t('city.errorOpeningMaps', 'Não foi possível abrir o mapa.'),
+          [{ text: t('common.ok') }]
+        );
+      });
   };
 
   if (!city) {
@@ -203,7 +287,7 @@ const CityScreen: React.FC = () => {
               
               {/* Navigation Buttons at bottom of card */}
               <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginTop="l" paddingTop="m" style={{ borderTopWidth: 1, borderTopColor: '#F0F0F0' }}>
-                <TouchableOpacity style={{ flex: 1, marginRight: 8 }}>
+                <TouchableOpacity style={{ flex: 1, marginRight: 8 }} onPress={openInMaps}>
                   <Box
                     flexDirection="row"
                     alignItems="center"

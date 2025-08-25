@@ -5,16 +5,62 @@ import { AudioDurationCalculator } from '../utils/AudioDurationCalculator';
 import { City } from '@/entities/City';
 import { CityMapper } from '@/mappers/CityMapper';
 import { CityCategoryService } from '@/services/CityCategoryService';
+import { UserFavoriteCityService } from '@/services/UserFavoriteCityService';
+import { RequestWithLanguage } from '../middleware/languageMiddleware';
 
 export class CitiesController extends BaseController<City> {
   public override service: CityService;
   private cityCategoryService: CityCategoryService;
+  private userFavoriteCityService: UserFavoriteCityService;
 
   constructor() {
     super(City, CityMapper);
     this.service = new CityService();
     this.cityCategoryService = new CityCategoryService();
+    this.userFavoriteCityService = new UserFavoriteCityService();
   }
+
+  // Override getById to include isFavorite
+  override getById = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // Set language from request
+      const language = (req as RequestWithLanguage).language || 'pt';
+      this.service.setLanguage(language);
+      
+      const id = parseInt(req.params['id'] as string, 10);
+
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          message: 'ID inválido',
+        });
+        return;
+      }
+
+      const result = await this.service.findById(id);
+      
+      // Check if user is authenticated and get favorite status
+      let isFavorite = false;
+      if (req.user?.userId) {
+        try {
+          isFavorite = await this.userFavoriteCityService.isFavoriteCity(req.user.userId, id);
+        } catch (error) {
+          // If error checking favorite status, just continue with false
+          console.warn('Error checking favorite status:', error);
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Obtido com sucesso',
+        data: result,
+        isFavorite
+      });
+
+    } catch (error) {
+      this.handleError(res, error);
+    }
+  };
 
   // Story CRUD endpoints
   async getStories(req: Request, res: Response): Promise<Response> {

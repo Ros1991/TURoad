@@ -33,14 +33,18 @@ export const getCities = async (search?: string, cityId?: string): Promise<City[
   }
 };
 
-export const getCityById = async (id: string): Promise<City | null> => {
+export const getCityById = async (id: string): Promise<City & { isFavorite?: boolean } | null> => {
   try {
     const response = await apiService.get<City>(`/api/public/cities/${id}`, {
-      includeAuth: false
+      includeAuth: true // Use optional auth to get favorite status
     });
     
     if (response.success && response.data) {
-      return response.data;
+      // The isFavorite comes in the response root, not in data
+      return {
+        ...response.data,
+        isFavorite: (response as any).isFavorite || false
+      };
     }
     
     return null;

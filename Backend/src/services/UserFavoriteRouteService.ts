@@ -61,4 +61,33 @@ export class UserFavoriteRouteService {
       throw new AppError('Failed to fetch available routes', 500);
     }
   }
+
+  async isFavoriteRoute(userId: number, routeId: number): Promise<boolean> {
+    try {
+      const existing = await this.userFavoriteRouteRepository.findByUserIdAndRouteId(userId, routeId);
+      return !!existing;
+    } catch (error) {
+      console.error('Error checking if route is favorite:', error);
+      throw new AppError('Failed to check favorite status', 500);
+    }
+  }
+
+  async toggleFavoriteRoute(userId: number, routeId: number): Promise<{ isFavorited: boolean; favoriteRoute?: UserFavoriteRoute }> {
+    try {
+      const existing = await this.userFavoriteRouteRepository.findByUserIdAndRouteId(userId, routeId);
+      
+      if (existing) {
+        // Remove from favorites
+        await this.userFavoriteRouteRepository.remove(userId, routeId);
+        return { isFavorited: false };
+      } else {
+        // Add to favorites
+        const favoriteRoute = await this.userFavoriteRouteRepository.create(userId, routeId);
+        return { isFavorited: true, favoriteRoute };
+      }
+    } catch (error) {
+      console.error('Error toggling favorite route:', error);
+      throw new AppError('Failed to toggle favorite route', 500);
+    }
+  }
 }
