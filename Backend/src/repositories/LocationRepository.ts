@@ -189,7 +189,7 @@ export class LocationRepository extends BaseRepository<Location> {
       qb.andWhere('l.city_id = :cityId', { cityId });
     }
     
-    return await qb.limit(10).getRawMany();
+    return await qb.getRawMany();
   }
 
   /**
@@ -237,7 +237,7 @@ export class LocationRepository extends BaseRepository<Location> {
       qb.andWhere('l.city_id = :cityId', { cityId });
     }
     
-    return await qb.limit(10).getRawMany();
+    return await qb.getRawMany();
   }
 }
 
