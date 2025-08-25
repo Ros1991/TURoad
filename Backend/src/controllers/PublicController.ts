@@ -13,7 +13,7 @@ import { StoryRoute } from '@/entities/StoryRoute';
 import { StoryCity } from '@/entities/StoryCity';
 import { StoryLocation } from '@/entities/StoryLocation';
 import { Type } from '@/entities/Type';
-import { Like, In } from 'typeorm';
+import { Like, In, FormattedConsoleLogger } from 'typeorm';
 import { faqService } from '@/services/FAQService';
 import { CategoryService } from '@/services/CategoryService';
 import { RouteService } from '@/services/RouteService';
@@ -89,6 +89,19 @@ export class PublicController {
     }
   }
 
+  formatTime(minutes: number): string {
+    const days = Math.floor(minutes / (24 * 60));
+    const hours = Math.floor((minutes % (24 * 60)) / 60);
+    const mins = minutes % 60;
+
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0) parts.push(`${hours}h`);
+    if (mins > 0) parts.push(`${mins}min`);
+
+    return parts.join(" ") || "0min";
+  }
+
   async getRoutes(req: RequestWithLanguage, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
@@ -97,7 +110,6 @@ export class PublicController {
       const cityId = req.query.cityId as string;
       
       const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search, cityId ? parseInt(cityId) : undefined);
-      
       const routesWithData = routes.map(route => ({
         id: route.id.toString(),
         title: route.title || 'Unnamed Route',
@@ -105,7 +117,8 @@ export class PublicController {
         image: route.image,
         categories: route.categories ? route.categories.map((cat: number) => cat.toString()) : [],
         stops: parseInt(route.stops) || 0,
-        totalDistance: `${(parseInt(route.stops) || 0) * 50}km`,
+        totalDistance: `${(parseFloat(route.totaldistance) || 0).toFixed(2)} km`,
+        totalTime: this.formatTime(parseInt(route.totaltime) || 0),
         stories: parseInt(route.stories) || 0
       }));
       

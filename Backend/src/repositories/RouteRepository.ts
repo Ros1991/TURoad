@@ -32,6 +32,8 @@ export class RouteRepository extends BaseRepository<Route> {
         'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
         'r.image_url as image',
         'COUNT(DISTINCT rc_city.city_id) as stops',
+        'SUM(DISTINCT rc_city.distance_km) as totalDistance',
+        'SUM(DISTINCT rc_city.travel_time_minutes) as totalTime',
         'COUNT(DISTINCT sr.story_route_id) as stories',
         'ARRAY_AGG(DISTINCT rc_cat.category_id) FILTER (WHERE rc_cat.category_id IS NOT NULL) as categories'
       ])
