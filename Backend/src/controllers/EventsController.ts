@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { EventService } from '../services/EventService';
 import { BaseController } from '@/core/base/BaseController';
+import { AudioDurationCalculator } from '../utils/AudioDurationCalculator';
 import { Event } from '@/entities/Event';
 import { EventMapper } from '@/mappers/EventMapper';
-import { EventService } from '@/services/EventService';
 import { EventCategoryService } from '@/services/EventCategoryService';
 
 export class EventsController extends BaseController<Event> {
@@ -68,6 +69,18 @@ export class EventsController extends BaseController<Event> {
       const eventId = parseInt(req.params.id!);
       const storyData = req.body;
       
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
+      
       const story = await this.service.createStory(eventId, storyData);
       
       return res.status(201).json({
@@ -89,6 +102,18 @@ export class EventsController extends BaseController<Event> {
       const eventId = parseInt(req.params.id!);
       const storyId = parseInt(req.params.storyId!);
       const storyData = req.body;
+      
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
       
       const story = await this.service.updateStory(eventId, storyId, storyData);
       

@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { CityService } from '../services/CityService';
 import { BaseController } from '@/core/base/BaseController';
+import { AudioDurationCalculator } from '../utils/AudioDurationCalculator';
 import { City } from '@/entities/City';
 import { CityMapper } from '@/mappers/CityMapper';
-import { CityService } from '@/services/CityService';
 import { CityCategoryService } from '@/services/CityCategoryService';
 
 export class CitiesController extends BaseController<City> {
@@ -19,10 +20,11 @@ export class CitiesController extends BaseController<City> {
   async getStories(req: Request, res: Response): Promise<Response> {
     try {
       const cityId = parseInt(req.params.id!);
-      const { page, limit, search } = req.query;
+      const { page, limit, search, language } = req.query;
       
       const stories = await this.service.getStoriesByCityId(
         cityId,
+        (language as string) || 'pt',
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined,
         search as string
@@ -68,6 +70,18 @@ export class CitiesController extends BaseController<City> {
       const cityId = parseInt(req.params.id!);
       const storyData = req.body;
       
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
+      
       const story = await this.service.createStory(cityId, storyData);
       
       return res.status(201).json({
@@ -89,6 +103,18 @@ export class CitiesController extends BaseController<City> {
       const cityId = parseInt(req.params.id!);
       const storyId = parseInt(req.params.storyId!);
       const storyData = req.body;
+      
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
       
       const story = await this.service.updateStory(cityId, storyId, storyData);
       

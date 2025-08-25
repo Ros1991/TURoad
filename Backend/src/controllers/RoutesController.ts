@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { RouteService } from '../services/RouteService';
 import { BaseController } from '@/core/base/BaseController';
+import { AudioDurationCalculator } from '../utils/AudioDurationCalculator';
 import { Route } from '@/entities/Route';
 import { RouteMapper } from '@/mappers/RouteMapper';
-import { RouteService } from '@/services/RouteService';
 import { RouteCategoryService } from '@/services/RouteCategoryService';
 import { RouteCityService } from '@/services/RouteCityService';
 
@@ -71,6 +72,18 @@ export class RoutesController extends BaseController<Route> {
       const routeId = parseInt(req.params.id!);
       const storyData = req.body;
       
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
+      
       const story = await this.service.createStory(routeId, storyData);
       
       return res.status(201).json({
@@ -92,6 +105,18 @@ export class RoutesController extends BaseController<Route> {
       const routeId = parseInt(req.params.id!);
       const storyId = parseInt(req.params.storyId!);
       const storyData = req.body;
+      
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
       
       const story = await this.service.updateStory(routeId, storyId, storyData);
       

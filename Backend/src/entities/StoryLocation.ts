@@ -23,6 +23,9 @@ export class StoryLocation extends BaseEntity {
   @Column({ name: 'audio_url_ref_id', type: 'integer', nullable: true })
   audioUrlRefId?: number;
 
+  @Column({ name: 'duration_seconds', type: 'integer', nullable: true })
+  durationSeconds?: number;
+
   @Column({ name: 'location_id', type: 'integer' })
   locationId!: number;
 

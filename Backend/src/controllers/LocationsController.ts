@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { LocationService } from '../services/LocationService';
 import { BaseController } from '@/core/base/BaseController';
+import { AudioDurationCalculator } from '../utils/AudioDurationCalculator';
 import { Location } from '@/entities/Location';
 import { LocationMapper } from '@/mappers/LocationMapper';
-import { LocationService } from '@/services/LocationService';
 import { LocationCategoryService } from '@/services/LocationCategoryService';
 
 export class LocationsController extends BaseController<Location> {
@@ -69,6 +70,18 @@ export class LocationsController extends BaseController<Location> {
       const locationId = parseInt(req.params.id!);
       const storyData = req.body;
       
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
+      
       const story = await this.service.createStory(locationId, storyData);
       
       return res.status(201).json({
@@ -90,6 +103,18 @@ export class LocationsController extends BaseController<Location> {
       const locationId = parseInt(req.params.id!);
       const storyId = parseInt(req.params.storyId!);
       const storyData = req.body;
+      
+      // Calculate audio duration if audio URL is provided
+      const audioUrl = AudioDurationCalculator.extractAudioUrl(storyData);
+      if (audioUrl) {
+        try {
+          const durationSeconds = await AudioDurationCalculator.calculateDurationFromUrl(audioUrl);
+          storyData.durationSeconds = durationSeconds;
+        } catch (error) {
+          console.warn('Failed to calculate audio duration:', error);
+          // Continue without duration - it's optional
+        }
+      }
       
       const story = await this.service.updateStory(locationId, storyId, storyData);
       
