@@ -32,7 +32,8 @@ export class CategoryRepository extends BaseRepository<Category> {
         'COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name',
         'COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description',
         'c.image_url as image',
-        'total_usage.total_occurrences as "totalUsage"'
+        'total_usage.total_occurrences as "totalUsage"',
+        'COALESCE(route_count.route_count, 0) as "routeCount"'
       ])
       .from('categories', 'c')
       .leftJoin('localized_texts', 'lt_name_lang', 'lt_name_lang.reference_id = c.name_text_ref_id AND lt_name_lang.language_code = :language')
@@ -57,6 +58,19 @@ export class CategoryRepository extends BaseRepository<Category> {
         )`,
         'total_usage',
         'total_usage.category_id = c.category_id'
+      )
+      .leftJoin(
+        `(
+          SELECT 
+            rc.category_id,
+            COUNT(DISTINCT r.route_id) AS route_count
+          FROM route_categories rc
+          JOIN routes r ON r.route_id = rc.route_id
+          WHERE r."deletedAt" IS NULL
+          GROUP BY rc.category_id
+        )`,
+        'route_count',
+        'route_count.category_id = c.category_id'
       )
       .where('c."deletedAt" IS NULL')
       .setParameter('language', language);

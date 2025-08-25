@@ -11,14 +11,10 @@ interface CategoryDetailCardProps {
 }
 
 const CategoryDetailCard: React.FC<CategoryDetailCardProps> = ({ item, onPress }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   
   if (!item) return null;
   
-  const currentLanguage = i18n.language || 'pt';
-  const categoryName = item.nameTranslations?.[currentLanguage as keyof typeof item.nameTranslations] || item.name || 'Categoria';
-  const categoryDescription = item.descriptionTranslations?.[currentLanguage as keyof typeof item.descriptionTranslations] || 'Descrição não disponível';
-
   return (
     <TouchableOpacity 
       style={{
@@ -49,7 +45,7 @@ const CategoryDetailCard: React.FC<CategoryDetailCardProps> = ({ item, onPress }
             marginBottom: 8
           }}
         >
-          {categoryName}
+          {item.name}
         </Text>
         <Text 
           style={{
@@ -60,7 +56,7 @@ const CategoryDetailCard: React.FC<CategoryDetailCardProps> = ({ item, onPress }
             lineHeight: 18
           }}
         >
-          {categoryDescription}
+          {item.description}
         </Text>
         <Box flexDirection="row" alignItems="center">
           <Icon name="map-marker-path" size={16} color="#5A5A5A"/>

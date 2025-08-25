@@ -207,7 +207,7 @@ export class PublicController {
           image: event.image
         };
       });
-      
+      console.log(eventsWithData);
       res.json({
         success: true,
         data: eventsWithData
