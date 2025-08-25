@@ -27,6 +27,32 @@ export const getBusinesses = async (search?: string, cityId?: string): Promise<B
   }
 };
 
+export const getHosting = async (search?: string, cityId?: string): Promise<Business[]> => {
+  try {
+    const params: any = {};
+    if (search) {
+      params.search = search;
+    }
+    if (cityId) {
+      params.cityId = cityId;
+    }
+    
+    const response = await apiService.get<Business[]>('/api/public/locations/hosting', {
+      params,
+      includeAuth: false // Public endpoint doesn't need authentication
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching hosting:', error);
+    return [];
+  }
+};
+
 export const getBusinessById = async (id: string, language: string = 'pt'): Promise<Business | null> => {
   try {
     const response = await apiService.get<Business>(`/api/public/locations/businesses/${id}`, {

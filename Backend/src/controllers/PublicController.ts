@@ -281,32 +281,22 @@ export class PublicController {
       let referenceLatitude: number | undefined;
       let referenceLongitude: number | undefined;
       
-      // If cityId is provided, use that city's location as reference
-      if (cityId) {
-        const referenceCity = await this.cityService.findById(parseInt(cityId)) as CityResponseDto;
-        if (referenceCity) {
-          referenceLatitude = parseFloat(referenceCity.latitude.toString());
-          referenceLongitude = parseFloat(referenceCity.longitude.toString());
-        }
-      } else {
-        // Otherwise use user's current location from middleware
-        referenceLatitude = req.userLocation?.latitude;
-        referenceLongitude = req.userLocation?.longitude;
-      }
-      
+      referenceLatitude = req.userLocation?.latitude;
+      referenceLongitude = req.userLocation?.longitude;
+    
       const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
-      
+
       const businessesWithData = businesses.map(business => ({
         id: business.id.toString(),
         name: business.name || 'Unnamed Business',
         description: business.description,
-        distance: business.distance ? `${parseFloat(business.distance).toFixed(1)}km ` : undefined,
+        distance: business.distance !== undefined && business.distance !== null ? `${parseFloat(business.distance).toFixed(1)}km ` : undefined,
         image: business.image,
         latitude: business.latitude ? parseFloat(business.latitude) : null,
         longitude: business.longitude ? parseFloat(business.longitude) : null,
-        categories: business.categories || []
+        categories: business.categories || [],
+        storiesCount: parseInt(business.storiesCount) || 0
       }));
-      
       res.json({
         success: true,
         data: businessesWithData
@@ -329,18 +319,8 @@ export class PublicController {
       let referenceLatitude: number | undefined;
       let referenceLongitude: number | undefined;
       
-      // If cityId is provided, use that city's location as reference
-      if (cityId) {
-        const referenceCity = await this.cityService.findById(parseInt(cityId)) as CityResponseDto;
-        if (referenceCity) {
-          referenceLatitude = parseFloat(referenceCity.latitude.toString());
-          referenceLongitude = parseFloat(referenceCity.longitude.toString());
-        }
-      } else {
-        // Otherwise use user's current location from middleware
-        referenceLatitude = req.userLocation?.latitude;
-        referenceLongitude = req.userLocation?.longitude;
-      }
+      referenceLatitude = req.userLocation?.latitude;
+      referenceLongitude = req.userLocation?.longitude;
       
       const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
       const historicalPlacesWithData = historicalPlaces.map(place => ({
@@ -365,6 +345,45 @@ export class PublicController {
       res.status(500).json({
         success: false,
         message: 'Error fetching historical places'
+      });
+    }
+  }
+
+  async getHosting(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const search = req.query.search as string;
+      const cityId = req.query.cityId as string;
+      
+      let referenceLatitude: number | undefined;
+      let referenceLongitude: number | undefined;
+      
+      referenceLatitude = req.userLocation?.latitude;
+      referenceLongitude = req.userLocation?.longitude;
+      
+      const hosting = await this.locationService.getHostingWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      
+      const hostingWithData = hosting.map(host => ({
+        id: host.id.toString(),
+        name: host.name || 'Unnamed Hosting',
+        description: host.description,
+        distance: host.distance !== undefined && host.distance !== null ? `${parseFloat(host.distance).toFixed(1)}km ` : undefined,
+        image: host.image,
+        latitude: host.latitude ? parseFloat(host.latitude) : null,
+        longitude: host.longitude ? parseFloat(host.longitude) : null,
+        categories: host.categories || [],
+        storiesCount: parseInt(host.storiesCount) || 0
+      }));
+      
+      res.json({
+        success: true,
+        data: hostingWithData
+      });
+    } catch (error) {
+      console.error('Error fetching hosting:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching hosting'
       });
     }
   }

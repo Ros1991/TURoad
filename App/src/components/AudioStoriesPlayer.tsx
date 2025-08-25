@@ -414,13 +414,6 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
               </Text>
             </Box>
             
-            {/* Loading indicator */}
-            {isLoading && (
-              <Box alignItems="center" marginTop="s">
-                <Text style={{ fontSize: 12, color: '#666666' }}>{t('audioPlayer.loading')}</Text>
-              </Box>
-            )}
-            
             {/* Error message */}
             {error && (
               <Box alignItems="center" marginTop="s">

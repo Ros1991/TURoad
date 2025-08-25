@@ -11,7 +11,7 @@ import { Box, Text, AudioStoriesPlayer, BusinessCard } from '../components';
 import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getCityById } from '../services/CityService';
 import { FavoriteService } from '../services/FavoriteService';
-import { getBusinesses } from '../services/BusinessService';
+import { getBusinesses, getHosting } from '../services/BusinessService';
 import { City, Story, Business } from '../types';
 
 type RootStackParamList = {
@@ -33,6 +33,7 @@ const CityScreen: React.FC = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [hosting, setHosting] = useState<Business[]>([]);
   const [isWhatToObserveExpanded, setIsWhatToObserveExpanded] = useState(false);
   const [isAboutLocationExpanded, setIsAboutLocationExpanded] = useState(false);
 
@@ -64,6 +65,7 @@ const CityScreen: React.FC = () => {
       
       // Load businesses for this city
       await loadBusinesses();
+      await loadHosting();
     } catch (error) {
       console.error('Error loading city:', error);
     }
@@ -71,12 +73,23 @@ const CityScreen: React.FC = () => {
 
   const loadBusinesses = async () => {
     try {
-      const businessData = await getBusinesses();
+      const businessData = await getBusinesses(undefined, route.params.cityId);
       // For now, show all businesses (same as HomeScreen)
       // In the future, this could be filtered by city location/region
       setBusinesses(businessData);
     } catch (error) {
       console.error('Error loading businesses:', error);
+    }
+  };
+
+  const loadHosting = async () => {
+    try {
+      const hostingData = await getHosting(undefined, route.params.cityId);
+      // For now, show all businesses (same as HomeScreen)
+      // In the future, this could be filtered by city location/region
+      setHosting(hostingData);
+    } catch (error) {
+      console.error('Error loading hosting:', error);
     }
   };
 
@@ -172,7 +185,7 @@ const CityScreen: React.FC = () => {
     <ScrollView 
       style={{ flex: 1, backgroundColor: 'white' }}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={{ paddingBottom: 20 }}
     >
       {/* Header with background image */}
       <Box height={300} position="relative">
@@ -409,7 +422,7 @@ const CityScreen: React.FC = () => {
         {/* Commerce and Services Section */}
         {businesses.length > 0 && (
           <>
-            <Box marginTop="l" marginBottom="m">
+            <Box marginTop="m" marginBottom="m">
               <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
                 {t('home.businessesAndServices')}
               </Text>
@@ -423,14 +436,33 @@ const CityScreen: React.FC = () => {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingLeft: 0, paddingRight: 16 }}
-              style={{ marginBottom: 24 }}
+              style={{ marginBottom: 0 }}
+            />
+          </>
+        )}
+
+        {/* Commerce and Services Section */}
+        {hosting.length > 0 && (
+          <>
+            <Box marginTop="s" marginBottom="m">
+              <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
+                {t('common.hosting')}
+              </Text>
+            </Box>
+            
+            {/* Businesses Carousel */}
+            <FlatList
+              data={hosting}
+              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              keyExtractor={(item, index) => `hosting-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 0, paddingRight: 16 }}
+              style={{ marginBottom: 0 }}
             />
           </>
         )}
       </Box>
-
-      {/* Extra padding at bottom for better scrolling */}
-      <Box paddingBottom="xl" />
     </ScrollView>
   );
 };

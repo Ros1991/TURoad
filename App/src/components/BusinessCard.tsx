@@ -85,7 +85,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress, showStories 
         >
           {item.description}
         </Text>
-        <Box flexDirection="row" alignItems="center">
+        <Box flexDirection="row" alignItems="center" marginBottom="s">
           <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
           <Text
             style={{
@@ -95,11 +95,11 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress, showStories 
               marginLeft: 4
             }}
           >
-            {item.distance ? `${item.distance} ${t('common.distanceAway')}` : 'N/A'}
+            {item.distance ? `${item.distance}${t('common.distanceAway')}` : 'N/A'}
           </Text>
         </Box>
-        {showStories && (
-          <Box flexDirection="row" alignItems="center">
+        {showStories && item.storiesCount > 0 && (
+          <Box flexDirection="row" alignItems="center" marginBottom="s">
             <Icon name="map-marker-outline" size={16} color="#5A5A5A"/>
             <Text
               style={{
@@ -109,7 +109,7 @@ const BusinessCard: React.FC<BusinessCardProps> = ({ item, onPress, showStories 
                 marginLeft: 4
               }}
             >
-              {item.stories ? `${item.stories} ${t('common.stories')}` : 'N/A'}
+              {item.storiesCount ? `${item.storiesCount} ${t('home.storiesAvailable')}` :   `0 ${t('home.storiesAvailable')}`}
             </Text>
           </Box>
         )}

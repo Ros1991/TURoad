@@ -141,9 +141,36 @@ export interface Business {
   distance: string;
   image: string;
   categories: string[];
+  storiesCount: number;
 }
 
 export interface HistoricalPlace {
+  id: string;
+  name: string;
+  nameTranslations: {
+    pt: string;
+    en: string;
+    es: string;
+  };
+  description: string;
+  descriptionTranslations: {
+    pt: string;
+    en: string;
+    es: string;
+  };
+  location: string;
+  locationTranslations: {
+    pt: string;
+    en: string;
+    es: string;
+  };
+  storiesCount: number;
+  image: string;
+  categories: string[];
+  distance: string;
+}
+
+export interface Hosting {
   id: string;
   name: string;
   nameTranslations: {

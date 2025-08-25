@@ -13,6 +13,7 @@ router.get('/cities', publicController.getCities.bind(publicController));
 router.get('/events', publicController.getEvents.bind(publicController));
 router.get('/locations/businesses', publicController.getBusinesses.bind(publicController));
 router.get('/locations/historical', publicController.getHistoricalPlaces.bind(publicController));
+router.get('/locations/hosting', publicController.getHosting.bind(publicController));
 
 // Search endpoints
 router.get('/cities/search', publicController.searchCities.bind(publicController));
