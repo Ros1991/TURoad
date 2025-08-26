@@ -65,6 +65,11 @@ const theme = createTheme({
       fontSize: 30,
       fontFamily: 'Asap',
     },
+    routeTitle: {
+      fontWeight: '700',
+      fontSize: 24,
+      fontFamily: 'Asap',
+    },
     sectionTitle: {
       fontWeight: 'bold',
       fontSize: 19,

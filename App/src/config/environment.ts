@@ -9,7 +9,7 @@ interface Config {
 // TODO: Later integrate with Expo Constants when available
 const getConfig = (): Config => {
   // Read from process.env if available (Expo), otherwise use default
-  const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3001';
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.1.100:3001';
   const environment = process.env.NODE_ENV || 'development';
 
   return {

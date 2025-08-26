@@ -307,9 +307,6 @@ export class LocationRepository extends BaseRepository<Location> {
     }
     
     const result = await qb.getRawMany();
-    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts SQL:', qb.getSql());
-    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts params:', qb.getParameters());
-    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts result sample:', result[0]);
     return result;
   }
 

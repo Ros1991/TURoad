@@ -341,8 +341,6 @@ export class PublicController {
       referenceLongitude = req.userLocation?.longitude;
       
       const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
-      console.log('DEBUG historicalPlaces raw data:', JSON.stringify(historicalPlaces[0], null, 2));
-      console.log('DEBUG referenceLatitude:', referenceLatitude, 'referenceLongitude:', referenceLongitude);
       const historicalPlacesWithData = historicalPlaces.map(place => ({
         id: place.id.toString(),
         name: place.name || 'Unnamed Place',
@@ -355,7 +353,6 @@ export class PublicController {
         categories: place.categories || [],
         distance: place.distance ? `${parseFloat(place.distance).toFixed(1)} km ` : undefined
       }));
-      console.log('DEBUG historicalPlacesWithData:', JSON.stringify(historicalPlacesWithData[0], null, 2));
       res.json({
         success: true,
         data: historicalPlacesWithData
@@ -662,7 +659,7 @@ export class PublicController {
     try {
       const { id } = req.params;
       const language = req.language || 'pt';
-
+      console.log(req.language);
       if (!id || isNaN(parseInt(id))) {
         return res.status(400).json({
           success: false,
@@ -671,6 +668,12 @@ export class PublicController {
       }
 
       const route = await this.routeService.getRouteById(parseInt(id), language);
+      if(route.total_distance){
+        route.total_distance = `${(parseFloat(route.total_distance) || 0).toFixed(1)} km`;
+      }
+      if(route.estimated_duration){
+        route.estimated_duration = this.formatTime(parseInt(route.estimated_duration) || 0);
+      }
       if (!route) {
         return res.status(404).json({
           success: false,

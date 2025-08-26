@@ -13,8 +13,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Box, Text, Card } from '../components';
 import { useTheme } from '@shopify/restyle';
 import { Theme } from '../themes/theme';
-import { Ionicons, MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import LinearGradient from 'react-native-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getRouteById, getRouteBusinesses, getRouteHosting } from '../services/RouteService';
 import AudioStoriesPlayer from '../components/AudioStoriesPlayer';
 
@@ -39,7 +42,19 @@ const RouteDetailScreen = () => {
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set());
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [currentPlayingCityId, setCurrentPlayingCityId] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const audioPlayerRefs = useRef<{ [key: string]: any }>({});
+  const { isAuthenticated, user } = useAuth();
+  const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
+
+  const languageOptions = [
+    { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
+    { code: 'en' as const, flag: '🇺🇸', name: 'English' },
+    { code: 'es' as const, flag: '🇪🇸', name: 'Español' }
+  ];
+
+  const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
   useEffect(() => {
     loadRouteDetails();
@@ -58,6 +73,7 @@ const RouteDetailScreen = () => {
       ]);
       
       if (routeResponse) {
+        console.log('Route response:', routeResponse);
         setRouteData(routeResponse);
       }
       setBusinesses(businessesResponse);
@@ -280,225 +296,176 @@ const RouteDetailScreen = () => {
   }
 
   return (
-  <ScrollView style={{ flex: 1, backgroundColor: '#B8860B' }}>
-    {/* Header */}
-    <Box padding="l" paddingTop="xl">
-      <Box flexDirection="row" alignItems="center" marginBottom="l">
+  <ScrollView style={{ flex: 1, backgroundColor: 'white' }}>
+    {/* Header with background image */}
+    <Box height={300} position="relative">
+      <Image
+        source={{ uri: routeData?.image_url || routeData?.image }}
+        style={{ width: '100%', height: '100%' }}
+        resizeMode="cover"
+      />
+      
+      {/* Back button */}
+      <Box position="absolute" top={40} left={16}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Box
-            width={40}
-            height={40}
-            borderRadius={20}
+            width={50}
+            height={50}
+            borderRadius={25}
+            marginTop="m"
             backgroundColor="white"
             justifyContent="center"
             alignItems="center"
-            marginRight="m"
           >
-            <Text>←</Text>
+            <MaterialCommunityIcons name="keyboard-backspace" size={30} color="#000" />
           </Box>
         </TouchableOpacity>
-        <Text variant="header" color="white" flex={1}>
-          ROTA HISTÓRICA
-        </Text>
       </Box>
-
-      {/* Route illustration */}
-      <Image
-        source={{ uri: routeData.image }}
-        style={{ width: '100%', height: 200, borderRadius: 12, marginBottom: 16 }}
-      />
+      
     </Box>
 
     {/* Content */}
-    <Box backgroundColor="white" borderTopLeftRadius={20} borderTopRightRadius={20} padding="l">
-      <Card variant="elevated" marginBottom="l">
-        <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="m">
-          <Box flex={1}>
-            <Text variant="subheader" color="textPrimary" marginBottom="s">
-              {routeData.title}
-            </Text>
-            <Box flexDirection="row" alignItems="center" marginBottom="s">
-              <Text variant="body" color="secondary" marginRight="m">
-                🗺️ {routeData.totalDistance}
-              </Text>
-              <Text variant="body" color="secondary" marginRight="m">
-                📍 {routeData.stops} {t('route.stops')}
-              </Text>
-            </Box>
-            <Text variant="body" color="secondary">
-              ⏱️ {routeData.estimatedDuration}
-            </Text>
-          </Box>
-          <Box flexDirection="row">
-            <TouchableOpacity style={{ marginRight: 12 }}>
-              <Text>📤</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text>❤️</Text>
-            </TouchableOpacity>
-          </Box>
-        </Box>
-
-        <Box flexDirection="row" alignItems="center" marginBottom="m">
-          <Text variant="body" color="secondary">
-            🌐 {t('route.language')}
+    <Box 
+      backgroundColor="white" 
+      borderTopLeftRadius={20} 
+      borderTopRightRadius={20} 
+      style={{ marginTop: -100 }}
+      flex={1}
+      paddingTop="l"
+      paddingHorizontal="l"
+    >
+      {/* Route Info */}
+      <Box flexDirection="row" justifyContent="space-between" alignItems="flex-start" marginBottom="m">
+        <Box flex={1}>
+          <Text variant="routeTitle" color="textPrimary" marginBottom="s">
+            {routeData.name || routeData.title || 'Nome da Rota'}
           </Text>
-        </Box>
-
-        <Text variant="body" color="textPrimary" marginBottom="l">
-          {routeData.description}
-        </Text>
-
-        {/* Route stops */}
-        <Box marginBottom="l">
-          <Box flexDirection="row" alignItems="center" marginBottom="m">
-            <Box
-              width={60}
-              height={60}
-              borderRadius={30}
-              backgroundColor="primary"
-              justifyContent="center"
-              alignItems="center"
-              marginRight="m"
-            >
-              <Text color="white">📍</Text>
-            </Box>
-            <Box flex={1}>
-              <Text variant="body" color="primary" fontWeight="bold">
-                Aracaju em 3km
-              </Text>
-            </Box>
-            <Box width={20} height={2} backgroundColor="primary" />
+          <Box flexDirection="row" alignItems="center">
+            <MaterialCommunityIcons name="map-marker-path" size={20} color="#666666" />
+            <Text variant="body" color="secondary" marginLeft="s" marginRight="m">
+              {routeData.total_distance || routeData.totalDistance || 'N/A'}
+            </Text>
           </Box>
-
-          <Box flexDirection="row" alignItems="center" marginBottom="m">
-            <Box
-              width={60}
-              height={60}
-              borderRadius={30}
-              backgroundColor="secondary"
-              justifyContent="center"
-              alignItems="center"
-              marginRight="m"
-            >
-              <Text color="white">📍</Text>
-            </Box>
-            <Box flex={1}>
-              <Text variant="body" color="textPrimary" fontWeight="bold">
-                São Cristóvão em 11km
-              </Text>
-            </Box>
-            <Box width={20} height={2} backgroundColor="secondary" />
+          <Box flexDirection="row" alignItems="center">
+            <MaterialCommunityIcons name="pin-outline" size={20} color="#666666" />
+            <Text variant="body" color="secondary" marginLeft="s" marginRight="m">
+              {routeData.stops || routeData.cities?.length || 0} {t('route.stops')}
+            </Text>
+          </Box>
+          <Box flexDirection="row" alignItems="center">
+            <MaterialCommunityIcons name="timer-outline" size={20} color="#666666" />
+            <Text variant="body" color="secondary" marginLeft="s">
+              {routeData.estimatedDuration || routeData.estimated_duration || 'N/A'}
+            </Text>
           </Box>
         </Box>
-      </Card>
-
-      {/* São Cristóvão Details */}
-      <Card variant="elevated" marginBottom="l">
-        <TouchableOpacity onPress={() => toggleCityExpansion('saoCristovao')}>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom="m">
-            <Text variant="subheader" color="textPrimary">
-              São Cristóvão, SE
-            </Text>
-            <Text>{expandedCities.has('saoCristovao') ? t('routes.hideStories') : t('routes.showStories')}</Text>
-          </Box>
-        </TouchableOpacity>
-        
-        {expandedCities.has('saoCristovao') && (
-          <Box>
-            <Text variant="body" color="textPrimary" marginBottom="m">
-              Primeira capital de Sergipe e quarta cidade mais antiga do Brasil, é um tesouro colonial reconhecido pela UNESCO.
-            </Text>
-
-            {routeData.stories.length > 0 && (
-              <Box marginBottom="m">
-                <Text variant="body" color="secondary" marginTop="s">
-                  🎵 Histórias de São Cristóvão, SE
-                </Text>
-                
-                <Box flexDirection="row" alignItems="center" marginBottom="s">
-                  <TouchableOpacity onPress={() => {}}>
-                    <Box
-                      width={40}
-                      height={40}
-                      borderRadius={20}
-                      backgroundColor="primary"
-                      justifyContent="center"
-                      alignItems="center"
-                      marginRight="m"
-                    >
-                      <Text color="white">▶️</Text>
-                    </Box>
-                  </TouchableOpacity>
-                  
-                  <Box flex={1} height={4} backgroundColor="light" borderRadius={2}>
-                    <Box width="30%" height="100%" backgroundColor="primary" borderRadius={2} />
-                  </Box>
-                </Box>
-                
-                <Box flexDirection="row" justifyContent="space-between">
-                  <Text variant="body" color="secondary">1:46</Text>
-                  <Text variant="body" color="secondary">3:40</Text>
-                </Box>
+        <Box flexDirection="row">
+          {/* Share Button */}  
+          <TouchableOpacity style={{ marginRight: 16 }}>
+            <Box
+              width={50}
+              height={ 50}
+              borderRadius={25}
+              justifyContent="center"
+              alignItems="center"
+              style={{ backgroundColor: '#F5F5F5' }}
+            >
+              <MaterialCommunityIcons name="share-variant" size={20} color="#666666" />
+            </Box>
+          </TouchableOpacity>
+          
+          {/* Favorite Button */}
+          {isAuthenticated && (
+            <TouchableOpacity onPress={() => setIsFavorite(!isFavorite)}>
+              <Box
+                width={50}
+                height={50}
+                borderRadius={25}
+                justifyContent="center"
+                alignItems="center"
+                style={{ 
+                  backgroundColor: isFavorite ? '#FF0000' : '#F5F5F5'
+                }}
+              >
+                <MaterialCommunityIcons 
+                  name={isFavorite ? "heart" : "heart-outline"} 
+                  size={20} 
+                  color={isFavorite ? "#FFFFFF" : "#FF0000"} 
+                />
               </Box>
-            )}
-          </Box>
-        )}
-      </Card>
+            </TouchableOpacity>
+          )}
+        </Box>
+      </Box>
 
-      {/* Expandable sections */}
-      <Card variant="elevated" marginBottom="m">
-        <TouchableOpacity onPress={() => toggleSectionExpansion('observe')}>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" padding="m">
-            <Text variant="subheader" color="textPrimary">
-              {t('city.whatToObserve')}
-            </Text>
-            <Text>{expandedSections.has('about') ? t('routes.hideAbout') : t('routes.showAbout')}</Text>
-          </Box>
-        </TouchableOpacity>
-        {expandedSections.has('observe') && (
-          <Box padding="m">
-            <Text variant="body" color="textPrimary">
-              Feira Central vibrante, arte urbana nos muros, poesia nas praças, e a icônica Casa do Cantador — um centro vivo da cultura nordestina no coração do DF.
-            </Text>
-          </Box>
-        )}
-      </Card>
+      {/* Language Selector */}
+      <Box flexDirection="row" alignItems="center" marginBottom="m">
+        <MaterialCommunityIcons name="web" size={20} color="#666666" />
+        <Box position="relative" width={130} marginLeft="s">
+          <TouchableOpacity onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}>
+            <Box flexDirection="row" alignItems="center" paddingHorizontal="s" paddingVertical="s" borderRadius={8} style={{ backgroundColor: '#F5F5F5' }}>
+              <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguageOption.flag}</Text>
+              <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguageOption.name}</Text>
+              <MaterialCommunityIcons name={showLanguageDropdown ? 'chevron-up' : 'chevron-down'} size={14} color="#666666" />
+            </Box>
+          </TouchableOpacity>
+          
+          {/* Dropdown Menu */}
+          {showLanguageDropdown && (
+            <Box 
+              position="absolute" 
+              top="100%" 
+              right={0} 
+              marginTop="s" 
+              backgroundColor="white" 
+              borderRadius={8} 
+              style={{ 
+                shadowColor: '#000000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+                elevation: 4,
+                zIndex: 1000,
+                minWidth: 140
+              }}
+            >
+              {languageOptions.map((option) => (
+                <TouchableOpacity 
+                  key={option.code} 
+                  onPress={async () => {
+                    await changeLanguage(option.code);
+                    setShowLanguageDropdown(false);
+                    // Reload route data with new language
+                    await loadRouteDetails();
+                  }}
+                >
+                  <Box 
+                    flexDirection="row" 
+                    alignItems="center" 
+                    paddingHorizontal="m" 
+                    paddingVertical="s"
+                    style={{ 
+                      backgroundColor: option.code === currentLanguage ? '#F0F8FF' : 'transparent' 
+                    }}
+                  >
+                    <Text style={{ fontSize: 14, marginRight: 8 }}>{option.flag}</Text>
+                    <Text style={{ fontSize: 14, color: '#1A1A1A' }}>{option.name}</Text>
+                  </Box>
+                </TouchableOpacity>
+              ))}
+            </Box>
+          )}
+        </Box>
+      </Box>
 
-      <Card variant="elevated" marginBottom="m">
-        <TouchableOpacity onPress={() => toggleSectionExpansion('about')}>
-          <Box flexDirection="row" justifyContent="space-between" alignItems="center" padding="m">
-            <Text variant="subheader" color="textPrimary">
-              {t('city.aboutLocation')}
-            </Text>
-            <Text>{expandedSections.has('about') ? '🔼' : '🔽'}</Text>
-          </Box>
-        </TouchableOpacity>
-        {expandedSections.has('about') && (
-          <Box padding="m">
-            <Text variant="body" color="textPrimary">
-              {routeData.description}
-            </Text>
-          </Box>
-        )}
-      </Card>
-
-      <Text variant="subheader" color="textPrimary" marginBottom="m">
-        {t('city.nearbyServices')}
-      </Text>
-
-      <Box flexDirection="row" marginBottom="l">
-        <Image
-          source={{ uri: 'https://via.placeholder.com/150x100/FF6B6B/FFFFFF?text=Service+1' }}
-          style={{ width: 150, height: 100, borderRadius: 8, marginRight: 12 }}
-        />
-        <Image
-          source={{ uri: 'https://via.placeholder.com/150x100/4ECDC4/FFFFFF?text=Service+2' }}
-          style={{ width: 150, height: 100, borderRadius: 8 }}
-        />
+      <Box flexDirection="row" alignItems="flex-start" marginBottom="l">
+        <MaterialCommunityIcons name="book-open-page-variant-outline" size={16} color="#666666" style={{ marginTop: 2 }} />
+        <Text variant="body" color="textPrimary" marginLeft="s" flex={1}>
+          {routeData.description || 'Descrição da rota não disponível'}
+        </Text>
       </Box>
     </Box>
-    </ScrollView>
+  </ScrollView>
   );
 };
 

@@ -77,11 +77,10 @@ export const getCategoriesWithRoutes = async (): Promise<CategoryWithRoutes[]> =
   }
 };
 
-export const getRouteById = async (id: string, language: string = 'pt'): Promise<Route | null> => {
+export const getRouteById = async (id: string): Promise<Route | null> => {
   try {
     const response = await apiService.get<Route>(
       `/api/public/routes/${id}`, {
-      headers: { 'Accept-Language': language },
       includeAuth: false // Public endpoint doesn't need authentication
     });
     
