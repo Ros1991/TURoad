@@ -106,9 +106,9 @@
   },
   "route": {
     "title": "Historical Route: Sergipe Memory Paths",
-    "totalDistance": "Total route of 51km",
-    "stops": "3 stops",
-    "estimatedDuration": "Estimated duration of 3 hours",
+    "totalDistance": "Total route of {{distance}}",
+    "stops": "stops",
+    "estimatedDuration": "Estimated duration of {{duration}}",
     "language": "Portuguese",
     "description": "Travel through cities that preserve the origins, struggles and traditions of the Sergipe people. This route connects colonial churches, historic centers, museums and centenary festivals — offering visitors a deep immersion in the state's cultural identity.",
     "aracaju": "Aracaju in 3km",

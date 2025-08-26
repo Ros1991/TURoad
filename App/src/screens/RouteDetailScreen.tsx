@@ -382,7 +382,7 @@ const RouteDetailScreen = () => {
           <Box flexDirection="row" alignItems="center">
             <MaterialCommunityIcons name="map-marker-path" size={20} color="#666666" />
             <Text variant="body" color="secondary" marginLeft="s" marginRight="m">
-              {routeData.total_distance || routeData.totalDistance || 'N/A'}
+              {t('route.totalDistance', {distance: routeData.total_distance || routeData.totalDistance || 'N/A'})}
             </Text>
           </Box>
           <Box flexDirection="row" alignItems="center">
@@ -394,7 +394,7 @@ const RouteDetailScreen = () => {
           <Box flexDirection="row" alignItems="center">
             <MaterialCommunityIcons name="timer-outline" size={20} color="#666666" />
             <Text variant="body" color="secondary" marginLeft="s">
-              {routeData.estimatedDuration || routeData.estimated_duration || 'N/A'}
+              {t('route.estimatedDuration', {duration: routeData.estimatedDuration || routeData.estimated_duration || 'N/A'})}
             </Text>
           </Box>
         </Box>

@@ -106,9 +106,9 @@
   },
   "route": {
     "title": "Rota Histórica: Caminhos da Memória Sergipana",
-    "totalDistance": "Percurso total de 51km",
-    "stops": "3 paradas",
-    "estimatedDuration": "Duração estimada de 3 horas",
+    "totalDistance": "Percurso total de {{distance}}",
+    "stops": "paradas",
+    "estimatedDuration": "Duração estimada de {{duration}}",
     "language": "Português",
     "description": "Viaje pelas cidades que guardam as origens, lutas e tradições do povo sergipano. Essa rota conecta igrejas coloniais, centros históricos, museus e festas centenárias — oferecendo ao visitante uma imersão profunda na identidade cultural do estado.",
     "aracaju": "Aracaju em 3km",
