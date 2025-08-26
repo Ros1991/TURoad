@@ -126,6 +126,103 @@ export class CategoryRepository extends BaseRepository<Category> {
     
     return await qb.getRawMany();
   }
+
+  /**
+   * Get categories with their routes (max 2 routes per category) and total route count
+   */
+  async findCategoriesWithRoutes(language: string = 'pt'): Promise<any[]> {
+    const query = `
+      WITH route_metrics AS (
+        SELECT 
+          r.route_id,
+          COALESCE(SUM(rc_city.distance_km), 0) as total_distance_km,
+          COALESCE(SUM(rc_city.travel_time_minutes), 0) as total_time_minutes,
+          COUNT(DISTINCT rc_city.city_id) as stops_count,
+          (COUNT(DISTINCT sr.story_route_id) + COUNT(DISTINCT sc.story_city_id)) as stories_count
+        FROM routes r
+        LEFT JOIN route_cities rc_city ON rc_city.route_id = r.route_id
+        LEFT JOIN story_routes sr ON sr.route_id = r.route_id
+        LEFT JOIN story_cities sc ON sc.city_id = rc_city.city_id
+        WHERE r."deletedAt" IS NULL
+        GROUP BY r.route_id
+      ),
+      category_total_routes AS (
+        SELECT 
+          c.category_id,
+          COUNT(DISTINCT r.route_id) as total_routes
+        FROM categories c
+        JOIN route_categories rc ON rc.category_id = c.category_id
+        JOIN routes r ON r.route_id = rc.route_id
+        WHERE c."deletedAt" IS NULL AND r."deletedAt" IS NULL
+        GROUP BY c.category_id
+      ),
+      limited_routes AS (
+        SELECT 
+          c.category_id,
+          r.route_id,
+          COALESCE(lt_route_title_lang.text_content, lt_route_title_pt.text_content) as route_title,
+          COALESCE(lt_route_desc_lang.text_content, lt_route_desc_pt.text_content) as route_description,
+          r.image_url as route_image,
+          rm.total_distance_km,
+          rm.total_time_minutes,
+          rm.stops_count,
+          rm.stories_count,
+          ROW_NUMBER() OVER (PARTITION BY c.category_id ORDER BY r.route_id) as rn
+        FROM categories c
+        JOIN route_categories rc ON rc.category_id = c.category_id
+        JOIN routes r ON r.route_id = rc.route_id
+        LEFT JOIN route_metrics rm ON rm.route_id = r.route_id
+        LEFT JOIN localized_texts lt_route_title_lang ON lt_route_title_lang.reference_id = r.title_text_ref_id AND lt_route_title_lang.language_code = $1
+        LEFT JOIN localized_texts lt_route_title_pt ON lt_route_title_pt.reference_id = r.title_text_ref_id AND lt_route_title_pt.language_code = 'pt'
+        LEFT JOIN localized_texts lt_route_desc_lang ON lt_route_desc_lang.reference_id = r.description_text_ref_id AND lt_route_desc_lang.language_code = $1
+        LEFT JOIN localized_texts lt_route_desc_pt ON lt_route_desc_pt.reference_id = r.description_text_ref_id AND lt_route_desc_pt.language_code = 'pt'
+        WHERE c."deletedAt" IS NULL AND r."deletedAt" IS NULL
+      ),
+      category_routes AS (
+        SELECT 
+          c.category_id,
+          c.name_text_ref_id,
+          c.description_text_ref_id,
+          c.image_url,
+          ctr.total_routes,
+          JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', lr.route_id::text,
+              'title', lr.route_title,
+              'description', lr.route_description,
+              'image', lr.route_image,
+              'totalDistance', COALESCE(lr.total_distance_km, 0)::text || 'km',
+              'totalTime', COALESCE(lr.total_time_minutes, 0)::text || 'min',
+              'stops', COALESCE(lr.stops_count, 0),
+              'stories', COALESCE(lr.stories_count, 0),
+              'categories', ARRAY[]::text[]
+            ) ORDER BY lr.route_id
+          ) as routes
+        FROM categories c
+        JOIN category_total_routes ctr ON ctr.category_id = c.category_id
+        LEFT JOIN limited_routes lr ON lr.category_id = c.category_id AND lr.rn <= 2
+        WHERE c."deletedAt" IS NULL
+        GROUP BY c.category_id, c.name_text_ref_id, c.description_text_ref_id, c.image_url, ctr.total_routes
+      )
+      SELECT 
+        cr.category_id::text as id,
+        COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
+        COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
+        cr.image_url as image,
+        cr.total_routes as "totalRoutes",
+        cr.routes
+      FROM category_routes cr
+      LEFT JOIN localized_texts lt_name_lang ON lt_name_lang.reference_id = cr.name_text_ref_id AND lt_name_lang.language_code = $1
+      LEFT JOIN localized_texts lt_name_pt ON lt_name_pt.reference_id = cr.name_text_ref_id AND lt_name_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_desc_lang ON lt_desc_lang.reference_id = cr.description_text_ref_id AND lt_desc_lang.language_code = $1
+      LEFT JOIN localized_texts lt_desc_pt ON lt_desc_pt.reference_id = cr.description_text_ref_id AND lt_desc_pt.language_code = 'pt'
+      WHERE cr.total_routes > 0
+      ORDER BY cr.total_routes DESC
+    `;
+    
+    const result = await AppDataSource.query(query, [language]);
+    return result;
+  }
 }
 
 // Export singleton instance

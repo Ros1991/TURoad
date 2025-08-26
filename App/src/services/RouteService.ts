@@ -1,4 +1,4 @@
-import { Category, Route } from '../types';
+import { Category, Route, CategoryWithRoutes } from '../types';
 import { apiService } from './ApiService';
 
 export const getCategories = async (showOnlyPrimary: boolean = false, search?: string, cityId?: string): Promise<Category[]> => {
@@ -52,6 +52,27 @@ export const getRoutes = async (categoryId?: string, search?: string, cityId?: s
     return [];
   } catch (error) {
     console.error('Error fetching routes:', error);
+    return [];
+  }
+};
+
+export const getCategoriesWithRoutes = async (): Promise<CategoryWithRoutes[]> => {
+  try {
+    const response = await apiService.get<CategoryWithRoutes[]>('/api/public/categories/with-routes', {
+      includeAuth: false // Public endpoint doesn't need authentication
+    });
+
+    if (response.success && response.data) {
+      // Garantir que routes seja sempre um array válido
+      return response.data.map(category => ({
+        ...category,
+        routes: Array.isArray(category.routes) ? category.routes : []
+      }));
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching categories with routes:', error);
     return [];
   }
 };

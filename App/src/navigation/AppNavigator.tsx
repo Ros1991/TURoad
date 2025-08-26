@@ -125,7 +125,11 @@ function MainTabNavigator() {
         options={{ headerShown: false }} // Remove o header da Home
       />
       <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="Routes" component={RoutesScreen} />
+      <Tab.Screen 
+        name="Routes" 
+        component={RoutesScreen} 
+        options={{ headerShown: false }} // Remove o header nativo das Routes
+      />
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen} 

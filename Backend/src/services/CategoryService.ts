@@ -13,4 +13,8 @@ export class CategoryService extends BaseService<Category> {
   async getAllWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number): Promise<any[]> {
     return await categoryRepository.findAllWithLocalizedTexts(language, search, undefined, cityId);
   }
+
+  async getCategoriesWithRoutes(language: string = 'pt'): Promise<any[]> {
+    return await categoryRepository.findCategoriesWithRoutes(language);
+  }
 }

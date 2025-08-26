@@ -57,25 +57,13 @@ export interface Story {
 export interface Route {
   id: string;
   title: string;
-  titleTranslations: {
-    pt: string;
-    en: string;
-    es: string;
-  };
   description: string;
-  descriptionTranslations: {
-    pt: string;
-    en: string;
-    es: string;
-  };
-  categories: string[];
+  image: string;
   totalDistance: string;
   totalTime: string;
-  estimatedDuration: string;
   stops: number;
-  cities: City[];
-  stories: number; // Total de histórias em todas as cidades da rota
-  image: string;
+  stories: number;
+  categories?: string[];
 }
 
 export interface Category {
@@ -92,9 +80,20 @@ export interface Category {
     en: string;
     es: string;
   };
-  image: string;
-  isPrimary?: boolean;
-  routeCount: number;
+  icon: string;
+  color: string;
+  isPrimary: boolean;
+  routeCount?: number;
+  totalUsage?: number;
+}
+
+export interface CategoryWithRoutes {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  totalRoutes: number;
+  routes: Route[];
 }
 
 export interface Event {

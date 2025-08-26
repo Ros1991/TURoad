@@ -349,6 +349,24 @@ export class PublicController {
     }
   }
 
+  async getCategoriesWithRoutes(req: RequestWithLanguage, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      
+      const categoriesWithRoutes = await this.categoryService.getCategoriesWithRoutes(language);
+      res.json({
+        success: true,
+        data: categoriesWithRoutes
+      });
+    } catch (error) {
+      console.error('Error fetching categories with routes:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching categories with routes'
+      });
+    }
+  }
+
   async getHosting(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
