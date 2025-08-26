@@ -8,6 +8,7 @@ import {
   Dimensions,
   FlatList,
 } from 'react-native';
+import DashLine from '../components/DashLine';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Box, Text, Card } from '../components';
@@ -206,6 +207,7 @@ const RouteDetailScreen = () => {
       style={{ marginTop: -100 }}
       flex={1}
       paddingTop="l"
+      paddingBottom="xl"
       paddingHorizontal="l"
     >
       {/* Route Info */}
@@ -388,9 +390,70 @@ const RouteDetailScreen = () => {
         
         const cityId = `city-${city.id || cityIndex}`;
         const isExpanded = expandedCities.has(cityId);
+        const isLastCity = cityIndex === routeData.cities.length - 1;
 
         return (
-          <Box key={cityId} marginBottom="l">
+          <Box key={cityId}>
+            {/* Route path component - only show if not first city */}
+            {cityIndex > 0 && (
+              <Box 
+                alignItems="center" 
+                
+                style={{ marginHorizontal: -24 }}
+              >
+                {/* Blue dot */}
+                <Box 
+                  width={16} 
+                  height={16} 
+                  borderRadius={8} 
+                  backgroundColor="success"
+                  borderWidth={2}
+                  borderColor="white"
+                  style={{
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 3,
+                    elevation: 3,
+                    marginBottom: 4,
+                    zIndex: 999999
+                  }}
+                />
+                
+                {/* Dashed line */}
+                <DashLine 
+                  style={{
+                    width: 1,
+                    height: 25,
+                    flexDirection: 'column',
+                    marginBottom: 4
+                  }}
+                  dashGap={3}
+                  totalDashUnit={20}
+                  dashLength={4}
+                  dashThickness={5}
+                  dashColor="#999999"
+                />
+                
+                {/* Gray dot */}
+                <Box 
+                  width={16} 
+                  height={16} 
+                  borderRadius={8}  
+                  backgroundColor="secondary"
+                  borderWidth={2}
+                  borderColor="white"
+                  style={{
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.15,
+                    shadowRadius: 3,
+                    elevation: 3
+                  }}
+                />
+              </Box>
+            )}
+            
             {/* City header - clickable to expand/collapse */}
             <TouchableOpacity onPress={() => toggleCityExpansion(cityId)}>
               <Box 
@@ -426,9 +489,7 @@ const RouteDetailScreen = () => {
                 paddingHorizontal="l" 
                 paddingBottom="m"
                 style={{ 
-                  marginHorizontal: -24,
-                  borderBottomWidth: 1,
-                  borderBottomColor: '#E0E0E0'
+                  marginHorizontal: -24
                 }}
               >
                 {/* City description */}
@@ -477,9 +538,32 @@ const RouteDetailScreen = () => {
                 </Box>
               </Box>
             )}
+            
+            {/* Bottom border - always visible */}
+            <Box 
+              style={{
+                borderBottomWidth: 1,
+                borderBottomColor: '#E0E0E0',
+                marginHorizontal: -24
+              }}
+            />
           </Box>
         );
       })}
+      <Box marginTop="l">
+        <Text 
+          variant="sectionTitle" 
+          color="dark" 
+          marginBottom="m"
+        >
+          {t('route.WhatToObserve')}
+        </Text>
+      </Box>
+      <Box marginBottom="m">
+        <Text variant="body" color="textDark" lineHeight={22}>
+          {routeData.what_to_observe}
+        </Text>
+      </Box>
     </Box>
   </ScrollView>
   );
