@@ -111,4 +111,24 @@ export class LocationService extends BaseService<Location> {
       stories: stories || []
     };
   }
+
+  async getBusinessesByCities(cityIds: number[], language: string = 'pt', userLatitude?: number | null, userLongitude?: number | null): Promise<any[]> {
+    const businesses = await locationRepository.findBusinessesByCitiesWithLocalizedTexts(
+      cityIds,
+      language,
+      userLatitude,
+      userLongitude
+    );
+    return businesses || [];
+  }
+
+  async getHostingByCities(cityIds: number[], language: string = 'pt', userLatitude?: number | null, userLongitude?: number | null): Promise<any[]> {
+    const hosting = await locationRepository.findHostingByCitiesWithLocalizedTexts(
+      cityIds,
+      language,
+      userLatitude,
+      userLongitude
+    );
+    return hosting || [];
+  }
 }

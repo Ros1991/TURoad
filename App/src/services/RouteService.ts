@@ -95,3 +95,39 @@ export const getRouteById = async (id: string, language: string = 'pt'): Promise
     return null;
   }
 };
+
+export const getRouteBusinesses = async (routeId: string): Promise<any[]> => {
+  try {
+    const response = await apiService.get<any[]>(
+      `/api/public/routes/${routeId}/businesses`, {
+      includeAuth: false // Location headers are automatically included
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching route businesses:', error);
+    return [];
+  }
+};
+
+export const getRouteHosting = async (routeId: string): Promise<any[]> => {
+  try {
+    const response = await apiService.get<any[]>(
+      `/api/public/routes/${routeId}/hosting`, {
+      includeAuth: false // Location headers are automatically included
+    });
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Error fetching route hosting:', error);
+    return [];
+  }
+};

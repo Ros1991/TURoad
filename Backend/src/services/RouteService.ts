@@ -88,4 +88,19 @@ export class RouteService extends BaseService<Route> {
   async getAllWithLocalizedTexts(language: string = 'pt', categoryId?: number, search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
     return await routeRepository.findAllWithLocalizedTexts(language, categoryId?.toString(), search, cityId, userLatitude, userLongitude);
   }
+
+  async getRouteById(routeId: number, language: string = 'pt'): Promise<any> {
+    const route = await routeRepository.findByIdWithLocalizedTexts(routeId, language);
+    if (!route) {
+      return null;
+    }
+
+    // Get stories for this route
+    const stories = await this.getStoriesByRouteId(routeId);
+    
+    return {
+      ...route,
+      stories: stories || []
+    };
+  }
 }

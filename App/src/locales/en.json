@@ -71,6 +71,7 @@
     "recentSearches": "Recent searches",
     "noCitiesFound": "No cities found",
     "noRoutesFound": "No routes found",
+    "notFound": "Route not found",
     "nearbyCities": "Nearby cities",
     "selectedCity": "Selected city",
     "aracaju": "Aracaju, SE",
@@ -90,6 +91,7 @@
   },
   "routes": {
     "title": "Tourist routes",
+    "notFound": "Route not found",
     "historical": "Historical",
     "ecological": "Ecological",
     "seeMore": "See more",

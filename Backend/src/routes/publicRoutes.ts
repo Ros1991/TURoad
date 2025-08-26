@@ -31,5 +31,10 @@ router.get('/faqs', publicController.getFAQs.bind(publicController));
 // Individual item endpoints
 router.get('/locations/:id', publicController.getLocationById.bind(publicController));
 router.get('/events/:id', publicController.getEventById.bind(publicController));
+router.get('/routes/:id', publicController.getRouteById.bind(publicController));
+
+// Route businesses and hosting endpoints
+router.get('/routes/:routeId/businesses', publicController.getRouteBusinesses.bind(publicController));
+router.get('/routes/:routeId/hosting', publicController.getRouteHosting.bind(publicController));
 
 export default router;

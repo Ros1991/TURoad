@@ -432,6 +432,134 @@ export class LocationRepository extends BaseRepository<Location> {
     const results = await this.repository.manager.query(query, [locationId, language]);
     return results[0] || null;
   }
+
+  async findBusinessesByCitiesWithLocalizedTexts(
+    cityIds: number[],
+    language: string = 'pt',
+    userLatitude?: number | null,
+    userLongitude?: number | null
+  ): Promise<any[]> {
+    const query = `
+      SELECT 
+        l.location_id as id,
+        COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
+        COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
+        l.image_url,
+        l.latitude,
+        l.longitude,
+        l.city_id,
+        COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) as city_name,
+        c.state as city_state,
+        ${userLatitude && userLongitude ? `
+          CASE 
+            WHEN l.latitude IS NOT NULL AND l.longitude IS NOT NULL THEN
+              6371 * acos(
+                cos(radians($3)) * cos(radians(l.latitude)) * 
+                cos(radians(l.longitude) - radians($4)) + 
+                sin(radians($3)) * sin(radians(l.latitude))
+              )
+            ELSE NULL
+          END as distance,
+        ` : 'NULL as distance,'}
+        array_agg(DISTINCT jsonb_build_object(
+          'id', cat.category_id,
+          'name', COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)
+        )) FILTER (WHERE cat.category_id IS NOT NULL) as categories,
+        COUNT(DISTINCT sl.story_location_id) as story_count
+      FROM locations l
+      LEFT JOIN localized_texts lt_name_lang ON l.name_text_ref_id = lt_name_lang.reference_id AND lt_name_lang.language_code = $2
+      LEFT JOIN localized_texts lt_name_pt ON l.name_text_ref_id = lt_name_pt.reference_id AND lt_name_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_desc_lang ON l.description_text_ref_id = lt_desc_lang.reference_id AND lt_desc_lang.language_code = $2
+      LEFT JOIN localized_texts lt_desc_pt ON l.description_text_ref_id = lt_desc_pt.reference_id AND lt_desc_pt.language_code = 'pt'
+      LEFT JOIN cities c ON l.city_id = c.city_id
+      LEFT JOIN localized_texts lt_city_lang ON c.name_text_ref_id = lt_city_lang.reference_id AND lt_city_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
+      LEFT JOIN location_categories lc ON l.location_id = lc.location_id
+      LEFT JOIN categories cat ON lc.category_id = cat.category_id AND cat."deletedAt" IS NULL
+      LEFT JOIN localized_texts lt_cat_lang ON cat.name_text_ref_id = lt_cat_lang.reference_id AND lt_cat_lang.language_code = $2
+      LEFT JOIN localized_texts lt_cat_pt ON cat.name_text_ref_id = lt_cat_pt.reference_id AND lt_cat_pt.language_code = 'pt'
+      LEFT JOIN story_locations sl ON l.location_id = sl.location_id
+      LEFT JOIN types t ON l.type_id = t.type_id
+      LEFT JOIN localized_texts lt_type_lang ON t.name_text_ref_id = lt_type_lang.reference_id AND lt_type_lang.language_code = $2
+      LEFT JOIN localized_texts lt_type_pt ON t.name_text_ref_id = lt_type_pt.reference_id AND lt_type_pt.language_code = 'pt'
+      WHERE l.city_id = ANY($1::int[]) 
+        AND l."deletedAt" IS NULL 
+        AND (COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) = 'business' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%negócio%' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%comércio%')
+      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state
+      ORDER BY distance ASC NULLS LAST
+    `;
+
+    const params = userLatitude && userLongitude 
+      ? [cityIds, language, userLatitude, userLongitude]
+      : [cityIds, language];
+
+    const results = await this.repository.manager.query(query, params);
+    return results || [];
+  }
+
+  async findHostingByCitiesWithLocalizedTexts(
+    cityIds: number[],
+    language: string = 'pt',
+    userLatitude?: number | null,
+    userLongitude?: number | null
+  ): Promise<any[]> {
+    const query = `
+      SELECT 
+        l.location_id as id,
+        COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
+        COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
+        l.image_url,
+        l.latitude,
+        l.longitude,
+        l.city_id,
+        COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) as city_name,
+        c.state as city_state,
+        ${userLatitude && userLongitude ? `
+          CASE 
+            WHEN l.latitude IS NOT NULL AND l.longitude IS NOT NULL THEN
+              6371 * acos(
+                cos(radians($3)) * cos(radians(l.latitude)) * 
+                cos(radians(l.longitude) - radians($4)) + 
+                sin(radians($3)) * sin(radians(l.latitude))
+              )
+            ELSE NULL
+          END as distance,
+        ` : 'NULL as distance,'}
+        array_agg(DISTINCT jsonb_build_object(
+          'id', cat.category_id,
+          'name', COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)
+        )) FILTER (WHERE cat.category_id IS NOT NULL) as categories,
+        COUNT(DISTINCT sl.story_location_id) as story_count
+      FROM locations l
+      LEFT JOIN localized_texts lt_name_lang ON l.name_text_ref_id = lt_name_lang.reference_id AND lt_name_lang.language_code = $2
+      LEFT JOIN localized_texts lt_name_pt ON l.name_text_ref_id = lt_name_pt.reference_id AND lt_name_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_desc_lang ON l.description_text_ref_id = lt_desc_lang.reference_id AND lt_desc_lang.language_code = $2
+      LEFT JOIN localized_texts lt_desc_pt ON l.description_text_ref_id = lt_desc_pt.reference_id AND lt_desc_pt.language_code = 'pt'
+      LEFT JOIN cities c ON l.city_id = c.city_id
+      LEFT JOIN localized_texts lt_city_lang ON c.name_text_ref_id = lt_city_lang.reference_id AND lt_city_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
+      LEFT JOIN location_categories lc ON l.location_id = lc.location_id
+      LEFT JOIN categories cat ON lc.category_id = cat.category_id AND cat."deletedAt" IS NULL
+      LEFT JOIN localized_texts lt_cat_lang ON cat.name_text_ref_id = lt_cat_lang.reference_id AND lt_cat_lang.language_code = $2
+      LEFT JOIN localized_texts lt_cat_pt ON cat.name_text_ref_id = lt_cat_pt.reference_id AND lt_cat_pt.language_code = 'pt'
+      LEFT JOIN story_locations sl ON l.location_id = sl.location_id
+      LEFT JOIN types t ON l.type_id = t.type_id
+      LEFT JOIN localized_texts lt_type_lang ON t.name_text_ref_id = lt_type_lang.reference_id AND lt_type_lang.language_code = $2
+      LEFT JOIN localized_texts lt_type_pt ON t.name_text_ref_id = lt_type_pt.reference_id AND lt_type_pt.language_code = 'pt'
+      WHERE l.city_id = ANY($1::int[]) 
+        AND l."deletedAt" IS NULL 
+        AND (COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) = 'hosting' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hospedagem%' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hotel%')
+      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state
+      ORDER BY distance ASC NULLS LAST
+    `;
+
+    const params = userLatitude && userLongitude 
+      ? [cityIds, language, userLatitude, userLongitude]
+      : [cityIds, language];
+
+    const results = await this.repository.manager.query(query, params);
+    return results || [];
+  }
 }
 
 // Export singleton instance

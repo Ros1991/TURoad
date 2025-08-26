@@ -657,4 +657,131 @@ export class PublicController {
       });
     }
   }
+
+  async getRouteById(req: RequestWithLanguage & RequestWithLocation, res: Response) {
+    try {
+      const { id } = req.params;
+      const language = req.language || 'pt';
+
+      if (!id || isNaN(parseInt(id))) {
+        return res.status(400).json({
+          success: false,
+          message: 'ID da rota inválido'
+        });
+      }
+
+      const route = await this.routeService.getRouteById(parseInt(id), language);
+      if (!route) {
+        return res.status(404).json({
+          success: false,
+          message: 'Rota não encontrada'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: route
+      });
+    } catch (error) {
+      console.error('Error fetching route by id:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Erro interno do servidor'
+      });
+    }
+  }
+
+  async getRouteBusinesses(req: RequestWithLanguage & RequestWithLocation, res: Response) {
+    try {
+      const { routeId } = req.params;
+      const language = req.language || 'pt';
+      const userLatitude = req.userLocation?.latitude || null;
+      const userLongitude = req.userLocation?.longitude || null;
+
+      if (!routeId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Route ID is required'
+        });
+      }
+
+      // Get route with cities
+      const route = await this.routeService.getRouteById(parseInt(routeId), language);
+      if (!route) {
+        return res.status(404).json({
+          success: false,
+          message: 'Route not found'
+        });
+      }
+
+      // Get all city IDs from the route
+      const cityIds = route.cities.map((city: any) => city.id);
+
+      // Get businesses from all cities in the route
+      const businesses = await this.locationService.getBusinessesByCities(
+        cityIds,
+        language,
+        userLatitude,
+        userLongitude
+      );
+
+      return res.json({
+        success: true,
+        data: businesses
+      });
+    } catch (error) {
+      console.error('Error fetching route businesses:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error fetching route businesses'
+      });
+    }
+  }
+
+  async getRouteHosting(req: RequestWithLanguage & RequestWithLocation, res: Response) {
+    try {
+      const { routeId } = req.params;
+      const language = req.language || 'pt';
+      const userLatitude = req.userLocation?.latitude || null;
+      const userLongitude = req.userLocation?.longitude || null;
+
+      if (!routeId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Route ID is required'
+        });
+      }
+
+      // Get route with cities
+      const route = await this.routeService.getRouteById(parseInt(routeId), language);
+      if (!route) {
+        return res.status(404).json({
+          success: false,
+          message: 'Route not found'
+        });
+      }
+
+      // Get all city IDs from the route
+      const cityIds = route.cities.map((city: any) => city.id);
+
+      // Get hosting from all cities in the route
+      const hosting = await this.locationService.getHostingByCities(
+        cityIds,
+        language,
+        userLatitude,
+        userLongitude
+      );
+
+      return res.json({
+        success: true,
+        data: hosting
+      });
+    } catch (error) {
+      console.error('Error fetching route hosting:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error fetching route hosting'
+      });
+    }
+  }
 }

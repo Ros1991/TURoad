@@ -71,6 +71,7 @@
     "recentSearches": "Búsquedas recientes",
     "noCitiesFound": "No se encontraron ciudades",
     "noRoutesFound": "No se encontraron rutas",
+    "notFound": "Ruta no encontrada",
     "nearbyCities": "Ciudades cercanas",
     "selectedCity": "Ciudad seleccionada",
     "aracaju": "Aracaju, SE",
@@ -90,6 +91,7 @@
   },
   "routes": {
     "title": "Rutas turísticas",
+    "notFound": "Ruta no encontrada",
     "historical": "Históricas",
     "ecological": "Ecológicas",
     "seeMore": "Ver más",

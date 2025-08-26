@@ -91,6 +91,57 @@ export class RouteRepository extends BaseRepository<Route> {
     
     return await qb.getRawMany();
   }
+
+  async findByIdWithLocalizedTexts(routeId: number, language: string = 'pt'): Promise<any> {
+    const query = `
+      SELECT 
+        r.route_id as id,
+        COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
+        COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
+        COALESCE(lt_what_lang.text_content, lt_what_pt.text_content) as what_to_observe,
+        r.image_url,
+        COALESCE(SUM(rc.distance_km), 0) as total_distance,
+        COALESCE(SUM(rc.travel_time_minutes), 0) as estimated_duration,
+        array_agg(DISTINCT jsonb_build_object(
+          'id', cat.category_id,
+          'name', COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)
+        )) FILTER (WHERE cat.category_id IS NOT NULL) as categories,
+        array_agg(jsonb_build_object(
+          'id', c.city_id,
+          'name', COALESCE(lt_city_lang.text_content, lt_city_pt.text_content),
+          'state', c.state,
+          'description', COALESCE(lt_city_desc_lang.text_content, lt_city_desc_pt.text_content),
+          'latitude', c.latitude,
+          'longitude', c.longitude,
+          'order', rc.order
+        ) ORDER BY rc.order) FILTER (WHERE c.city_id IS NOT NULL) as cities,
+        COUNT(DISTINCT sr.story_route_id) as story_count
+      FROM routes r
+      LEFT JOIN localized_texts lt_name_lang ON r.title_text_ref_id = lt_name_lang.reference_id AND lt_name_lang.language_code = $2
+      LEFT JOIN localized_texts lt_name_pt ON r.title_text_ref_id = lt_name_pt.reference_id AND lt_name_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_desc_lang ON r.description_text_ref_id = lt_desc_lang.reference_id AND lt_desc_lang.language_code = $2
+      LEFT JOIN localized_texts lt_desc_pt ON r.description_text_ref_id = lt_desc_pt.reference_id AND lt_desc_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_what_lang ON r.what_to_observe_text_ref_id = lt_what_lang.reference_id AND lt_what_lang.language_code = $2
+      LEFT JOIN localized_texts lt_what_pt ON r.what_to_observe_text_ref_id = lt_what_pt.reference_id AND lt_what_pt.language_code = 'pt'
+      LEFT JOIN route_categories rc_cat ON r.route_id = rc_cat.route_id
+      LEFT JOIN categories cat ON rc_cat.category_id = cat.category_id AND cat."deletedAt" IS NULL
+      LEFT JOIN localized_texts lt_cat_lang ON cat.name_text_ref_id = lt_cat_lang.reference_id AND lt_cat_lang.language_code = $2
+      LEFT JOIN localized_texts lt_cat_pt ON cat.name_text_ref_id = lt_cat_pt.reference_id AND lt_cat_pt.language_code = 'pt'
+      LEFT JOIN route_cities rc ON r.route_id = rc.route_id
+      LEFT JOIN cities c ON rc.city_id = c.city_id
+      LEFT JOIN localized_texts lt_city_lang ON c.name_text_ref_id = lt_city_lang.reference_id AND lt_city_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_city_desc_lang ON c.description_text_ref_id = lt_city_desc_lang.reference_id AND lt_city_desc_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_desc_pt ON c.description_text_ref_id = lt_city_desc_pt.reference_id AND lt_city_desc_pt.language_code = 'pt'
+      LEFT JOIN story_routes sr ON r.route_id = sr.route_id
+      WHERE r.route_id = $1 AND r."deletedAt" IS NULL
+      GROUP BY r.route_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, 
+               lt_what_lang.text_content, lt_what_pt.text_content, r.image_url
+    `;
+
+    const results = await this.repository.manager.query(query, [routeId, language]);
+    return results[0] || null;
+  }
 }
 
 // Export singleton instance
