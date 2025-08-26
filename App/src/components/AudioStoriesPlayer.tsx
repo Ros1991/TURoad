@@ -13,13 +13,14 @@ interface AudioStoriesPlayerProps {
   onStoryChange: (index: number) => void;
   onDurationUpdate?: (storyIndex: number, realDuration: number) => void;
   onPlayStart?: () => void; // Called when this player starts playing
+  hideLanguageSelector?: boolean; // Hide language selector for screens with their own language control
 }
 
 export interface AudioStoriesPlayerRef {
   pause: () => void;
 }
 
-const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ stories, currentStoryIndex, onStoryChange, onDurationUpdate, onPlayStart }, ref) => {
+const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ stories, currentStoryIndex, onStoryChange, onDurationUpdate, onPlayStart, hideLanguageSelector = false }, ref) => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -456,69 +457,71 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
           <Text style={{ fontSize: 18, fontWeight: '600', color: '#1A1A1A' }}>
             {t('city.stories')}
           </Text>
-          <Box position="relative">
-            <TouchableOpacity onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}>
-              <Box flexDirection="row" alignItems="center" paddingHorizontal="s" paddingVertical="s" borderRadius={8} style={{ backgroundColor: '#F5F5F5' }}>
-                <Icon name="web" size={14} color="#666666" />
-                <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4, marginRight: 4 }}>{currentLanguageOption.flag}</Text>
-                <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguageOption.name}</Text>
-                <Icon name={showLanguageDropdown ? 'chevron-up' : 'chevron-down'} size={14} color="#666666" />
-              </Box>
-            </TouchableOpacity>
-            
-            {/* Dropdown Menu */}
-            {showLanguageDropdown && (
-              <Box 
-                position="absolute" 
-                top="100%" 
-                right={0} 
-                marginTop="s" 
-                backgroundColor="white" 
-                borderRadius={8} 
-                style={{ 
-                  shadowColor: '#000000',
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 8,
-                  elevation: 4,
-                  zIndex: 1000,
-                  minWidth: 140
-                }}
-              >
-                {languageOptions.map((option) => (
-                  <TouchableOpacity 
-                    key={option.code} 
-                    onPress={async () => {
-                      await changeLanguage(option.code);
-                      setShowLanguageDropdown(false);
-                    }}
-                  >
-                    <Box 
-                      flexDirection="row" 
-                      alignItems="center" 
-                      paddingHorizontal="m" 
-                      paddingVertical="s"
-                      style={{ 
-                        backgroundColor: option.code === currentLanguage ? '#F0F8FF' : 'transparent' 
+          {!hideLanguageSelector && (
+            <Box position="relative">
+              <TouchableOpacity onPress={() => setShowLanguageDropdown(!showLanguageDropdown)}>
+                <Box flexDirection="row" alignItems="center" paddingHorizontal="s" paddingVertical="s" borderRadius={8} style={{ backgroundColor: '#F5F5F5' }}>
+                  <Icon name="web" size={14} color="#666666" />
+                  <Text style={{ fontSize: 14, color: '#666666', marginLeft: 4, marginRight: 4 }}>{currentLanguageOption.flag}</Text>
+                  <Text style={{ fontSize: 14, color: '#666666', marginRight: 4 }}>{currentLanguageOption.name}</Text>
+                  <Icon name={showLanguageDropdown ? 'chevron-up' : 'chevron-down'} size={14} color="#666666" />
+                </Box>
+              </TouchableOpacity>
+              
+              {/* Dropdown Menu */}
+              {showLanguageDropdown && (
+                <Box 
+                  position="absolute" 
+                  top="100%" 
+                  right={0} 
+                  marginTop="s" 
+                  backgroundColor="white" 
+                  borderRadius={8} 
+                  style={{ 
+                    shadowColor: '#000000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+                    elevation: 4,
+                    zIndex: 1000,
+                    minWidth: 140
+                  }}
+                >
+                  {languageOptions.map((option) => (
+                    <TouchableOpacity 
+                      key={option.code} 
+                      onPress={async () => {
+                        await changeLanguage(option.code);
+                        setShowLanguageDropdown(false);
                       }}
                     >
-                      <Text style={{ fontSize: 14, marginRight: 8 }}>{option.flag}</Text>
-                      <Text style={{ 
-                        fontSize: 14, 
-                        color: option.code === currentLanguage ? '#035A6E' : '#1A1A1A',
-                        fontWeight: option.code === currentLanguage ? '500' : '400'
-                      }}>
-                        {option.name}
-                      </Text>
-                      {option.code === currentLanguage && (
-                        <Icon name="check" size={14} color="#035A6E" style={{ marginLeft: 'auto' }} />
-                      )}
-                    </Box>
-                  </TouchableOpacity>
-                ))}
-              </Box>
-            )}
-          </Box>
+                      <Box 
+                        flexDirection="row" 
+                        alignItems="center" 
+                        paddingHorizontal="m" 
+                        paddingVertical="s"
+                        style={{ 
+                          backgroundColor: option.code === currentLanguage ? '#F0F8FF' : 'transparent' 
+                        }}
+                      >
+                        <Text style={{ fontSize: 14, marginRight: 8 }}>{option.flag}</Text>
+                        <Text style={{ 
+                          fontSize: 14, 
+                          color: option.code === currentLanguage ? '#035A6E' : '#1A1A1A',
+                          fontWeight: option.code === currentLanguage ? '500' : '400'
+                        }}>
+                          {option.name}
+                        </Text>
+                        {option.code === currentLanguage && (
+                          <Icon name="check" size={14} color="#035A6E" style={{ marginLeft: 'auto' }} />
+                        )}
+                      </Box>
+                    </TouchableOpacity>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
         
         {/* Story List */}

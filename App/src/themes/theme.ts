@@ -40,6 +40,7 @@ const theme = createTheme({
     buttonPrimary: '#002043',
     buttonSecondary: '#6C757D',
     textPrimary: '#002043',
+    textGray: '#666666',
     infoPrimary: '#002043',
     textTitle: '#035A6E',
     textSecondary: palette.white,

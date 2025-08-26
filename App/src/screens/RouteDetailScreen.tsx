@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { getRouteById, getRouteBusinesses, getRouteHosting } from '../services/RouteService';
 import { FavoriteService } from '../services/FavoriteService';
 import AudioStoriesPlayer, { AudioStoriesPlayerRef } from '../components/AudioStoriesPlayer';
+import { Story } from '../types';
 
 type RootStackParamList = {
   RouteDetail: { routeId: string };
@@ -499,13 +500,55 @@ const RouteDetailScreen = () => {
 
       <Box flexDirection="row" alignItems="flex-start" marginBottom="l">
         <MaterialCommunityIcons name="book-open-page-variant-outline" size={16} color="#666666" style={{ marginTop: 2 }} />
-        <Text variant="body" color="textPrimary" marginLeft="s" flex={1}>
+        <Text variant="body" color="textGray" marginLeft="s" flex={1}>
           {routeData.description || 'Descrição da rota não disponível'}
         </Text>
       </Box>
 
       
-      {/* Audio Stories for each city with global state */}
+      {/* Route Stories */}
+      {routeData.stories && routeData.stories.length > 0 && (
+        <Box marginBottom="l">
+          {/* Route stories header */}
+          <Box flexDirection="row" alignItems="center" marginBottom="m">
+            <MaterialCommunityIcons name="book-open" size={16} color="#035A6E" />
+            <Text 
+              variant="subheader" 
+              color="primary" 
+              marginLeft="s"
+              style={{ fontWeight: '600' }}
+            >
+              {t('route.stories')}
+            </Text>
+          </Box>
+          
+          <AudioStoriesPlayer 
+            ref={(ref) => { audioPlayerRefs.current['route'] = ref; }}
+            stories={routeData.stories as Story[]}
+            currentStoryIndex={0}
+            onStoryChange={(newIndex) => {
+              // Story change logic if needed
+            }}
+            onDurationUpdate={(storyIndex, realDuration) => {
+              // Update story duration when real audio duration is discovered
+              if (routeData.stories[storyIndex]) {
+                routeData.stories[storyIndex].durationSeconds = realDuration;
+              }
+            }}
+            onPlayStart={() => {
+              // Pause all other players when this one starts
+              Object.keys(audioPlayerRefs.current).forEach(otherPlayerId => {
+                if (otherPlayerId !== 'route' && audioPlayerRefs.current[otherPlayerId]) {
+                  audioPlayerRefs.current[otherPlayerId]?.pause();
+                }
+              });
+            }}
+            hideLanguageSelector={true}
+          />
+        </Box>
+      )}
+      
+      {/* Audio Stories for each city */}
       {routeData.cities.map((city: any, cityIndex: number) => {
         if (!city.stories || city.stories.length === 0) return null;
         
@@ -548,6 +591,7 @@ const RouteDetailScreen = () => {
                   }
                 });
               }}
+              hideLanguageSelector={true}
             />
           </Box>
         );
