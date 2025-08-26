@@ -101,9 +101,10 @@ const RouteDetailScreen = () => {
     const newExpanded = new Set(expandedCities);
     if (newExpanded.has(cityId)) {
       newExpanded.delete(cityId);
-      // Stop audio if this city is playing
-      if (currentPlayingCityId === cityId) {
-        stopCurrentAudio();
+      // Pause audio if this city is playing when collapsed
+      const cityPlayer = audioPlayerRefs.current[cityId];
+      if (cityPlayer) {
+        cityPlayer.pause();
       }
     } else {
       newExpanded.add(cityId);
@@ -120,26 +121,6 @@ const RouteDetailScreen = () => {
       }
     }
     setCurrentPlayingCityId(cityId);
-  };
-
-  const stopCurrentAudio = () => {
-    if (currentPlayingCityId) {
-      const currentPlayer = audioPlayerRefs.current[currentPlayingCityId];
-      if (currentPlayer?.pause) {
-        currentPlayer.pause();
-      }
-      setCurrentPlayingCityId(null);
-    }
-  };
-
-  const toggleSectionExpansion = (sectionId: string) => {
-    const newExpanded = new Set(expandedSections);
-    if (newExpanded.has(sectionId)) {
-      newExpanded.delete(sectionId);
-    } else {
-      newExpanded.add(sectionId);
-    }
-    setExpandedSections(newExpanded);
   };
 
   const toggleFavorite = async () => {
@@ -170,153 +151,6 @@ const RouteDetailScreen = () => {
     }
   };
 
-  const renderBusinessCard = ({ item }: { item: any }) => (
-    <Card
-      marginRight="m"
-      padding="m"
-      width={280}
-      backgroundColor="white"
-    >
-      {item.imageUrl && (
-        <Box height={120} marginBottom="s" borderRadius={8} overflow="hidden">
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </Box>
-      )}
-      <Text variant="subheader" numberOfLines={1}>
-        {item.name}
-      </Text>
-      <Text variant="body" color="secondary" numberOfLines={2} marginTop="s">
-        {item.description}
-      </Text>
-      {item.distance && (
-        <Box flexDirection="row" alignItems="center" marginTop="s">
-          <Ionicons name="location-outline" size={14} color={theme.colors.secondary} />
-          <Text variant="body" color="secondary" marginLeft="s">
-            {item.distance < 1 ? `${(item.distance * 1000).toFixed(0)}m` : `${item.distance.toFixed(1)}km`}
-          </Text>
-        </Box>
-      )}
-      {item.rating && (
-        <Box flexDirection="row" alignItems="center" marginTop="s">
-          <Ionicons name="star" size={14} color="#FFD700" />
-          <Text variant="body" marginLeft="s">
-            {item.rating.toFixed(1)}
-          </Text>
-        </Box>
-      )}
-    </Card>
-  );
-
-  const renderHostingCard = ({ item }: { item: any }) => (
-    <Card
-      marginRight="m"
-      padding="m"
-      width={280}
-      backgroundColor="white"
-    >
-      {item.imageUrl && (
-        <Box height={120} marginBottom="s" borderRadius={8} overflow="hidden">
-          <Image
-            source={{ uri: item.imageUrl }}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </Box>
-      )}
-      <Text variant="subheader" numberOfLines={1}>
-        {item.name}
-      </Text>
-      <Text variant="body" color="secondary" numberOfLines={2} marginTop="s">
-        {item.description}
-      </Text>
-      {item.priceRange && (
-        <Box flexDirection="row" alignItems="center" marginTop="s">
-          <FontAwesome5 name="star" size={10} color={theme.colors.secondary} />
-          <Text variant="body" color="success" marginTop="s">
-            {item.priceRange}
-          </Text>
-        </Box>
-      )}
-      {item.distance && (
-        <Box flexDirection="row" alignItems="center" marginTop="s">
-          <Ionicons name="location-outline" size={14} color={theme.colors.secondary} />
-          <Text variant="body" color="secondary" marginLeft="s">
-            {item.distance < 1 ? `${(item.distance * 1000).toFixed(0)}m` : `${item.distance.toFixed(1)}km`}
-          </Text>
-        </Box>
-      )}
-      {item.rating && (
-        <Box flexDirection="row" alignItems="center" marginTop="s">
-          <Ionicons name="star" size={14} color="#FFD700" />
-          <Text variant="body" marginLeft="s">
-            {item.rating.toFixed(1)}
-          </Text>
-        </Box>
-      )}
-    </Card>
-  );
-
-  const renderCityCarousel = () => {
-    if (!routeData?.cities || routeData.cities.length === 0) return null;
-
-    return (
-      <Box marginVertical="m">
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        >
-          {routeData.cities.map((city: any, index: number) => (
-            <TouchableOpacity
-              key={city.cityId}
-              onPress={() => toggleCityExpansion(city.cityId)}
-              style={{ marginRight: 12 }}
-            >
-              <Box
-                backgroundColor={expandedCities.has(city.cityId) ? 'primary' : 'white'}
-                borderWidth={1}
-                borderColor={expandedCities.has(city.cityId) ? 'primary' : 'secondary'}
-                borderRadius={20}
-                paddingHorizontal="m"
-                paddingVertical="s"
-                flexDirection="row"
-                alignItems="center"
-              >
-                <Box
-                  width={24}
-                  height={24}
-                  borderRadius={12}
-                  backgroundColor={expandedCities.has(city.cityId) ? 'white' : 'primary'}
-                  justifyContent="center"
-                  alignItems="center"
-                  marginRight="s"
-                >
-                  <Text
-                    variant="body"
-                    color={expandedCities.has(city.cityId) ? 'primary' : 'white'}
-                    fontWeight="bold"
-                  >
-                    {index + 1}
-                  </Text>
-                </Box>
-                <Text
-                  variant="body"
-                  color={expandedCities.has(city.cityId) ? 'white' : 'black'}
-                  marginLeft="s"
-                >
-                  {city.name}
-                </Text>
-              </Box>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </Box>
-    );
-  };
 
   if (loading) {
     return (
@@ -548,51 +382,91 @@ const RouteDetailScreen = () => {
         </Box>
       )}
       
-      {/* Audio Stories for each city */}
+      {/* Expandable Cities with Stories */}
       {routeData.cities.map((city: any, cityIndex: number) => {
         if (!city.stories || city.stories.length === 0) return null;
         
         const cityId = `city-${city.id || cityIndex}`;
+        const isExpanded = expandedCities.has(cityId);
 
         return (
           <Box key={cityId} marginBottom="l">
-            {/* City name header */}
-            <Box flexDirection="row" alignItems="center" marginBottom="m">
-              <MaterialCommunityIcons name="map-marker" size={16} color="#035A6E" />
-              <Text 
-                variant="subheader" 
-                color="primary" 
-                marginLeft="s"
-                style={{ fontWeight: '600' }}
+            {/* City header - clickable to expand/collapse */}
+            <TouchableOpacity onPress={() => toggleCityExpansion(cityId)}>
+              <Box 
+                flexDirection="row" 
+                alignItems="center" 
+                justifyContent="space-between" 
+                paddingVertical="m"
+                style={{ 
+                  borderBottomWidth: 1, 
+                  borderBottomColor: '#E0E0E0' 
+                }}
               >
-                {city.name}
-              </Text>
-            </Box>
+                <Text 
+                  variant="routeTitle" 
+                  color="textPrimary" 
+                >
+                  {city.name}
+                </Text>
+                <MaterialCommunityIcons 
+                  name={isExpanded ? 'chevron-up' : 'chevron-down'} 
+                  size={20} 
+                  color="#666666" 
+                />
+              </Box>
+            </TouchableOpacity>
             
-            <AudioStoriesPlayer 
-              ref={(ref) => { audioPlayerRefs.current[cityId] = ref; }}
-              stories={city.stories as Story[]}
-              currentStoryIndex={0}
-              onStoryChange={(newIndex) => {
-                // Story change logic if needed
-              }}
-              onDurationUpdate={(storyIndex, realDuration) => {
-                // Update story duration when real audio duration is discovered
-                const updatedStories = [...(city.stories as Story[])];
-                if (updatedStories[storyIndex]) {
-                  updatedStories[storyIndex].durationSeconds = realDuration;
-                }
-              }}
-              onPlayStart={() => {
-                // Pause all other players when this one starts
-                Object.keys(audioPlayerRefs.current).forEach(otherCityId => {
-                  if (otherCityId !== cityId && audioPlayerRefs.current[otherCityId]) {
-                    audioPlayerRefs.current[otherCityId]?.pause();
-                  }
-                });
-              }}
-              hideLanguageSelector={true}
-            />
+            {/* Expanded content */}
+            {isExpanded && (
+              <Box paddingTop="m">
+                {/* City description */}
+                {city.description && (
+                  <Box marginBottom="m">
+                    <Text variant="body" color="textGray" lineHeight={22}>
+                      {city.description}
+                    </Text>
+                  </Box>
+                )}
+                
+                {/* Stories section */}
+                <Box>
+                  <Text 
+                    variant="subheader" 
+                    color="textPrimary" 
+                    marginBottom="m"
+                    style={{ fontWeight: '600' }}
+                  >
+                    Histórias de {city.name}
+                  </Text>
+                  
+                  <AudioStoriesPlayer 
+                    ref={(ref) => { audioPlayerRefs.current[cityId] = ref; }}
+                    stories={city.stories as Story[]}
+                    currentStoryIndex={0}
+                    onStoryChange={(newIndex) => {
+                      // Story change logic if needed
+                    }}
+                    onDurationUpdate={(storyIndex, realDuration) => {
+                      // Update story duration when real audio duration is discovered
+                      const updatedStories = [...(city.stories as Story[])];
+                      if (updatedStories[storyIndex]) {
+                        updatedStories[storyIndex].durationSeconds = realDuration;
+                      }
+                    }}
+                    onPlayStart={() => {
+                      // Pause all other players when this one starts
+                      Object.keys(audioPlayerRefs.current).forEach(otherPlayerId => {
+                        if (otherPlayerId !== cityId && audioPlayerRefs.current[otherPlayerId]) {
+                          audioPlayerRefs.current[otherPlayerId]?.pause();
+                        }
+                      });
+                    }}
+                    hideLanguageSelector={true}
+                  />
+                </Box>
+              </Box>
+            )}
           </Box>
         );
       })}
