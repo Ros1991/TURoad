@@ -77,7 +77,14 @@ const RouteDetailScreen = () => {
       
       if (routeResponse) {
         console.log('🔍 DEBUG - Full Route response:', JSON.stringify(routeResponse, null, 2));
-        setRouteData(routeResponse.data || routeResponse);
+        const routeData = routeResponse.data || routeResponse;
+        setRouteData(routeData);
+        
+        // Set all city expanders as open by default
+        if (routeData.cities && routeData.cities.length > 0) {
+          const cityIds = routeData.cities.map((city: any, index: number) => `city-${city.id || index}`);
+          setExpandedCities(new Set(cityIds));
+        }
         
         // Set initial favorite status from API response
         if (routeResponse.isFavorite !== undefined) {

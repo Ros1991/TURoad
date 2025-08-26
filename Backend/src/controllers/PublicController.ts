@@ -11,6 +11,7 @@ import { RouteService } from '@/services/RouteService';
 import { CityService } from '@/services/CityService';
 import { EventService } from '@/services/EventService';
 import { LocationService } from '@/services/LocationService';
+import { RouteCityService } from '@/services/RouteCityService';
 import { CityResponseDto } from '@/dtos/CityDto';
 import { UserFavoriteCityService } from '@/services/UserFavoriteCityService';
 import { UserFavoriteRouteService } from '@/services/UserFavoriteRouteService';
@@ -21,6 +22,7 @@ export class PublicController {
   private cityService: CityService;
   private eventService: EventService;
   private locationService: LocationService;
+  private routeCityService: RouteCityService;
   private userFavoriteCityService: UserFavoriteCityService;
   private userFavoriteRouteService: UserFavoriteRouteService;
 
@@ -30,6 +32,7 @@ export class PublicController {
     this.cityService = new CityService();
     this.eventService = new EventService();
     this.locationService = new LocationService();
+    this.routeCityService = new RouteCityService();
     this.userFavoriteCityService = new UserFavoriteCityService();
     this.userFavoriteRouteService = new UserFavoriteRouteService();
   }
@@ -728,17 +731,15 @@ export class PublicController {
         });
       }
 
-      // Get route with cities
-      const route = await this.routeService.getRouteById(parseInt(routeId), language);
-      if (!route) {
-        return res.status(404).json({
-          success: false,
-          message: 'Route not found'
+      // Get city IDs directly from RouteCityService
+      const cityIds = await this.routeCityService.getCityIdsByRouteId(parseInt(routeId));
+      
+      if (cityIds.length === 0) {
+        return res.json({
+          success: true,
+          data: []
         });
       }
-
-      // Get all city IDs from the route
-      const cityIds = route.cities.map((city: any) => city.id);
 
       // Get businesses from all cities in the route
       const businesses = await this.locationService.getBusinessesByCities(
@@ -747,7 +748,7 @@ export class PublicController {
         userLatitude,
         userLongitude
       );
-      console.log(businesses);
+
       return res.json({
         success: true,
         data: businesses
@@ -775,17 +776,15 @@ export class PublicController {
         });
       }
 
-      // Get route with cities
-      const route = await this.routeService.getRouteById(parseInt(routeId), language);
-      if (!route) {
-        return res.status(404).json({
-          success: false,
-          message: 'Route not found'
+      // Get city IDs directly from RouteCityService
+      const cityIds = await this.routeCityService.getCityIdsByRouteId(parseInt(routeId));
+      
+      if (cityIds.length === 0) {
+        return res.json({
+          success: true,
+          data: []
         });
       }
-
-      // Get all city IDs from the route
-      const cityIds = route.cities.map((city: any) => city.id);
 
       // Get hosting from all cities in the route
       const hosting = await this.locationService.getHostingByCities(

@@ -92,6 +92,11 @@ export class RouteCityService extends BaseService<RouteCity> {
     return this.repository.getAvailableCitiesForRoute(routeId);
   }
 
+  async getCityIdsByRouteId(routeId: number): Promise<number[]> {
+    const routeCities = await this.repository.findByRouteId(routeId);
+    return routeCities.map(rc => rc.cityId);
+  }
+
   /**
    * Refresh distance and travel time fields for route cities
    * @param routeId Optional route ID. If not provided, processes all routes
