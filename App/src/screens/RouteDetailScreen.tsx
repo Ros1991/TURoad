@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getRouteById, getRouteBusinesses, getRouteHosting } from '../services/RouteService';
+import { FavoriteService } from '../services/FavoriteService';
 import AudioStoriesPlayer from '../components/AudioStoriesPlayer';
 
 type RootStackParamList = {
@@ -73,8 +74,18 @@ const RouteDetailScreen = () => {
       ]);
       
       if (routeResponse) {
-        console.log('Route response:', routeResponse);
-        setRouteData(routeResponse);
+        console.log('🔍 DEBUG - Full Route response:', JSON.stringify(routeResponse, null, 2));
+        setRouteData(routeResponse.data || routeResponse);
+        
+        // Set initial favorite status from API response
+        if (routeResponse.isFavorite !== undefined) {
+          console.log('🤍 Setting initial favorite status:', routeResponse.isFavorite);
+          setIsFavorite(routeResponse.isFavorite || false);
+        } else {
+          console.log('🤍 No isFavorite found in routeResponse, setting to false');
+          console.log('🔍 DEBUG - Available keys:', Object.keys(routeResponse));
+          setIsFavorite(false);
+        }
       }
       setBusinesses(businessesResponse);
       setHosting(hostingResponse);
@@ -128,6 +139,34 @@ const RouteDetailScreen = () => {
       newExpanded.add(sectionId);
     }
     setExpandedSections(newExpanded);
+  };
+
+  const toggleFavorite = async () => {
+    if (!user?.id || !routeData) return;
+    
+    try {
+      console.log('🤍 Toggling favorite for route:', route.params?.routeId);
+      
+      // Optimistically update UI
+      const newFavoriteState = !isFavorite;
+      setIsFavorite(newFavoriteState);
+      
+      // Call backend API
+      const result = await FavoriteService.toggleFavoriteRoute(
+        parseInt(user.id), 
+        parseInt(route.params?.routeId || '0')
+      );
+      
+      // Update state based on API response
+      setIsFavorite(result.isFavorited);
+      
+      console.log('🤍 Favorite toggled successfully:', result.isFavorited);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      
+      // Revert optimistic update on error
+      setIsFavorite(prev => !prev);
+    }
   };
 
   const renderBusinessCard = ({ item }: { item: any }) => (
@@ -376,7 +415,7 @@ const RouteDetailScreen = () => {
           
           {/* Favorite Button */}
           {isAuthenticated && (
-            <TouchableOpacity onPress={() => setIsFavorite(!isFavorite)}>
+            <TouchableOpacity onPress={toggleFavorite}>
               <Box
                 width={50}
                 height={50}

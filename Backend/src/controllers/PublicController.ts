@@ -13,6 +13,7 @@ import { EventService } from '@/services/EventService';
 import { LocationService } from '@/services/LocationService';
 import { CityResponseDto } from '@/dtos/CityDto';
 import { UserFavoriteCityService } from '@/services/UserFavoriteCityService';
+import { UserFavoriteRouteService } from '@/services/UserFavoriteRouteService';
 
 export class PublicController {
   private categoryService: CategoryService;
@@ -21,6 +22,7 @@ export class PublicController {
   private eventService: EventService;
   private locationService: LocationService;
   private userFavoriteCityService: UserFavoriteCityService;
+  private userFavoriteRouteService: UserFavoriteRouteService;
 
   constructor() {
     this.categoryService = new CategoryService();
@@ -29,6 +31,7 @@ export class PublicController {
     this.eventService = new EventService();
     this.locationService = new LocationService();
     this.userFavoriteCityService = new UserFavoriteCityService();
+    this.userFavoriteRouteService = new UserFavoriteRouteService();
   }
 
   private async getLocalizedText(textRefId: number | undefined, language: string): Promise<string | null> {
@@ -681,9 +684,26 @@ export class PublicController {
         });
       }
 
+      // Check if user is authenticated and get favorite status
+      let isFavorite = false;
+      console.log('🔍 DEBUG - Checking user auth:', (req as any).user?.userId);
+      if ((req as any).user?.userId) {
+        try {
+          console.log('🔍 DEBUG - Checking isFavoriteRoute for user:', (req as any).user.userId, 'route:', id);
+          isFavorite = await this.userFavoriteRouteService.isFavoriteRoute((req as any).user.userId, parseInt(id));
+          console.log('🔍 DEBUG - isFavoriteRoute result:', isFavorite);
+        } catch (error) {
+          // If error checking favorite status, just continue with false
+          console.warn('Error checking favorite status:', error);
+        }
+      } else {
+        console.log('🔍 DEBUG - User not authenticated or userId not found');
+      }
+
       res.json({
         success: true,
-        data: route
+        data: route,
+        isFavorite
       });
     } catch (error) {
       console.error('Error fetching route by id:', error);

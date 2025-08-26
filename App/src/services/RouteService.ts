@@ -77,15 +77,15 @@ export const getCategoriesWithRoutes = async (): Promise<CategoryWithRoutes[]> =
   }
 };
 
-export const getRouteById = async (id: string): Promise<Route | null> => {
+export const getRouteById = async (id: string): Promise<any> => {
   try {
-    const response = await apiService.get<Route>(
+    const response = await apiService.get<any>(
       `/api/public/routes/${id}`, {
-      includeAuth: false // Public endpoint doesn't need authentication
+      includeAuth: true // Need auth to check favorite status
     });
     
-    if (response.success && response.data) {
-      return response.data;
+    if (response.success) {
+      return response; // Return full response including isFavorite
     }
     
     return null;
