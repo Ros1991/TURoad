@@ -17,6 +17,7 @@ import { City, Story, Business } from '../types';
 type RootStackParamList = {
   City: { cityId: string };
   RouteDetail: { routeId: string };
+  Others: { type: 'event' | 'location'; itemId: string };
 };
 
 type CityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'City'>;
@@ -431,7 +432,13 @@ const CityScreen: React.FC = () => {
             {/* Businesses Carousel */}
             <FlatList
               data={businesses}
-              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.navigate('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
               keyExtractor={(item, index) => `business-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -453,7 +460,13 @@ const CityScreen: React.FC = () => {
             {/* Businesses Carousel */}
             <FlatList
               data={hosting}
-              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.navigate('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
               keyExtractor={(item, index) => `hosting-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}

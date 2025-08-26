@@ -1,7 +1,7 @@
 import { Business } from "../types";
 import { apiService } from './ApiService';
 
-export const getBusinesses = async (search?: string, cityId?: string): Promise<Business[]> => {
+export const getBusinesses = async (search?: string, cityId?: string, locationId?: string): Promise<Business[]> => {
   try {
     const params: any = {};
     if (search) {
@@ -9,6 +9,9 @@ export const getBusinesses = async (search?: string, cityId?: string): Promise<B
     }
     if (cityId) {
       params.cityId = cityId;
+    }
+    if (locationId) {
+      params.locationId = locationId;
     }
     
     const response = await apiService.get<Business[]>('/api/public/locations/businesses', {
@@ -27,7 +30,7 @@ export const getBusinesses = async (search?: string, cityId?: string): Promise<B
   }
 };
 
-export const getHosting = async (search?: string, cityId?: string): Promise<Business[]> => {
+export const getHosting = async (search?: string, cityId?: string, locationId?: string): Promise<Business[]> => {
   try {
     const params: any = {};
     if (search) {
@@ -35,6 +38,9 @@ export const getHosting = async (search?: string, cityId?: string): Promise<Busi
     }
     if (cityId) {
       params.cityId = cityId;
+    }
+    if (locationId) {
+      params.locationId = locationId;
     }
     
     const response = await apiService.get<Business[]>('/api/public/locations/hosting', {

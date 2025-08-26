@@ -76,9 +76,7 @@ const OthersScreen: React.FC = () => {
   const loadBusinesses = async (itemData: ItemData | null) => {
       try {
         if (!itemData || !('cityId' in itemData)) return;
-        const businessData = await getBusinesses(undefined, (itemData as HistoricalPlace).cityId.toString());
-        // For now, show all businesses (same as HomeScreen)
-        // In the future, this could be filtered by city location/region
+        const businessData = await getBusinesses(undefined, (itemData as HistoricalPlace).cityId.toString(), itemData.id);
         setBusinesses(businessData);
       } catch (error) {
         console.error('Error loading businesses:', error);
@@ -88,9 +86,7 @@ const OthersScreen: React.FC = () => {
   const loadHosting = async (itemData: ItemData | null) => {
       try {
         if (!itemData || !('cityId' in itemData)) return;
-        const hostingData = await getHosting(undefined, (itemData as HistoricalPlace).cityId.toString());
-        // For now, show all businesses (same as HomeScreen)
-        // In the future, this could be filtered by city location/region
+        const hostingData = await getHosting(undefined, (itemData as HistoricalPlace).cityId.toString(), itemData.id);
         setHosting(hostingData);
       } catch (error) {
         console.error('Error loading hosting:', error);
@@ -390,14 +386,20 @@ const OthersScreen: React.FC = () => {
           <>
             <Box marginTop="m" marginBottom="m">
               <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
-                {t('home.businessesAndServices')}
+                {t('others.nearbyBusinesses')}
               </Text>
             </Box>
             
             {/* Businesses Carousel */}
             <FlatList
               data={businesses}
-              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.push('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
               keyExtractor={(item, index) => `business-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -412,14 +414,20 @@ const OthersScreen: React.FC = () => {
           <>
             <Box marginTop="s" marginBottom="m">
               <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
-                {t('common.hosting')}
+                {t('others.nearbyHosting')}
               </Text>
             </Box>
             
             {/* Businesses Carousel */}
             <FlatList
               data={hosting}
-              renderItem={({ item }) => <BusinessCard item={item} showStories={true}/>}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.push('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
               keyExtractor={(item, index) => `hosting-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}

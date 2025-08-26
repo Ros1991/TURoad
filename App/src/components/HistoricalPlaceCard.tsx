@@ -84,7 +84,8 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
           {item.description}
         </Text>
         <Box>
-          <Box flexDirection="row" alignItems="center" marginBottom="s">
+            {/* Distância */}
+            <Box flexDirection="row" alignItems="center" marginBottom="s">
             <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
             <Text
               style={{
@@ -94,7 +95,7 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
                 marginLeft: 4
               }}
             >
-              {item.location}
+              {item.distance} {t('common.distanceAway')}
             </Text>
           </Box>
           <Box flexDirection="row" alignItems="center" marginBottom="s">
@@ -110,20 +111,7 @@ const HistoricalPlaceCard: React.FC<HistoricalPlaceCardProps> = ({ item, onPress
               {item.storiesCount || 0} {t('home.storiesAvailable')}
             </Text>
           </Box>
-          {/* Distância */}
-          <Box flexDirection="row" alignItems="center" marginBottom="s">
-            <Icon name="map-marker-outline" as any size={16} color="#5A5A5A"/>
-            <Text
-              style={{
-                fontFamily: 'Asap',
-                fontSize: 16,
-                color: '#5A5A5A',
-                marginLeft: 4
-              }}
-            >
-              {item.distance} {t('common.distanceAway')}
-            </Text>
-          </Box>
+
         </Box>
       </Box>
     </TouchableOpacity>

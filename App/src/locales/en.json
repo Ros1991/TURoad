@@ -234,7 +234,9 @@
     "aboutEvent": "About the event",
     "aboutLocation": "About the location",
     "historicalSignificance": "Historical significance",
-    "itemNotFound": "Item not found"
+    "itemNotFound": "Item not found",
+    "nearbyBusinesses": "Nearby businesses and services",
+    "nearbyHosting": "Nearby accommodations"
   },
   "common": {
     "back": "Back",

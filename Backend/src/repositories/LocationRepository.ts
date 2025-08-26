@@ -276,8 +276,8 @@ export class LocationRepository extends BaseRepository<Location> {
       .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
       .where('l."deletedAt" IS NULL')
-      .andWhere('t.type_id = :historicalTypeId', { historicalTypeId: 3 })
       .groupBy('l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude')
+      .andWhere('t.type_id = :historicalTypeId', { historicalTypeId: 3 })
       .setParameter('language', language);
 
     // Set location parameters if provided
@@ -306,7 +306,11 @@ export class LocationRepository extends BaseRepository<Location> {
       qb.orderBy('COALESCE(lt_name_lang.text_content, lt_name_pt.text_content)', 'ASC');
     }
     
-    return await qb.getRawMany();
+    const result = await qb.getRawMany();
+    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts SQL:', qb.getSql());
+    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts params:', qb.getParameters());
+    console.log('DEBUG findHistoricalPlacesWithLocalizedTexts result sample:', result[0]);
+    return result;
   }
 
   /**

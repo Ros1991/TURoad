@@ -279,14 +279,30 @@ export class PublicController {
       const language = req.language || 'pt';
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
+      const locationId = req.query.locationId as string;
       
       let referenceLatitude: number | undefined;
       let referenceLongitude: number | undefined;
       
-      referenceLatitude = req.userLocation?.latitude;
-      referenceLongitude = req.userLocation?.longitude;
+      // If locationId is provided, use that location's coordinates for distance calculation
+      if (locationId) {
+        const referenceLocation = await this.locationService.getLocationById(parseInt(locationId), language);
+        if (referenceLocation) {
+          referenceLatitude = parseFloat(referenceLocation.latitude);
+          referenceLongitude = parseFloat(referenceLocation.longitude);
+        }
+      } else {
+        // Otherwise use user's current location from middleware
+        referenceLatitude = req.userLocation?.latitude;
+        referenceLongitude = req.userLocation?.longitude;
+      }
     
-      const businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      let businesses = await this.locationService.getBusinessesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      
+      // Filter out the reference location itself if locationId was provided
+      if (locationId) {
+        businesses = businesses.filter(business => business.id.toString() !== locationId);
+      }
 
       const businessesWithData = businesses.map(business => ({
         id: business.id.toString(),
@@ -325,6 +341,8 @@ export class PublicController {
       referenceLongitude = req.userLocation?.longitude;
       
       const historicalPlaces = await this.locationService.getHistoricalPlacesWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      console.log('DEBUG historicalPlaces raw data:', JSON.stringify(historicalPlaces[0], null, 2));
+      console.log('DEBUG referenceLatitude:', referenceLatitude, 'referenceLongitude:', referenceLongitude);
       const historicalPlacesWithData = historicalPlaces.map(place => ({
         id: place.id.toString(),
         name: place.name || 'Unnamed Place',
@@ -337,7 +355,7 @@ export class PublicController {
         categories: place.categories || [],
         distance: place.distance ? `${parseFloat(place.distance).toFixed(1)} km ` : undefined
       }));
-      
+      console.log('DEBUG historicalPlacesWithData:', JSON.stringify(historicalPlacesWithData[0], null, 2));
       res.json({
         success: true,
         data: historicalPlacesWithData
@@ -376,14 +394,30 @@ export class PublicController {
       const language = req.language || 'pt';
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
+      const locationId = req.query.locationId as string;
       
       let referenceLatitude: number | undefined;
       let referenceLongitude: number | undefined;
       
-      referenceLatitude = req.userLocation?.latitude;
-      referenceLongitude = req.userLocation?.longitude;
+      // If locationId is provided, use that location's coordinates for distance calculation
+      if (locationId) {
+        const referenceLocation = await this.locationService.getLocationById(parseInt(locationId), language);
+        if (referenceLocation) {
+          referenceLatitude = parseFloat(referenceLocation.latitude);
+          referenceLongitude = parseFloat(referenceLocation.longitude);
+        }
+      } else {
+        // Otherwise use user's current location from middleware
+        referenceLatitude = req.userLocation?.latitude;
+        referenceLongitude = req.userLocation?.longitude;
+      }
       
-      const hosting = await this.locationService.getHostingWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      let hosting = await this.locationService.getHostingWithLocalizedTexts(language, search, cityId ? parseInt(cityId) : undefined, referenceLatitude, referenceLongitude);
+      
+      // Filter out the reference location itself if locationId was provided
+      if (locationId) {
+        hosting = hosting.filter(host => host.id.toString() !== locationId);
+      }
       
       const hostingWithData = hosting.map(host => ({
         id: host.id.toString(),
