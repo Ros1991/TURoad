@@ -113,7 +113,8 @@ export class RouteRepository extends BaseRepository<Route> {
           'description', COALESCE(lt_city_desc_lang.text_content, lt_city_desc_pt.text_content),
           'latitude', c.latitude,
           'longitude', c.longitude,
-          'order', rc.order
+          'order', rc.order,
+          'stories', city_stories.stories
         ) ORDER BY rc.order) FILTER (WHERE c.city_id IS NOT NULL) as cities,
         COUNT(DISTINCT sr.story_route_id) as story_count
       FROM routes r
@@ -133,6 +134,23 @@ export class RouteRepository extends BaseRepository<Route> {
       LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
       LEFT JOIN localized_texts lt_city_desc_lang ON c.description_text_ref_id = lt_city_desc_lang.reference_id AND lt_city_desc_lang.language_code = $2
       LEFT JOIN localized_texts lt_city_desc_pt ON c.description_text_ref_id = lt_city_desc_pt.reference_id AND lt_city_desc_pt.language_code = 'pt'
+      LEFT JOIN LATERAL (
+        SELECT array_agg(jsonb_build_object(
+          'id', sc.story_city_id,
+          'title', COALESCE(lt_story_title_lang.text_content, lt_story_title_pt.text_content),
+          'description', COALESCE(lt_story_desc_lang.text_content, lt_story_desc_pt.text_content),
+          'durationSeconds', sc.duration_seconds,
+          'audioUrl', COALESCE(lt_story_audio_lang.text_content, lt_story_audio_pt.text_content)
+        ) ORDER BY sc.story_city_id) as stories
+        FROM story_cities sc
+        LEFT JOIN localized_texts lt_story_title_lang ON sc.name_text_ref_id = lt_story_title_lang.reference_id AND lt_story_title_lang.language_code = $2
+        LEFT JOIN localized_texts lt_story_title_pt ON sc.name_text_ref_id = lt_story_title_pt.reference_id AND lt_story_title_pt.language_code = 'pt'
+        LEFT JOIN localized_texts lt_story_desc_lang ON sc.description_text_ref_id = lt_story_desc_lang.reference_id AND lt_story_desc_lang.language_code = $2
+        LEFT JOIN localized_texts lt_story_desc_pt ON sc.description_text_ref_id = lt_story_desc_pt.reference_id AND lt_story_desc_pt.language_code = 'pt'
+        LEFT JOIN localized_texts lt_story_audio_lang ON sc.audio_url_ref_id = lt_story_audio_lang.reference_id AND lt_story_audio_lang.language_code = $2
+        LEFT JOIN localized_texts lt_story_audio_pt ON sc.audio_url_ref_id = lt_story_audio_pt.reference_id AND lt_story_audio_pt.language_code = 'pt'
+        WHERE sc.city_id = c.city_id
+      ) city_stories ON true
       LEFT JOIN story_routes sr ON r.route_id = sr.route_id
       WHERE r.route_id = $1 AND r."deletedAt" IS NULL
       GROUP BY r.route_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, 

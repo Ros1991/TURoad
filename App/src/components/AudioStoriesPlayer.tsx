@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { TouchableOpacity, Animated, Dimensions, PanResponder } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -12,9 +12,14 @@ interface AudioStoriesPlayerProps {
   currentStoryIndex: number;
   onStoryChange: (index: number) => void;
   onDurationUpdate?: (storyIndex: number, realDuration: number) => void;
+  onPlayStart?: () => void; // Called when this player starts playing
 }
 
-export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStoryChange, onDurationUpdate }: AudioStoriesPlayerProps) {
+export interface AudioStoriesPlayerRef {
+  pause: () => void;
+}
+
+const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ stories, currentStoryIndex, onStoryChange, onDurationUpdate, onPlayStart }, ref) => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -29,6 +34,17 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
   const isInitialLoadRef = useRef(true);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressBarWidth = Dimensions.get('window').width - 64; // Account for padding
+
+  // Expose pause method to parent
+  useImperativeHandle(ref, () => ({
+    pause: () => {
+      if (soundRef.current && isPlaying) {
+        soundRef.current.pause();
+        setIsPlaying(false);
+        setPlayStartTime(null);
+      }
+    }
+  }), [isPlaying]);
 
   const languageOptions = [
     { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
@@ -165,6 +181,11 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
         const shouldAutoPlay = !isInitialLoadRef.current;
         
         if (shouldAutoPlay) {
+          // Notify parent that this player is starting
+          if (onPlayStart) {
+            onPlayStart();
+          }
+          
           const startTime = Date.now();
           setIsPlaying(true);
           setPlayStartTime(startTime);
@@ -200,6 +221,11 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
       
       soundRef.current.pause();
     } else {
+      // Notify parent that this player is starting
+      if (onPlayStart) {
+        onPlayStart();
+      }
+      
       // Play - definir estado imediatamente
       const startTime = Date.now();
       setIsPlaying(true);
@@ -547,5 +573,7 @@ export default function AudioStoriesPlayer({ stories, currentStoryIndex, onStory
       </Box>
     </Box>
   );
-};
+});
+
+export default AudioStoriesPlayer;
 

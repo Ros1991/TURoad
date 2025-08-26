@@ -20,7 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getRouteById, getRouteBusinesses, getRouteHosting } from '../services/RouteService';
 import { FavoriteService } from '../services/FavoriteService';
-import AudioStoriesPlayer from '../components/AudioStoriesPlayer';
+import AudioStoriesPlayer, { AudioStoriesPlayerRef } from '../components/AudioStoriesPlayer';
 
 type RootStackParamList = {
   RouteDetail: { routeId: string };
@@ -45,7 +45,7 @@ const RouteDetailScreen = () => {
   const [currentPlayingCityId, setCurrentPlayingCityId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-  const audioPlayerRefs = useRef<{ [key: string]: any }>({});
+  const audioPlayerRefs = useRef<{ [key: string]: AudioStoriesPlayerRef | null }>({});
   const { isAuthenticated, user } = useAuth();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
 
@@ -111,11 +111,11 @@ const RouteDetailScreen = () => {
   };
 
   const handleAudioPlay = (cityId: string) => {
-    // Stop any currently playing audio
+    // Pause any currently playing audio
     if (currentPlayingCityId && currentPlayingCityId !== cityId) {
       const currentPlayer = audioPlayerRefs.current[currentPlayingCityId];
-      if (currentPlayer?.stop) {
-        currentPlayer.stop();
+      if (currentPlayer?.pause) {
+        currentPlayer.pause();
       }
     }
     setCurrentPlayingCityId(cityId);
@@ -124,8 +124,8 @@ const RouteDetailScreen = () => {
   const stopCurrentAudio = () => {
     if (currentPlayingCityId) {
       const currentPlayer = audioPlayerRefs.current[currentPlayingCityId];
-      if (currentPlayer?.stop) {
-        currentPlayer.stop();
+      if (currentPlayer?.pause) {
+        currentPlayer.pause();
       }
       setCurrentPlayingCityId(null);
     }
@@ -503,6 +503,55 @@ const RouteDetailScreen = () => {
           {routeData.description || 'Descrição da rota não disponível'}
         </Text>
       </Box>
+
+      
+      {/* Audio Stories for each city with global state */}
+      {routeData.cities.map((city: any, cityIndex: number) => {
+        if (!city.stories || city.stories.length === 0) return null;
+        
+        const cityId = `city-${city.id || cityIndex}`;
+
+        return (
+          <Box key={cityId} marginBottom="l">
+            {/* City name header */}
+            <Box flexDirection="row" alignItems="center" marginBottom="m">
+              <MaterialCommunityIcons name="map-marker" size={16} color="#035A6E" />
+              <Text 
+                variant="subheader" 
+                color="primary" 
+                marginLeft="s"
+                style={{ fontWeight: '600' }}
+              >
+                {city.name}
+              </Text>
+            </Box>
+            
+            <AudioStoriesPlayer 
+              ref={(ref) => { audioPlayerRefs.current[cityId] = ref; }}
+              stories={city.stories as Story[]}
+              currentStoryIndex={0}
+              onStoryChange={(newIndex) => {
+                // Story change logic if needed
+              }}
+              onDurationUpdate={(storyIndex, realDuration) => {
+                // Update story duration when real audio duration is discovered
+                const updatedStories = [...(city.stories as Story[])];
+                if (updatedStories[storyIndex]) {
+                  updatedStories[storyIndex].durationSeconds = realDuration;
+                }
+              }}
+              onPlayStart={() => {
+                // Pause all other players when this one starts
+                Object.keys(audioPlayerRefs.current).forEach(otherCityId => {
+                  if (otherCityId !== cityId && audioPlayerRefs.current[otherCityId]) {
+                    audioPlayerRefs.current[otherCityId]?.pause();
+                  }
+                });
+              }}
+            />
+          </Box>
+        );
+      })}
     </Box>
   </ScrollView>
   );
