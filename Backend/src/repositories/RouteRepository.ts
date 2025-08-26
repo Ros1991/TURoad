@@ -111,6 +111,7 @@ export class RouteRepository extends BaseRepository<Route> {
           'name', COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || ', ' || c.state,
           'state', c.state,
           'description', COALESCE(lt_city_desc_lang.text_content, lt_city_desc_pt.text_content),
+          'what_to_observe', COALESCE(lt_city_what_lang.text_content, lt_city_what_pt.text_content),
           'latitude', c.latitude,
           'longitude', c.longitude,
           'order', rc.order,
@@ -134,6 +135,8 @@ export class RouteRepository extends BaseRepository<Route> {
       LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
       LEFT JOIN localized_texts lt_city_desc_lang ON c.description_text_ref_id = lt_city_desc_lang.reference_id AND lt_city_desc_lang.language_code = $2
       LEFT JOIN localized_texts lt_city_desc_pt ON c.description_text_ref_id = lt_city_desc_pt.reference_id AND lt_city_desc_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_city_what_lang ON c.what_to_observe_text_ref_id = lt_city_what_lang.reference_id AND lt_city_what_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_what_pt ON c.what_to_observe_text_ref_id = lt_city_what_pt.reference_id AND lt_city_what_pt.language_code = 'pt'
       LEFT JOIN LATERAL (
         SELECT array_agg(jsonb_build_object(
           'id', sc.story_city_id,

@@ -536,6 +536,20 @@ const RouteDetailScreen = () => {
                     hideLanguageSelector={true}
                   />
                 </Box>
+                <Box marginTop="l">
+                  <Text 
+                    variant="sectionTitle" 
+                    color="dark" 
+                    marginBottom="m"
+                  >
+                    {t('route.WhatToObserve')}
+                  </Text>
+                </Box>
+                <Box marginBottom="m">
+                  <Text variant="body" color="textDark" lineHeight={22}>
+                    {city.what_to_observe}
+                  </Text>
+                </Box>
               </Box>
             )}
             
@@ -550,20 +564,6 @@ const RouteDetailScreen = () => {
           </Box>
         );
       })}
-      <Box marginTop="l">
-        <Text 
-          variant="sectionTitle" 
-          color="dark" 
-          marginBottom="m"
-        >
-          {t('route.WhatToObserve')}
-        </Text>
-      </Box>
-      <Box marginBottom="m">
-        <Text variant="body" color="textDark" lineHeight={22}>
-          {routeData.what_to_observe}
-        </Text>
-      </Box>
     </Box>
   </ScrollView>
   );

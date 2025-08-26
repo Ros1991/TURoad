@@ -747,7 +747,7 @@ export class PublicController {
         userLatitude,
         userLongitude
       );
-
+      console.log(businesses);
       return res.json({
         success: true,
         data: businesses
