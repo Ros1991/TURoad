@@ -28,4 +28,8 @@ router.get('/cities/search', publicController.searchCities.bind(publicController
 // FAQ endpoint
 router.get('/faqs', publicController.getFAQs.bind(publicController));
 
+// Individual item endpoints
+router.get('/locations/:id', publicController.getLocationById.bind(publicController));
+router.get('/events/:id', publicController.getEventById.bind(publicController));
+
 export default router;

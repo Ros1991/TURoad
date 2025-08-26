@@ -505,4 +505,122 @@ export class PublicController {
       });
     }
   }
+
+  async getLocationById(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const locationId = req.params.id;
+      
+      if (!locationId) {
+        res.status(400).json({
+          success: false,
+          message: 'Location ID is required'
+        });
+        return;
+      }
+
+      // Extract user location for distance calculation
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
+
+      const location = await this.locationService.getLocationById(parseInt(locationId), language, userLatitude, userLongitude);
+      if (!location) {
+        res.status(404).json({
+          success: false,
+          message: 'Location not found'
+        });
+        return;
+      }
+
+      const formattedLocation = {
+        id: location.id.toString(),
+        name: location.name || 'Unnamed Location',
+        description: location.description,
+        location: location.location,
+        image: location.image,
+        cityId: location.cityId,
+        city: location.city,
+        state: location.state,
+        latitude: location.latitude ? parseFloat(location.latitude) : null,
+        longitude: location.longitude ? parseFloat(location.longitude) : null,
+        distance: location.distance ? `${parseFloat(location.distance).toFixed(1)} km` : null,
+        categories: location.categories || [],
+        stories: location.stories || [],
+        storiesCount: location.stories?.length || 0
+      };
+
+      res.json({
+        success: true,
+        data: formattedLocation
+      });
+    } catch (error) {
+      console.error('Error fetching location by ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching location'
+      });
+    }
+  }
+
+  async getEventById(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const eventId = req.params.id;
+      
+      if (!eventId) {
+        res.status(400).json({
+          success: false,
+          message: 'Event ID is required'
+        });
+        return;
+      }
+
+      // Extract user location for distance calculation
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
+
+      const event = await this.eventService.getEventById(parseInt(eventId), language, userLatitude, userLongitude);
+      if (!event) {
+        res.status(404).json({
+          success: false,
+          message: 'Event not found'
+        });
+        return;
+      }
+
+      const eventDate = new Date(event.eventdate);
+      const formattedDate = eventDate.toLocaleDateString('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      const formattedEvent = {
+        id: event.id.toString(),
+        name: event.name || 'Unnamed Event',
+        description: event.description,
+        location: event.location || 'Local não especificado',
+        date: formattedDate,
+        time: event.time,
+        city: event.city,
+        state: event.state,
+        distance: event.distance ? `${parseFloat(event.distance).toFixed(1)} km` : null,
+        image: event.image,
+        categories: event.categories || [],
+        stories: event.stories || [],
+        storiesCount: event.stories?.length || 0
+      };
+
+      res.json({
+        success: true,
+        data: formattedEvent
+      });
+    } catch (error) {
+      console.error('Error fetching event by ID:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching event'
+      });
+    }
+  }
 }

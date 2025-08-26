@@ -27,9 +27,9 @@ export const getHistoricalPlaces = async (search?: string, cityId?: string): Pro
   }
 };
 
-export const getHistoricalPlaceById = async (id: string, language: string = 'pt'): Promise<HistoricalPlace | null> => {
+export const getPlaceById = async (id: string, language: string = 'pt'): Promise<HistoricalPlace | null> => {
   try {
-    const response = await apiService.get<HistoricalPlace>(`/api/public/locations/historical/${id}`, {
+    const response = await apiService.get<HistoricalPlace>(`/api/public/locations/${id}`, {
       headers: { 'Accept-Language': language },
       includeAuth: false
     });

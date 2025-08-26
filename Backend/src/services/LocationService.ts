@@ -96,4 +96,19 @@ export class LocationService extends BaseService<Location> {
   async getHostingWithLocalizedTexts(language: string = 'pt', search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
     return await locationRepository.findHostingWithLocalizedTexts(language, search, cityId, userLatitude, userLongitude);
   }
+
+  async getLocationById(locationId: number, language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any> {
+    const location = await locationRepository.findByIdWithLocalizedTexts(locationId, language, userLatitude, userLongitude);
+    if (!location) {
+      return null;
+    }
+
+    // Get stories for this location
+    const stories = await this.getStoriesByLocationId(locationId);
+    
+    return {
+      ...location,
+      stories: stories || []
+    };
+  }
 }

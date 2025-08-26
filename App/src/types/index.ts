@@ -122,6 +122,8 @@ export interface Event {
   time: string;
   image: string;
   categories: string[];
+  city: string;
+  state: string;
 }
 
 export interface Business {
@@ -142,6 +144,9 @@ export interface Business {
   image: string;
   categories: string[];
   storiesCount: number;
+  city: string;
+  state: string;
+  cityId: number;
 }
 
 export interface HistoricalPlace {
@@ -168,6 +173,9 @@ export interface HistoricalPlace {
   image: string;
   categories: string[];
   distance: string;
+  city: string;
+  state: string;
+  cityId: number;
 }
 
 export interface Hosting {

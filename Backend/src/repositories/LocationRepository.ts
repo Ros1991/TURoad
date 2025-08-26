@@ -387,6 +387,47 @@ export class LocationRepository extends BaseRepository<Location> {
     
     return await qb.getRawMany();
   }
+
+  async findByIdWithLocalizedTexts(locationId: number, language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any> {
+    const distanceFormula = userLatitude !== undefined && userLongitude !== undefined 
+      ? `ROUND(CAST((6371 * acos(cos(radians(${userLatitude})) * cos(radians(l.latitude)) * cos(radians(l.longitude) - radians(${userLongitude})) + sin(radians(${userLatitude})) * sin(radians(l.latitude)))) AS numeric), 2)` 
+      : 'NULL';
+
+    const query = `
+      SELECT 
+        l.location_id as id,
+        COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
+        COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
+        NULL as location,
+        l.image_url as image,
+        l.latitude,
+        l.longitude,
+        l.city_id as "cityId",
+        COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) as city,
+        c.state as state,
+        ${distanceFormula} as distance,
+        ARRAY_AGG(DISTINCT COALESCE(lt_cat_lang.text_content, lt_cat_pt.text_content)) FILTER (WHERE lc.category_id IS NOT NULL) as categories,
+        COUNT(DISTINCT sl.story_location_id) as "storiesCount"
+      FROM locations l
+      LEFT JOIN localized_texts lt_name_lang ON l.name_text_ref_id = lt_name_lang.reference_id AND lt_name_lang.language_code = $2
+      LEFT JOIN localized_texts lt_name_pt ON l.name_text_ref_id = lt_name_pt.reference_id AND lt_name_pt.language_code = 'pt'
+      LEFT JOIN localized_texts lt_desc_lang ON l.description_text_ref_id = lt_desc_lang.reference_id AND lt_desc_lang.language_code = $2
+      LEFT JOIN localized_texts lt_desc_pt ON l.description_text_ref_id = lt_desc_pt.reference_id AND lt_desc_pt.language_code = 'pt'
+      LEFT JOIN cities c ON l.city_id = c.city_id
+      LEFT JOIN localized_texts lt_city_lang ON c.name_text_ref_id = lt_city_lang.reference_id AND lt_city_lang.language_code = $2
+      LEFT JOIN localized_texts lt_city_pt ON c.name_text_ref_id = lt_city_pt.reference_id AND lt_city_pt.language_code = 'pt'
+      LEFT JOIN location_categories lc ON l.location_id = lc.location_id
+      LEFT JOIN categories cat ON lc.category_id = cat.category_id AND cat."deletedAt" IS NULL
+      LEFT JOIN localized_texts lt_cat_lang ON cat.name_text_ref_id = lt_cat_lang.reference_id AND lt_cat_lang.language_code = $2
+      LEFT JOIN localized_texts lt_cat_pt ON cat.name_text_ref_id = lt_cat_pt.reference_id AND lt_cat_pt.language_code = 'pt'
+      LEFT JOIN story_locations sl ON l.location_id = sl.location_id
+      WHERE l.location_id = $1 AND l."deletedAt" IS NULL
+      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, lt_city_lang.text_content, lt_city_pt.text_content, c.state
+    `;
+
+    const results = await this.repository.manager.query(query, [locationId, language]);
+    return results[0] || null;
+  }
 }
 
 // Export singleton instance

@@ -20,6 +20,7 @@ import CityScreen from '../screens/CityScreen';
 import RouteDetailScreen from '../screens/RouteDetailScreen';
 import SelectCityScreen from '../screens/SelectCityScreen';
 import CategoryRoutesScreen from '../screens/CategoryRoutesScreen';
+import OthersScreen from '../screens/OthersScreen';
 
 // Profile internal screens
 import RouteHistoryScreen from '../screens/RouteHistoryScreen';
@@ -177,6 +178,7 @@ function AppNavigator() {
         <Stack.Screen name="RouteDetail" component={RouteDetailScreen} />
         <Stack.Screen name="SelectCity" component={SelectCityScreen} />
         <Stack.Screen name="CategoryRoutes" component={CategoryRoutesScreen} />
+        <Stack.Screen name="Others" component={OthersScreen} />
         
         {/* Profile Internal Screens */}
         <Stack.Screen name="RouteHistory" component={RouteHistoryScreen} />

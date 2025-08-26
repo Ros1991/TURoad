@@ -88,4 +88,19 @@ export class EventService extends BaseService<Event> {
   async getAllWithLocalizedTexts(language: string = 'pt', cityId?: number, search?: string): Promise<any[]> {
     return await eventRepository.findAllWithLocalizedTexts(language, cityId, search);
   }
+
+  async getEventById(eventId: number, language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any> {
+    const event = await eventRepository.findByIdWithLocalizedTexts(eventId, language, userLatitude, userLongitude);
+    if (!event) {
+      return null;
+    }
+
+    // Get stories for this event
+    const stories = await this.getStoriesByEventId(eventId);
+    
+    return {
+      ...event,
+      stories: stories || []
+    };
+  }
 }

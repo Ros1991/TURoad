@@ -224,6 +224,30 @@ const HomeScreen: React.FC = () => {
     });
   };
 
+  // Handle business press navigation
+  const handleBusinessPress = (business: Business) => {
+    (navigation as any).navigate('Others', { 
+      type: 'location', 
+      itemId: business.id 
+    });
+  };
+
+    // Handle business press navigation
+    const handleEventPress = (event: Event) => {
+      (navigation as any).navigate('Others', { 
+        type: 'event', 
+        itemId: event.id 
+      });
+    };
+
+  // Handle historical place press navigation
+  const handleHistoricalPlacePress = (historicalPlace: HistoricalPlace) => {
+    (navigation as any).navigate('Others', { 
+      type: 'location', 
+      itemId: historicalPlace.id 
+    });
+  };
+
   const loadData = async (searchQuery?: string, forceCityId?: number | null) => {
     try {
       setIsLoading(true);
@@ -615,7 +639,7 @@ const HomeScreen: React.FC = () => {
             {/* Events Carousel */}
             <FlatList
               data={events}
-              renderItem={({ item }) => <EventCard item={item} />}
+              renderItem={({ item }) => <EventCard item={item} onPress={handleEventPress} />}
               keyExtractor={(item, index) => `event-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -637,11 +661,11 @@ const HomeScreen: React.FC = () => {
             {/* Businesses Carousel */}
             <FlatList
               data={businesses}
-              renderItem={({ item }) => <BusinessCard item={item} />}
+              renderItem={({ item }) => <BusinessCard item={item} onPress={handleBusinessPress} />}
               keyExtractor={(item, index) => `business-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingLeft: 20 }}
+              contentContainerStyle={{ paddingLeft: 24, paddingRight: 16 }}
               style={{ marginBottom: 0 }}
             />
           </>
@@ -659,11 +683,11 @@ const HomeScreen: React.FC = () => {
             {/* Historical Places Carousel */}
             <FlatList
               data={historicalPlaces}
-              renderItem={({ item }) => <HistoricalPlaceCard item={item} />}
+              renderItem={({ item }) => <HistoricalPlaceCard item={item} onPress={handleHistoricalPlacePress} />}
               keyExtractor={(item, index) => `historical-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingLeft: 20 }}
+              contentContainerStyle={{ paddingLeft: 24, paddingRight: 16 }}
               style={{ marginBottom: 200 }}
             />
           </>

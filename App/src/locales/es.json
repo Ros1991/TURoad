@@ -223,6 +223,19 @@
     "estancia": "Estância, Sergipe",
     "itabaiana": "Itabaiana, Sergipe"
   },
+  "others": {
+    "event": "Evento",
+    "location": "Lugar Histórico",
+    "historicalPlace": "Lugar Histórico",
+    "noLocationAvailable": "Ubicación no disponible.",
+    "errorOpeningMaps": "No se pudo abrir el mapa.",
+    "viewOnMap": "Ver en mapa",
+    "moreInfo": "Más información",
+    "aboutEvent": "Sobre el evento",
+    "aboutLocation": "Sobre el lugar",
+    "historicalSignificance": "Significado histórico",
+    "itemNotFound": "Elemento no encontrado"
+  },
   "common": {
     "back": "Volver",
     "next": "Siguiente",
