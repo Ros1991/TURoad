@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { locationService, Coordinates } from './LocationService';
+import { config } from '../config/environment';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -12,10 +13,10 @@ class ApiService {
   private baseURL: string;
 
   constructor() {
-    // Use localhost for development - can be configured later
-    // Use 10.0.2.2 for Android emulator to connect to host's localhost
-    // Use your actual IP for physical devices
-    this.baseURL = 'http://10.254.200.24:3001';
+    // Use API_URL from environment configuration
+    // Falls back to Android emulator localhost if not configured
+    this.baseURL = config.apiUrl;
+
   }
 
   private async getAuthToken(): Promise<string | null> {
@@ -96,6 +97,7 @@ class ApiService {
       
       // Build query string from params
       let url = `${this.baseURL}${endpoint}`;
+      console.log('API URL:', this.baseURL);
       if (options?.params) {
         const queryString = new URLSearchParams(options.params).toString();
         url += `?${queryString}`;
@@ -125,7 +127,7 @@ class ApiService {
   async post<T>(endpoint: string, body: any, includeAuth: boolean = true): Promise<ApiResponse<T>> {
     try {
       const headers = await this.getHeaders(includeAuth);
-      
+      console.log('API URL:', `${this.baseURL}${endpoint}`);
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         method: 'POST',
         headers,

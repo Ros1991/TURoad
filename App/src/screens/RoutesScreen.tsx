@@ -12,6 +12,7 @@ import { Route, CategoryWithRoutes } from '../types';
 type RootStackParamList = {
   Routes: undefined;
   RouteDetail: { routeId: string };
+  CategoryRoutes: { categoryId: string; categoryName: string };
 };
 
 type RoutesScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Routes'>;
@@ -48,9 +49,11 @@ const RoutesScreen: React.FC = () => {
     navigation.navigate('RouteDetail', { routeId: route.id });
   };
 
-  const handleSeeMore = (categoryId: string) => {
-    // TODO: Navigate to a screen showing all routes for this category
-    console.log('See more for category:', categoryId);
+  const handleSeeMore = (categoryId: string, categoryName: string) => {
+    navigation.navigate('CategoryRoutes', { 
+      categoryId, 
+      categoryName 
+    });
   };
 
   const renderRouteCard = ({ item }: { item: Route }) => (
@@ -81,7 +84,7 @@ const RoutesScreen: React.FC = () => {
           {category.name}
         </Text>
         <TouchableOpacity 
-          onPress={() => handleSeeMore(category.id)}
+          onPress={() => handleSeeMore(category.id, category.name)}
           style={{
             flexDirection: 'row',
             alignItems: 'center'

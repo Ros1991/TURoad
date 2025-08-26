@@ -33,6 +33,7 @@ type RootStackParamList = {
   SelectCity: undefined;
   RouteDetail: { routeId: string };
   City: { cityId: string };
+  CategoryRoutes: { categoryId: string; categoryName: string };
 };
 
 type BottomTabParamList = {
@@ -213,6 +214,14 @@ const HomeScreen: React.FC = () => {
     setIsCitySearchModalVisible(false);
     setCitySearchText('');
     setCitySearchResults([]);
+  };
+
+  // Handle category press navigation
+  const handleCategoryPress = (category: Category) => {
+    navigation.navigate('CategoryRoutes', { 
+      categoryId: category.id, 
+      categoryName: category.name 
+    });
   };
 
   const loadData = async (searchQuery?: string, forceCityId?: number | null) => {
@@ -516,7 +525,7 @@ const HomeScreen: React.FC = () => {
             {/* Categories Carousel - Full Width (first 5 only) */}
             <FlatList
               data={categories.slice(0, 5)}
-              renderItem={({ item }) => <CategoryItem item={item} />}
+              renderItem={({ item }) => <CategoryItem item={item} onPress={handleCategoryPress} />}
               keyExtractor={(item, index) => `category-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -538,7 +547,7 @@ const HomeScreen: React.FC = () => {
             {/* Routes Carousel - Full Width */}
             <FlatList
               data={routes}
-              renderItem={({ item }) => <RouteCard item={item} onPress={(route) => navigation.navigate('RouteDetail', { routeId: route.id })} />}
+              renderItem={({ item }) => <RouteCard item={item} onPress={() => navigation.navigate('RouteDetail', { routeId: item.id })} />}
               keyExtractor={(item, index) => `route-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -584,7 +593,7 @@ const HomeScreen: React.FC = () => {
             {/* Categories Carousel - 150px */}
             <FlatList
               data={categories}
-              renderItem={({ item }) => <CategoryDetailCard item={item} />}
+              renderItem={({ item }) => <CategoryDetailCard item={item} onPress={handleCategoryPress} />}
               keyExtractor={(item, index) => `category-route-${index}-${item.id}`}
               horizontal
               showsHorizontalScrollIndicator={false}

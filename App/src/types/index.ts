@@ -85,6 +85,7 @@ export interface Category {
   isPrimary: boolean;
   routeCount?: number;
   totalUsage?: number;
+  image: string;
 }
 
 export interface CategoryWithRoutes {

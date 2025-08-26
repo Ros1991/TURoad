@@ -8,21 +8,33 @@ import { Route, Category } from '../types';
 interface RouteCardProps {
   item: Route;
   onPress: (route: Route) => void;
+  fullWidth?: boolean;
 }
 
-const RouteCard: React.FC<RouteCardProps> = ({ item, onPress }) => {
+const RouteCard: React.FC<RouteCardProps> = ({ item, onPress, fullWidth = false }) => {
   const { t } = useTranslation();
   
   if (!item) return null;
 
+  const cardWidth = fullWidth ? '100%' : 300;
+  const imageWidth = fullWidth ? '100%' : 300;
+  const imageHeight = fullWidth ? 200 : 285;
+
   return (
     <TouchableOpacity 
       style={{
-        width: 300,
-        marginRight: 20,
+        width: cardWidth,
+        marginRight: fullWidth ? 0 : 20,
         backgroundColor: 'white',
         borderRadius: 12,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        ...(fullWidth && {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        })
       }}
       onPress={() => onPress(item)}
     >
@@ -30,18 +42,18 @@ const RouteCard: React.FC<RouteCardProps> = ({ item, onPress }) => {
       <Image
         source={{ uri: item.image }}
         style={{ 
-          width: 300, 
-          height: 285, 
+          width: imageWidth, 
+          height: imageHeight, 
           borderTopLeftRadius: 12, 
           borderTopRightRadius: 12,
-          borderBottomLeftRadius: 12, 
-          borderBottomRightRadius: 12 ,
-          marginBottom: 12
+          borderBottomLeftRadius: fullWidth ? 0 : 12, 
+          borderBottomRightRadius: fullWidth ? 0 : 12,
+          marginBottom: fullWidth ? 0 : 12
         }}
       />
       
       {/* Conteúdo com padding */}
-      <Box>
+      <Box paddingHorizontal={fullWidth ? "m" : undefined} paddingVertical={fullWidth ? "m" : undefined}>
         {/* Título */}
         <Text 
           style={{
@@ -55,8 +67,8 @@ const RouteCard: React.FC<RouteCardProps> = ({ item, onPress }) => {
           {item.title}
         </Text>
         
-        {/* Badges de categorias */}
-        {item.categories && item.categories.length > 0 && (
+        {/* Badges de categorias - ocultar no fullWidth */}
+        {!fullWidth && item.categories && item.categories.length > 0 && (
           <Box flexDirection="row" flexWrap="wrap" marginBottom="s">
             {item.categories.map((categoryName, index) => (
               <Box
