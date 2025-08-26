@@ -23,7 +23,7 @@ export class RouteRepository extends BaseRepository<Route> {
    * Get all routes with localized texts using database JOINs
    * Falls back to Portuguese if the requested language doesn't exist
    */
-  async findAllWithLocalizedTexts(language: string = 'pt', categoryId?: string, search?: string, cityId?: number): Promise<any[]> {
+  async findAllWithLocalizedTexts(language: string = 'pt', categoryId?: string, search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
     const qb = AppDataSource
       .createQueryBuilder()
       .select([
@@ -49,8 +49,9 @@ export class RouteRepository extends BaseRepository<Route> {
       .leftJoin('categories', 'cat', 'cat.category_id = rc_cat.category_id AND cat."deletedAt" IS NULL')
       .leftJoin('localized_texts', 'lt_cat_lang', 'lt_cat_lang.reference_id = cat.name_text_ref_id AND lt_cat_lang.language_code = :language')
       .leftJoin('localized_texts', 'lt_cat_pt', 'lt_cat_pt.reference_id = cat.name_text_ref_id AND lt_cat_pt.language_code = \'pt\'')
+      .leftJoin('cities', 'start_city', 'start_city.city_id = rc_city.city_id AND rc_city."order" = 0')
       .where('r."deletedAt" IS NULL')
-      .groupBy('r.route_id, lt_title_lang.text_content, lt_title_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, r.image_url')
+      .groupBy('r.route_id, lt_title_lang.text_content, lt_title_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, r.image_url, start_city.latitude, start_city.longitude')
       .setParameter('language', language);
 
     // Filter by category if provided
@@ -74,6 +75,18 @@ export class RouteRepository extends BaseRepository<Route> {
     if (cityId) {
       qb.andWhere('EXISTS (SELECT 1 FROM route_cities WHERE route_id = r.route_id AND city_id = :cityId)', 
         { cityId });
+    }
+
+    // Add ordering by distance if user location is provided, otherwise by route ID
+    if (userLatitude !== undefined && userLongitude !== undefined) {
+      qb.orderBy(`(6371 * acos(cos(radians(:userLatitude)) * cos(radians(start_city.latitude)) * 
+                   cos(radians(start_city.longitude) - radians(:userLongitude)) + 
+                   sin(radians(:userLatitude)) * sin(radians(start_city.latitude))))`, 'ASC')
+        .addOrderBy('r.route_id', 'ASC')
+        .setParameter('userLatitude', userLatitude)
+        .setParameter('userLongitude', userLongitude);
+    } else {
+      qb.orderBy('r.route_id', 'ASC');
     }
     
     return await qb.getRawMany();

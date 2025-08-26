@@ -55,11 +55,7 @@ function App(): React.JSX.Element {
       <AuthProvider>
         <ThemeProvider>
           <ToastProvider>
-            <StatusBar 
-              barStyle="dark-content" 
-              translucent={true} 
-              backgroundColor="transparent" 
-            />
+            <StatusBar hidden={true} />
             <AppNavigator key="main-navigator" />
           </ToastProvider>
         </ThemeProvider>

@@ -97,14 +97,16 @@ export class PublicController {
     return parts.join(" ") || "0min";
   }
 
-  async getRoutes(req: RequestWithLanguage, res: Response): Promise<void> {
+  async getRoutes(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
       const categoryId = req.query.categoryId as string;
       const search = req.query.search as string;
       const cityId = req.query.cityId as string;
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
       
-      const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search, cityId ? parseInt(cityId) : undefined);
+      const routes = await this.routeService.getAllWithLocalizedTexts(language, categoryId ? parseInt(categoryId) : undefined, search, cityId ? parseInt(cityId) : undefined, userLatitude, userLongitude);
       const routesWithData = routes.map(route => ({
         id: route.id.toString(),
         title: route.title || 'Unnamed Route',
@@ -349,11 +351,13 @@ export class PublicController {
     }
   }
 
-  async getCategoriesWithRoutes(req: RequestWithLanguage, res: Response): Promise<void> {
+  async getCategoriesWithRoutes(req: RequestWithLanguage & RequestWithLocation, res: Response): Promise<void> {
     try {
       const language = req.language || 'pt';
+      const userLatitude = req.userLocation?.latitude;
+      const userLongitude = req.userLocation?.longitude;
       
-      const categoriesWithRoutes = await this.categoryService.getCategoriesWithRoutes(language);
+      const categoriesWithRoutes = await this.categoryService.getCategoriesWithRoutes(language, userLatitude, userLongitude);
       res.json({
         success: true,
         data: categoriesWithRoutes

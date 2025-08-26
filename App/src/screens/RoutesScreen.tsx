@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, FlatList, SafeAreaView, StatusBar, View, Text as RNText } from 'react-native';
+import { ScrollView, TouchableOpacity, FlatList, SafeAreaView, View, Text as RNText } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from 'react-i18next';
@@ -117,7 +117,6 @@ const RoutesScreen: React.FC = () => {
   
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
       
       {/* Fixed Header */}
       <View 

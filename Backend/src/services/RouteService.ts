@@ -85,7 +85,7 @@ export class RouteService extends BaseService<Route> {
     return this.storyRouteRepository.delete(storyId);
   }
 
-  async getAllWithLocalizedTexts(language: string = 'pt', categoryId?: number, search?: string, cityId?: number): Promise<any[]> {
-    return await routeRepository.findAllWithLocalizedTexts(language, categoryId?.toString(), search, cityId);
+  async getAllWithLocalizedTexts(language: string = 'pt', categoryId?: number, search?: string, cityId?: number, userLatitude?: number, userLongitude?: number): Promise<any[]> {
+    return await routeRepository.findAllWithLocalizedTexts(language, categoryId?.toString(), search, cityId, userLatitude, userLongitude);
   }
 }

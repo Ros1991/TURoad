@@ -3,6 +3,8 @@ import { ScrollView, Image, TouchableOpacity, FlatList, Modal, TextInput, Activi
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { 
@@ -33,7 +35,17 @@ type RootStackParamList = {
   City: { cityId: string };
 };
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
+type BottomTabParamList = {
+  Home: undefined;
+  Explore: undefined;
+  Routes: undefined;
+  Profile: undefined;
+};
+
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<BottomTabParamList, 'Home'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 // Generate instance ID outside component to detect true re-creation
 const generateInstanceId = () => Math.random().toString(36).substr(2, 9);
@@ -490,7 +502,10 @@ const HomeScreen: React.FC = () => {
                 <Text variant="sectionTitle">
                   {t('home.exploreByCategory')}
                 </Text>
-                <TouchableOpacity style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <TouchableOpacity 
+                  style={{ alignItems: 'center', justifyContent: 'center' }}
+                  onPress={() => navigation.navigate('Routes')}
+                >
                   <Text style={{ fontSize: 12, color: 'black' }}>
                     {t('home.seeAll')}
                   </Text>

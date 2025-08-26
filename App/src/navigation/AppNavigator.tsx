@@ -106,9 +106,9 @@ function MainTabNavigator() {
         tabBarStyle: {
           backgroundColor: 'white',
           paddingTop: 8,
-          paddingBottom: 8,
+          paddingBottom: 34, // Increased bottom padding for safe area
           paddingHorizontal: 4,
-          height: 75,
+          height: 95, // Increased height to accommodate extra padding
           borderTopWidth: 0, // Remove borda sólida, substituída pelo degradê
           elevation: 0,
           shadowOpacity: 0
@@ -142,7 +142,7 @@ function MainTabNavigator() {
       colors={['rgba(229, 229, 229, 0.0)', 'rgba(229, 229, 229, 0.3)']}
       style={{
         position: 'absolute',
-        bottom: 75, // Altura do TabBar
+        bottom: 95, // Updated height of TabBar
         left: 0,
         right: 0,
         height: 15,

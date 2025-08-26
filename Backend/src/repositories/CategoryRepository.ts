@@ -130,7 +130,7 @@ export class CategoryRepository extends BaseRepository<Category> {
   /**
    * Get categories with their routes (max 2 routes per category) and total route count
    */
-  async findCategoriesWithRoutes(language: string = 'pt'): Promise<any[]> {
+  async findCategoriesWithRoutes(language: string = 'pt', userLatitude?: number, userLongitude?: number): Promise<any[]> {
     const query = `
       WITH route_metrics AS (
         SELECT 
@@ -167,11 +167,30 @@ export class CategoryRepository extends BaseRepository<Category> {
           rm.total_time_minutes,
           rm.stops_count,
           rm.stories_count,
-          ROW_NUMBER() OVER (PARTITION BY c.category_id ORDER BY r.route_id) as rn
+          ROW_NUMBER() OVER (
+            PARTITION BY c.category_id 
+            ORDER BY 
+              CASE 
+                WHEN $2::numeric IS NOT NULL AND $3::numeric IS NOT NULL THEN
+                  (6371 * acos(cos(radians($2)) * cos(radians(start_city.latitude)) * 
+                   cos(radians(start_city.longitude) - radians($3)) + 
+                   sin(radians($2)) * sin(radians(start_city.latitude))))
+                ELSE r.route_id
+              END
+          ) as rn,
+          CASE 
+            WHEN $2::numeric IS NOT NULL AND $3::numeric IS NOT NULL THEN
+              (6371 * acos(cos(radians($2)) * cos(radians(start_city.latitude)) * 
+               cos(radians(start_city.longitude) - radians($3)) + 
+               sin(radians($2)) * sin(radians(start_city.latitude))))
+            ELSE r.route_id
+          END as global_order
         FROM categories c
         JOIN route_categories rc ON rc.category_id = c.category_id
         JOIN routes r ON r.route_id = rc.route_id
         LEFT JOIN route_metrics rm ON rm.route_id = r.route_id
+        LEFT JOIN route_cities rc_start ON rc_start.route_id = r.route_id AND rc_start."order" = 0
+        LEFT JOIN cities start_city ON start_city.city_id = rc_start.city_id
         LEFT JOIN localized_texts lt_route_title_lang ON lt_route_title_lang.reference_id = r.title_text_ref_id AND lt_route_title_lang.language_code = $1
         LEFT JOIN localized_texts lt_route_title_pt ON lt_route_title_pt.reference_id = r.title_text_ref_id AND lt_route_title_pt.language_code = 'pt'
         LEFT JOIN localized_texts lt_route_desc_lang ON lt_route_desc_lang.reference_id = r.description_text_ref_id AND lt_route_desc_lang.language_code = $1
@@ -196,7 +215,7 @@ export class CategoryRepository extends BaseRepository<Category> {
               'stops', COALESCE(lr.stops_count, 0),
               'stories', COALESCE(lr.stories_count, 0),
               'categories', ARRAY[]::text[]
-            ) ORDER BY lr.route_id
+            ) ORDER BY lr.global_order
           ) as routes
         FROM categories c
         JOIN category_total_routes ctr ON ctr.category_id = c.category_id
@@ -220,7 +239,7 @@ export class CategoryRepository extends BaseRepository<Category> {
       ORDER BY cr.total_routes DESC
     `;
     
-    const result = await AppDataSource.query(query, [language]);
+    const result = await AppDataSource.query(query, [language, userLatitude, userLongitude]);
     return result;
   }
 }
