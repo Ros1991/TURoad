@@ -120,8 +120,9 @@
   "city": {
     "title": "Aracaju",
     "state": "Sergipe",
-    "distance": "A 3km de distância",
+    "distance": "a 3km de distância",
     "stories": "Histórias",
+    "storiesOf": "Histórias de {{cityName}}",
     "language": "Português",
     "introduction": "Introdução à cidade de Aracaju",
     "storyBy": "Contada por líderes comunitários",

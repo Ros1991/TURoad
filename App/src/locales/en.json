@@ -122,6 +122,7 @@
     "state": "Sergipe",
     "distance": "3km away",
     "stories": "Stories",
+    "storiesOf": "Stories of {{cityName}}",
     "language": "Portuguese",
     "introduction": "Introduction to the city of Aracaju",
     "storyBy": "Told by community leaders",

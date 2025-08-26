@@ -41,6 +41,7 @@ const theme = createTheme({
     buttonSecondary: '#6C757D',
     textPrimary: '#002043',
     textGray: '#666666',
+    textDark: '#425466',
     infoPrimary: '#002043',
     textTitle: '#035A6E',
     textSecondary: palette.white,

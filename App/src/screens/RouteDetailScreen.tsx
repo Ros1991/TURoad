@@ -398,14 +398,16 @@ const RouteDetailScreen = () => {
                 alignItems="center" 
                 justifyContent="space-between" 
                 paddingVertical="m"
+                paddingHorizontal="l"
                 style={{ 
-                  borderBottomWidth: 1, 
-                  borderBottomColor: '#E0E0E0' 
+                  borderTopWidth: 1,
+                  borderTopColor: '#E0E0E0',
+                  marginHorizontal: -24 // Negative margin to extend to screen edges
                 }}
               >
                 <Text 
                   variant="routeTitle" 
-                  color="textPrimary" 
+                  color="dark" 
                 >
                   {city.name}
                 </Text>
@@ -419,11 +421,20 @@ const RouteDetailScreen = () => {
             
             {/* Expanded content */}
             {isExpanded && (
-              <Box paddingTop="m">
+              <Box 
+                paddingTop="m" 
+                paddingHorizontal="l" 
+                paddingBottom="m"
+                style={{ 
+                  marginHorizontal: -24,
+                  borderBottomWidth: 1,
+                  borderBottomColor: '#E0E0E0'
+                }}
+              >
                 {/* City description */}
                 {city.description && (
                   <Box marginBottom="m">
-                    <Text variant="body" color="textGray" lineHeight={22}>
+                    <Text variant="body" color="textDark" lineHeight={22}>
                       {city.description}
                     </Text>
                   </Box>
@@ -432,12 +443,11 @@ const RouteDetailScreen = () => {
                 {/* Stories section */}
                 <Box>
                   <Text 
-                    variant="subheader" 
-                    color="textPrimary" 
+                    variant="sectionTitle" 
+                    color="dark" 
                     marginBottom="m"
-                    style={{ fontWeight: '600' }}
                   >
-                    Histórias de {city.name}
+                    {t('city.storiesOf', { cityName: city.name })}
                   </Text>
                   
                   <AudioStoriesPlayer 

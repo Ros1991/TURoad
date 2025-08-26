@@ -108,7 +108,7 @@ export class RouteRepository extends BaseRepository<Route> {
         )) FILTER (WHERE cat.category_id IS NOT NULL) as categories,
         array_agg(jsonb_build_object(
           'id', c.city_id,
-          'name', COALESCE(lt_city_lang.text_content, lt_city_pt.text_content),
+          'name', COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) || ', ' || c.state,
           'state', c.state,
           'description', COALESCE(lt_city_desc_lang.text_content, lt_city_desc_pt.text_content),
           'latitude', c.latitude,
