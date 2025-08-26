@@ -436,17 +436,21 @@ export class LocationRepository extends BaseRepository<Location> {
     userLatitude?: number | null,
     userLongitude?: number | null
   ): Promise<any[]> {
+    console.log('🏢 DEBUG findBusinessesByCitiesWithLocalizedTexts - cityIds:', cityIds);
+    console.log('🏢 DEBUG findBusinessesByCitiesWithLocalizedTexts - language:', language);
+
     const query = `
       SELECT 
         l.location_id as id,
         COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
         COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
-        l.image_url,
+        l.image_url as image,
         l.latitude,
         l.longitude,
         l.city_id,
         COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) as city_name,
         c.state as city_state,
+        COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) as location_type,
         ${userLatitude && userLongitude ? `
           CASE 
             WHEN l.latitude IS NOT NULL AND l.longitude IS NOT NULL THEN
@@ -481,8 +485,15 @@ export class LocationRepository extends BaseRepository<Location> {
       LEFT JOIN localized_texts lt_type_pt ON t.name_text_ref_id = lt_type_pt.reference_id AND lt_type_pt.language_code = 'pt'
       WHERE l.city_id = ANY($1::int[]) 
         AND l."deletedAt" IS NULL 
-        AND (COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) = 'business' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%negócio%' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%comércio%')
-      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state
+        AND (
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%business%' OR 
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%negócio%' OR 
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%comércio%' OR
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%loja%' OR
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%restaurante%' OR
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%outros%'
+        )
+      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state, lt_type_lang.text_content, lt_type_pt.text_content
       ORDER BY distance ASC NULLS LAST
     `;
 
@@ -491,6 +502,7 @@ export class LocationRepository extends BaseRepository<Location> {
       : [cityIds, language];
 
     const results = await this.repository.manager.query(query, params);
+    console.log('🏢 DEBUG findBusinessesByCitiesWithLocalizedTexts - results count:', results?.length);
     return results || [];
   }
 
@@ -500,17 +512,21 @@ export class LocationRepository extends BaseRepository<Location> {
     userLatitude?: number | null,
     userLongitude?: number | null
   ): Promise<any[]> {
+    console.log('🏨 DEBUG findHostingByCitiesWithLocalizedTexts - cityIds:', cityIds);
+    console.log('🏨 DEBUG findHostingByCitiesWithLocalizedTexts - language:', language);
+
     const query = `
       SELECT 
         l.location_id as id,
         COALESCE(lt_name_lang.text_content, lt_name_pt.text_content) as name,
         COALESCE(lt_desc_lang.text_content, lt_desc_pt.text_content) as description,
-        l.image_url,
+        l.image_url as image,
         l.latitude,
         l.longitude,
         l.city_id,
         COALESCE(lt_city_lang.text_content, lt_city_pt.text_content) as city_name,
         c.state as city_state,
+        COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) as location_type,
         ${userLatitude && userLongitude ? `
           CASE 
             WHEN l.latitude IS NOT NULL AND l.longitude IS NOT NULL THEN
@@ -545,8 +561,14 @@ export class LocationRepository extends BaseRepository<Location> {
       LEFT JOIN localized_texts lt_type_pt ON t.name_text_ref_id = lt_type_pt.reference_id AND lt_type_pt.language_code = 'pt'
       WHERE l.city_id = ANY($1::int[]) 
         AND l."deletedAt" IS NULL 
-        AND (COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) = 'hosting' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hospedagem%' OR COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hotel%')
-      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state
+        AND (
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hosting%' OR 
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hospedagem%' OR 
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%hotel%' OR
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%pousad%' OR
+          COALESCE(lt_type_lang.text_content, lt_type_pt.text_content) ILIKE '%resort%'
+        )
+      GROUP BY l.location_id, lt_name_lang.text_content, lt_name_pt.text_content, lt_desc_lang.text_content, lt_desc_pt.text_content, l.image_url, l.latitude, l.longitude, l.city_id, lt_city_lang.text_content, lt_city_pt.text_content, c.state, lt_type_lang.text_content, lt_type_pt.text_content
       ORDER BY distance ASC NULLS LAST
     `;
 
@@ -555,6 +577,7 @@ export class LocationRepository extends BaseRepository<Location> {
       : [cityIds, language];
 
     const results = await this.repository.manager.query(query, params);
+    console.log('🏨 DEBUG findHostingByCitiesWithLocalizedTexts - results count:', results?.length);
     return results || [];
   }
 }

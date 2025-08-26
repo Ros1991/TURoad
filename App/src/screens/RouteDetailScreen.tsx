@@ -11,7 +11,7 @@ import {
 import DashLine from '../components/DashLine';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Box, Text, Card } from '../components';
+import { Box, Text, Card, BusinessCard } from '../components';
 import { useTheme } from '@shopify/restyle';
 import { Theme } from '../themes/theme';
 import { Ionicons, MaterialIcons, FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,6 +27,7 @@ import { Story } from '../types';
 type RootStackParamList = {
   RouteDetail: { routeId: string };
   City: { cityId: string };
+  Others: { type: 'event' | 'location'; itemId: string };
 };
 
 type RouteDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'RouteDetail'>;
@@ -76,7 +77,6 @@ const RouteDetailScreen = () => {
       ]);
       
       if (routeResponse) {
-        console.log('🔍 DEBUG - Full Route response:', JSON.stringify(routeResponse, null, 2));
         const routeData = routeResponse.data || routeResponse;
         setRouteData(routeData);
         
@@ -97,6 +97,7 @@ const RouteDetailScreen = () => {
         }
       }
       setBusinesses(businessesResponse);
+      console.log(businessesResponse);
       setHosting(hostingResponse);
     } catch (error) {
       console.error('Error loading route details:', error);
@@ -571,6 +572,62 @@ const RouteDetailScreen = () => {
           </Box>
         );
       })}
+
+      {/* Commerce and Services Section */}
+      {businesses.length > 0 && (
+          <>
+            <Box marginTop="m" marginBottom="m">
+              <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
+                {t('home.businessesAndServices')}
+              </Text>
+            </Box>
+            
+            {/* Businesses Carousel */}
+            <FlatList
+              data={businesses}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.navigate('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
+              keyExtractor={(item, index) => `business-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 0, paddingRight: 16 }}
+              style={{ marginBottom: 0 }}
+            />
+          </>
+        )}
+
+        {/* Commerce and Services Section */}
+        {hosting.length > 0 && (
+          <>
+            <Box marginTop="s" marginBottom="m">
+              <Text style={{ fontSize: 20, fontWeight: '600', color: '#002043' }}>
+                {t('common.hosting')}
+              </Text>
+            </Box>
+            
+            {/* Businesses Carousel */}
+            <FlatList
+              data={hosting}
+              renderItem={({ item }) => (
+                <BusinessCard 
+                  item={item} 
+                  showStories={true}
+                  onPress={() => navigation.navigate('Others', { type: 'location', itemId: item.id.toString() })}
+                />
+              )}
+              keyExtractor={(item, index) => `hosting-${index}-${item.id}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingLeft: 0, paddingRight: 16 }}
+              style={{ marginBottom: 0 }}
+            />
+          </>
+        )}
     </Box>
   </ScrollView>
   );

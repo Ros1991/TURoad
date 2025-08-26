@@ -39,8 +39,14 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   // Expose pause method to parent
   useImperativeHandle(ref, () => ({
     pause: () => {
-      if (soundRef.current && isPlaying) {
-        soundRef.current.pause();
+      try {
+        if (soundRef.current && isPlaying) {
+          soundRef.current.pause();
+          setIsPlaying(false);
+          setPlayStartTime(null);
+        }
+      } catch (error) {
+        console.warn('Error pausing audio:', error);
         setIsPlaying(false);
         setPlayStartTime(null);
       }
@@ -60,11 +66,16 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     Sound.setCategory('Playback');
     return () => {
       // Cleanup on unmount
-      if (soundRef.current) {
-        soundRef.current.release();
-      }
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
+      }
+      try {
+        if (soundRef.current) {
+          soundRef.current.release();
+          soundRef.current = null;
+        }
+      } catch (error) {
+        console.warn('Error releasing audio on unmount:', error);
       }
     };
   }, []);
@@ -142,8 +153,13 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
       setError(null);
       
       // Release previous sound
-      if (soundRef.current) {
-        soundRef.current.release();
+      try {
+        if (soundRef.current) {
+          soundRef.current.release();
+          soundRef.current = null;
+        }
+      } catch (error) {
+        console.warn('Error releasing previous audio:', error);
         soundRef.current = null;
       }
       
@@ -215,30 +231,37 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
       return;
     }
     
-    if (isPlaying) {
-      // Pause - definir estado imediatamente também
+    try {
+      if (isPlaying) {
+        // Pause - definir estado imediatamente também
+        setIsPlaying(false);
+        setPlayStartTime(null);
+        
+        soundRef.current.pause();
+      } else {
+        // Notify parent that this player is starting
+        if (onPlayStart) {
+          onPlayStart();
+        }
+        
+        // Play - definir estado imediatamente
+        const startTime = Date.now();
+        setIsPlaying(true);
+        setPlayStartTime(startTime);
+        
+        soundRef.current.play((success) => {
+          if (!success) {
+            setIsPlaying(false);
+            setPlayStartTime(null);
+            setError(t('audioPlayer.playbackError'));
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Error in togglePlayback:', error);
       setIsPlaying(false);
       setPlayStartTime(null);
-      
-      soundRef.current.pause();
-    } else {
-      // Notify parent that this player is starting
-      if (onPlayStart) {
-        onPlayStart();
-      }
-      
-      // Play - definir estado imediatamente
-      const startTime = Date.now();
-      setIsPlaying(true);
-      setPlayStartTime(startTime);
-      
-      soundRef.current.play((success) => {
-        if (!success) {
-          setIsPlaying(false);
-          setPlayStartTime(null);
-          setError(t('audioPlayer.playbackError'));
-        }
-      });
+      setError(t('audioPlayer.playbackError'));
     }
   };
   
@@ -258,13 +281,17 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const seekToPosition = (position: number) => {
     if (!soundRef.current || isLoading) return;
     
-    const seekTime = Math.max(0, Math.min(position, duration));
-    soundRef.current.setCurrentTime(seekTime);
-    setCurrentPosition(seekTime);
-    
-    // Reset play start time se estiver tocando
-    if (isPlaying) {
-      setPlayStartTime(Date.now());
+    try {
+      const seekTime = Math.max(0, Math.min(position, duration));
+      soundRef.current.setCurrentTime(seekTime);
+      setCurrentPosition(seekTime);
+      
+      // Reset play start time se estiver tocando
+      if (isPlaying) {
+        setPlayStartTime(Date.now());
+      }
+    } catch (error) {
+      console.warn('Error seeking audio position:', error);
     }
   };
 
@@ -272,12 +299,18 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     if (currentStoryIndex >= stories.length - 1) return;
     
     // Stop current audio
-    if (soundRef.current && isPlaying) {
-      soundRef.current.stop(() => {
-        setIsPlaying(false);
+    try {
+      if (soundRef.current && isPlaying) {
+        soundRef.current.stop(() => {
+          setIsPlaying(false);
+          onStoryChange(currentStoryIndex + 1);
+        });
+      } else {
         onStoryChange(currentStoryIndex + 1);
-      });
-    } else {
+      }
+    } catch (error) {
+      console.warn('Error stopping audio in goToNextStory:', error);
+      setIsPlaying(false);
       onStoryChange(currentStoryIndex + 1);
     }
   };
@@ -286,12 +319,18 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     if (currentStoryIndex <= 0) return;
     
     // Stop current audio
-    if (soundRef.current && isPlaying) {
-      soundRef.current.stop(() => {
-        setIsPlaying(false);
+    try {
+      if (soundRef.current && isPlaying) {
+        soundRef.current.stop(() => {
+          setIsPlaying(false);
+          onStoryChange(currentStoryIndex - 1);
+        });
+      } else {
         onStoryChange(currentStoryIndex - 1);
-      });
-    } else {
+      }
+    } catch (error) {
+      console.warn('Error stopping audio in goToPreviousStory:', error);
+      setIsPlaying(false);
       onStoryChange(currentStoryIndex - 1);
     }
   };
@@ -300,12 +339,18 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
     
     // Stop current audio
-    if (soundRef.current && isPlaying) {
-      soundRef.current.stop(() => {
-        setIsPlaying(false);
+    try {
+      if (soundRef.current && isPlaying) {
+        soundRef.current.stop(() => {
+          setIsPlaying(false);
+          onStoryChange(index);
+        });
+      } else {
         onStoryChange(index);
-      });
-    } else {
+      }
+    } catch (error) {
+      console.warn('Error stopping audio in goToStory:', error);
+      setIsPlaying(false);
       onStoryChange(index);
     }
   };

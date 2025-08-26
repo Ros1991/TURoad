@@ -665,7 +665,6 @@ export class PublicController {
     try {
       const { id } = req.params;
       const language = req.language || 'pt';
-      console.log(req.language);
       if (!id || isNaN(parseInt(id))) {
         return res.status(400).json({
           success: false,
@@ -689,18 +688,13 @@ export class PublicController {
 
       // Check if user is authenticated and get favorite status
       let isFavorite = false;
-      console.log('🔍 DEBUG - Checking user auth:', (req as any).user?.userId);
       if ((req as any).user?.userId) {
         try {
-          console.log('🔍 DEBUG - Checking isFavoriteRoute for user:', (req as any).user.userId, 'route:', id);
           isFavorite = await this.userFavoriteRouteService.isFavoriteRoute((req as any).user.userId, parseInt(id));
-          console.log('🔍 DEBUG - isFavoriteRoute result:', isFavorite);
         } catch (error) {
           // If error checking favorite status, just continue with false
           console.warn('Error checking favorite status:', error);
         }
-      } else {
-        console.log('🔍 DEBUG - User not authenticated or userId not found');
       }
 
       res.json({
@@ -747,11 +741,23 @@ export class PublicController {
         language,
         userLatitude,
         userLongitude
-      );
+      ); 
+      
+      const hostingWithData = businesses.map(host => ({
+        id: host.id.toString(),
+        name: host.name || 'Unnamed Hosting',
+        description: host.description,
+        distance: host.distance !== undefined && host.distance !== null ? `${parseFloat(host.distance).toFixed(1)}km ` : undefined,
+        image: host.image,
+        latitude: host.latitude ? parseFloat(host.latitude) : null,
+        longitude: host.longitude ? parseFloat(host.longitude) : null,
+        categories: host.categories || [],
+        storiesCount: parseInt(host.storiesCount) || 0
+      }));
 
       return res.json({
         success: true,
-        data: businesses
+        data: hostingWithData
       });
     } catch (error) {
       console.error('Error fetching route businesses:', error);
@@ -793,10 +799,22 @@ export class PublicController {
         userLatitude,
         userLongitude
       );
-
+      
+      const hostingWithData = hosting.map(host => ({
+        id: host.id.toString(),
+        name: host.name || 'Unnamed Hosting',
+        description: host.description,
+        distance: host.distance !== undefined && host.distance !== null ? `${parseFloat(host.distance).toFixed(1)}km ` : undefined,
+        image: host.image,
+        latitude: host.latitude ? parseFloat(host.latitude) : null,
+        longitude: host.longitude ? parseFloat(host.longitude) : null,
+        categories: host.categories || [],
+        storiesCount: parseInt(host.storiesCount) || 0
+      }));
+      
       return res.json({
         success: true,
-        data: hosting
+        data: hostingWithData
       });
     } catch (error) {
       console.error('Error fetching route hosting:', error);
