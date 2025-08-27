@@ -38,13 +38,13 @@ export class UserFavoritesRepository {
         'city' as type,
         c.image_url as imageUrl,
         COUNT(sc.story_city_id) as storiesCount,
-        ufc.created_at as createdAt
+        ufc."createdAt" as createdAt
       FROM user_favorite_cities ufc
       INNER JOIN cities c ON ufc.city_id = c.city_id
       LEFT JOIN localized_texts lt ON c.name_text_ref_id = lt.reference_id AND lt.language_code = $2
       LEFT JOIN story_cities sc ON c.city_id = sc.city_id
-      WHERE ufc.user_id = $1 AND c.deleted_at IS NULL
-      GROUP BY c.city_id, lt.text_content, c.image_url, ufc.created_at
+      WHERE ufc.user_id = $1 AND c."deletedAt" IS NULL
+      GROUP BY c.city_id, lt.text_content, c.image_url, ufc."createdAt"
     `, [userId, language]);
 
     results.push(...cities.map((city: any) => ({
@@ -64,13 +64,13 @@ export class UserFavoritesRepository {
         'route' as type,
         r.image_url as imageUrl,
         COUNT(sr.story_route_id) as storiesCount,
-        ufr.created_at as createdAt
+        ufr."createdAt" as createdAt
       FROM user_favorite_routes ufr
       INNER JOIN routes r ON ufr.route_id = r.route_id
       LEFT JOIN localized_texts lt ON r.title_text_ref_id = lt.reference_id AND lt.language_code = $2
       LEFT JOIN story_routes sr ON r.route_id = sr.route_id
-      WHERE ufr.user_id = $1 AND r.deleted_at IS NULL
-      GROUP BY r.route_id, lt.text_content, r.image_url, ufr.created_at
+      WHERE ufr.user_id = $1 AND r."deletedAt" IS NULL
+      GROUP BY r.route_id, lt.text_content, r.image_url, ufr."createdAt"
     `, [userId, language]);
 
     results.push(...routes.map((route: any) => ({
@@ -90,13 +90,13 @@ export class UserFavoritesRepository {
         'event' as type,
         e.image_url as imageUrl,
         COUNT(se.story_event_id) as storiesCount,
-        ufe.created_at as createdAt
+        ufe."createdAt" as createdAt
       FROM user_favorite_events ufe
       INNER JOIN events e ON ufe.event_id = e.event_id
       LEFT JOIN localized_texts lt ON e.name_text_ref_id = lt.reference_id AND lt.language_code = $2
       LEFT JOIN story_events se ON e.event_id = se.event_id
-      WHERE ufe.user_id = $1 AND e.deleted_at IS NULL
-      GROUP BY e.event_id, lt.text_content, e.image_url, ufe.created_at
+      WHERE ufe.user_id = $1 AND e."deletedAt" IS NULL
+      GROUP BY e.event_id, lt.text_content, e.image_url, ufe."createdAt"
     `, [userId, language]);
 
     results.push(...events.map((event: any) => ({
@@ -108,27 +108,30 @@ export class UserFavoritesRepository {
       createdAt: event.createdat
     })));
 
-    // Get favorite locations
+    // Get favorite locations with type name
     const locations = await this.favoriteLocationRepo.manager.query(`
       SELECT 
         l.location_id as id,
         COALESCE(lt.text_content, 'Unnamed Location') as name,
-        'location' as type,
+        COALESCE(type_lt.text_content, type_lt_pt.text_content, 'location') as type,
         l.image_url as imageUrl,
         COUNT(sl.story_location_id) as storiesCount,
-        ufl.created_at as createdAt
+        ufl."createdAt" as createdAt
       FROM user_favorite_locations ufl
       INNER JOIN locations l ON ufl.location_id = l.location_id
       LEFT JOIN localized_texts lt ON l.name_text_ref_id = lt.reference_id AND lt.language_code = $2
+      LEFT JOIN types t ON l.type_id = t.type_id
+      LEFT JOIN localized_texts type_lt ON t.name_text_ref_id = type_lt.reference_id AND type_lt.language_code = $2
+      LEFT JOIN localized_texts type_lt_pt ON t.name_text_ref_id = type_lt_pt.reference_id AND type_lt_pt.language_code = 'pt'
       LEFT JOIN story_locations sl ON l.location_id = sl.location_id
-      WHERE ufl.user_id = $1 AND l.deleted_at IS NULL
-      GROUP BY l.location_id, lt.text_content, l.image_url, ufl.created_at
+      WHERE ufl.user_id = $1 AND l."deletedAt" IS NULL
+      GROUP BY l.location_id, lt.text_content, l.image_url, ufl."createdAt", type_lt.text_content, type_lt_pt.text_content
     `, [userId, language]);
 
     results.push(...locations.map((location: any) => ({
       id: location.id.toString(),
       name: location.name,
-      type: 'location' as const,
+      type: location.type, // Now using the actual type name from database
       imageUrl: location.imageurl,
       storiesCount: parseInt(location.storiescount) || 0,
       createdAt: location.createdat

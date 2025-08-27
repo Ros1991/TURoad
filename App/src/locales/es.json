@@ -211,7 +211,13 @@
   },
   "favorites": {
     "title": "Favoritos",
-    "audioStories": "historias en audio"
+    "audioStories": "historias en audio",
+    "types": {
+      "city": "Ciudad",
+      "route": "Ruta",
+      "event": "Evento",
+      "location": "Punto turístico"
+    }
   },
   "routeHistory": {
     "title": "Historial de rutas",

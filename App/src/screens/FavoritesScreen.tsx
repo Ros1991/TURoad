@@ -1,37 +1,46 @@
-import React, { useState } from 'react';
-import { ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
+import { favoritesService, UserFavoriteItem } from '../services/FavoritesService';
 
 const FavoritesScreen: React.FC = () => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [favorites, setFavorites] = useState<UserFavoriteItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const favorites = [
-    {
-      id: '1',
-      title: 'Aracaju',
-      type: 'Cidade',
-      stories: 3,
-      image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73c0e?w=400&h=300&fit=crop',
-    },
-    {
-      id: '2',
-      title: 'Orla de Atalaia',
-      type: 'Ponto turístico',
-      stories: 3,
-      image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop',
-    },
-  ];
+  useEffect(() => {
+    loadFavorites();
+  }, []);
 
-  const FavoriteCard = ({ item }: { item: any }) => (
-    <TouchableOpacity>
+  const loadFavorites = async () => {
+    try {
+      setLoading(true);
+      const data = await favoritesService.getUserFavorites();
+      console.log(data);
+      setFavorites(data);
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+      Alert.alert('Erro', 'Não foi possível carregar seus favoritos. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const FavoriteCard = ({ item }: { item: UserFavoriteItem }) => (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      style={{
+        transform: [{ scale: 1 }],
+      }}
+    >
       <Box
         backgroundColor="white"
-        borderRadius={12}
+        borderRadius={16}
         marginHorizontal="m"
         marginBottom="m"
         style={{
@@ -44,39 +53,37 @@ const FavoritesScreen: React.FC = () => {
       >
         <Box flexDirection="row" padding="m">
           <Image
-            source={{ uri: item.image }}
+            source={{ uri: item.imageUrl || 'https://via.placeholder.com/120x120/E0E0E0/FFFFFF?text=No+Image' }}
             style={{
-              width: 80,
-              height: 60,
-              borderRadius: 8,
-              marginRight: 12,
+              width: 120,
+              height: 120,
+              borderRadius: 12,
+              marginRight: 16,
             }}
           />
-          <Box flex={1}>
-            <Text style={{ 
-              fontSize: 16, 
-              fontWeight: '600', 
-              color: '#1A1A1A',
-              marginBottom: 4,
-            }}>
-              {item.title}
-            </Text>
-            <Box
-              backgroundColor="light"
-              paddingHorizontal="s"
-              paddingVertical="s"
-              borderRadius={4}
-              alignSelf="flex-start"
-              marginBottom="s"
-            >
-              <Text style={{ fontSize: 12, color: '#2E7D32', fontWeight: '500' }}>
-                {item.type}
+          <Box flex={1} justifyContent="space-between">
+            <Box>
+              <Text style={{ 
+                fontSize: 18, 
+                fontWeight: '600', 
+                color: '#1A1A1A',
+                marginBottom: 6,
+              }}>
+                {item.name}
+              </Text>
+              <Text style={{ 
+                fontSize: 14, 
+                color: '#2E7D32', 
+                fontWeight: '500',
+                marginBottom: 8,
+              }}>
+                {item.type == 'city' || item.type == 'route' || item.type == 'event' ? t(`favorites.types.${item.type}`) : item.type}
               </Text>
             </Box>
             <Box flexDirection="row" alignItems="center">
-              <Icon name="headphones" size={12} color="#666666" />
-              <Text style={{ fontSize: 12, color: '#666666', marginLeft: 4 }}>
-                {item.stories} {t('favorites.audioStories')}
+              <Icon name="headphones" size={14} color="#666666" />
+              <Text style={{ fontSize: 14, color: '#666666', marginLeft: 6 }}>
+                {item.storiesCount} {t('favorites.audioStories')}
               </Text>
             </Box>
           </Box>
@@ -122,14 +129,45 @@ const FavoritesScreen: React.FC = () => {
         </Box>
 
         {/* Content */}
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
-          <Box paddingTop="m">
-            {favorites.map((item) => (
-              <FavoriteCard key={item.id} item={item} />
-            ))}
+        {loading ? (
+          <Box flex={1} justifyContent="center" alignItems="center">
+            <ActivityIndicator size="large" color="#2E7D32" />
+            <Text style={{ marginTop: 16, color: '#666666' }}>
+              Carregando seus favoritos...
+            </Text>
           </Box>
-          <Box height={20} />
-        </ScrollView>
+        ) : favorites.length === 0 ? (
+          <Box flex={1} justifyContent="center" alignItems="center" padding="xl">
+            <Icon name="heart-outline" size={64} color="#CCCCCC" />
+            <Text style={{ 
+              fontSize: 18, 
+              fontWeight: '600', 
+              color: '#1A1A1A',
+              marginTop: 16,
+              textAlign: 'center'
+            }}>
+              Nenhum favorito ainda
+            </Text>
+            <Text style={{ 
+              fontSize: 14, 
+              color: '#666666',
+              marginTop: 8,
+              textAlign: 'center',
+              lineHeight: 20
+            }}>
+              Explore cidades, rotas e eventos{'\n'}e adicione aos seus favoritos
+            </Text>
+          </Box>
+        ) : (
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}>
+            <Box paddingTop="m">
+              {favorites.map((item) => (
+                <FavoriteCard key={item.id} item={item} />
+              ))}
+            </Box>
+            <Box height={20} />
+          </ScrollView>
+        )}
       </Box>
   );
 };
