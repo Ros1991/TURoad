@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMan
 import { City } from './City';
 import { EventCategory } from './EventCategory';
 import { StoryEvent } from './StoryEvent';
+import { UserFavoriteEvent } from './UserFavoriteEvent';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
 import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
@@ -45,5 +46,8 @@ export class Event extends SoftDeleteBaseEntity {
 
   @OneToMany(() => StoryEvent, (storyEvent) => storyEvent.event)
   stories!: StoryEvent[];
+
+  @OneToMany(() => UserFavoriteEvent, (favorite) => favorite.event)
+  userFavorites!: UserFavoriteEvent[];
 }
 

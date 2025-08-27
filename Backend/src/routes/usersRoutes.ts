@@ -6,6 +6,8 @@ import { UsersController } from '@/controllers/UsersController';
 import { UserPushSettingsController } from '@/controllers/UserPushSettingsController';
 import { UserFavoriteCityController } from '@/controllers/UserFavoriteCityController';
 import { UserFavoriteRouteController } from '@/controllers/UserFavoriteRouteController';
+import { UserFavoriteEventController } from '@/controllers/UserFavoriteEventController';
+import { UserFavoriteLocationController } from '@/controllers/UserFavoriteLocationController';
 import { UserVisitedRouteController } from '@/controllers/UserVisitedRouteController';
 
 const router = Router();
@@ -13,6 +15,8 @@ const usersController = new UsersController();
 const userPushSettingsController = new UserPushSettingsController();
 const userFavoriteCityController = new UserFavoriteCityController();
 const userFavoriteRouteController = new UserFavoriteRouteController();
+const userFavoriteEventController = new UserFavoriteEventController();
+const userFavoriteLocationController = new UserFavoriteLocationController();
 const userVisitedRouteController = new UserVisitedRouteController();
 
 // All routes require authentication (admin requirement temporarily removed for testing)
@@ -49,6 +53,22 @@ router.delete('/:id/favorite-routes/:routeId', (req, res) => userFavoriteRouteCo
 router.get('/:id/available-favorite-routes', (req, res) => userFavoriteRouteController.getAvailableRoutes(req, res));
 router.get('/:id/favorite-routes/:routeId/is-favorite', (req, res) => userFavoriteRouteController.isFavoriteRoute(req, res));
 router.post('/:id/favorite-routes/toggle', (req, res) => userFavoriteRouteController.toggleFavoriteRoute(req, res));
+
+// User Favorite Events routes
+router.get('/:id/favorite-events', (req, res) => userFavoriteEventController.getUserFavoriteEvents(req, res));
+router.post('/:id/favorite-events', (req, res) => userFavoriteEventController.addFavoriteEvent(req, res));
+router.delete('/:id/favorite-events/:eventId', (req, res) => userFavoriteEventController.removeFavoriteEvent(req, res));
+router.get('/:id/available-events', (req, res) => userFavoriteEventController.getAvailableEvents(req, res));
+router.get('/:id/favorite-events/:eventId/is-favorite', (req, res) => userFavoriteEventController.isFavoriteEvent(req, res));
+router.post('/:id/favorite-events/toggle', (req, res) => userFavoriteEventController.toggleFavoriteEvent(req, res));
+
+// User Favorite Locations routes
+router.get('/:id/favorite-locations', (req, res) => userFavoriteLocationController.getUserFavoriteLocations(req, res));
+router.post('/:id/favorite-locations', (req, res) => userFavoriteLocationController.addFavoriteLocation(req, res));
+router.delete('/:id/favorite-locations/:locationId', (req, res) => userFavoriteLocationController.removeFavoriteLocation(req, res));
+router.get('/:id/available-locations', (req, res) => userFavoriteLocationController.getAvailableLocations(req, res));
+router.get('/:id/favorite-locations/:locationId/is-favorite', (req, res) => userFavoriteLocationController.isFavoriteLocation(req, res));
+router.post('/:id/favorite-locations/toggle', (req, res) => userFavoriteLocationController.toggleFavoriteLocation(req, res));
 
 // User Visited Routes routes
 router.get('/:id/visited-routes', (req, res) => userVisitedRouteController.getUserVisitedRoutes(req, res));

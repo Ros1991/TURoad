@@ -112,6 +112,7 @@ export class RouteRepository extends BaseRepository<Route> {
           'state', c.state,
           'description', COALESCE(lt_city_desc_lang.text_content, lt_city_desc_pt.text_content),
           'what_to_observe', COALESCE(lt_city_what_lang.text_content, lt_city_what_pt.text_content),
+          'image_url', c.image_url,
           'latitude', c.latitude,
           'longitude', c.longitude,
           'order', rc.order,

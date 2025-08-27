@@ -3,6 +3,7 @@ import { City } from './City';
 import { Type } from './Type';
 import { LocationCategory } from './LocationCategory';
 import { StoryLocation } from './StoryLocation';
+import { UserFavoriteLocation } from './UserFavoriteLocation';
 import { LocalizedTextRef } from '../decorators/LocalizedTextRef';
 import { SoftDeleteBaseEntity } from '@/core/base/BaseEntity';
 
@@ -48,5 +49,8 @@ export class Location extends SoftDeleteBaseEntity {
 
   @OneToMany(() => StoryLocation, (storyLocation) => storyLocation.location)
   stories!: StoryLocation[];
+
+  @OneToMany(() => UserFavoriteLocation, (favorite) => favorite.location)
+  userFavorites!: UserFavoriteLocation[];
 }
 

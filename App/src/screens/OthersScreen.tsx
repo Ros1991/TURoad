@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, Image, TouchableOpacity, Linking, Platform, Alert, FlatList } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useEffect, useRef } from 'react';
+import { ScrollView, Image, TouchableOpacity, Linking, Platform, Alert, FlatList, BackHandler } from 'react-native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import LinearGradient from 'react-native-linear-gradient';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
-import { Box, Text, AudioStoriesPlayer, BusinessCard } from '../components';
+import { Box, Text, SafeAudioStoriesPlayer, BusinessCard } from '../components';
 import { useLanguageRefresh } from '../hooks/useDataRefresh';
 import { getEventById } from '../services/EventService';
 import { getPlaceById } from '../services/HistoricalPlaceService';
 import { Event, HistoricalPlace, Business, Story } from '@/types';
 import { getBusinesses, getHosting } from '@/services/BusinessService';
+import { FavoriteService } from '../services/FavoriteService';
 
 type ItemType = 'event' | 'location';
 type ItemData = Event | HistoricalPlace;
@@ -36,13 +37,82 @@ const OthersScreen: React.FC = () => {
     const [hosting, setHosting] = useState<Business[]>([]);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [shouldRenderAudio, setShouldRenderAudio] = useState(true);
+  const { user, isAuthenticated } = useAuth();
+  const audioPlayerRef = useRef<any>(null);
 
   const { type, itemId } = route.params;
 
   useEffect(() => {
     loadItem();
   }, []);
+
+  // Custom back handler to stop audio before navigation
+  const handleBackPress = () => {
+    console.log('🎵 Custom back pressed - stopping audio first');
+    
+    // Immediately disable audio rendering
+    setShouldRenderAudio(false);
+    
+    // Force stop audio
+    try {
+      if (audioPlayerRef.current && audioPlayerRef.current.pause) {
+        audioPlayerRef.current.pause();
+      }
+    } catch (error) {
+      console.warn('Error stopping audio on back press:', error);
+    }
+    
+    // Navigate back after a short delay to ensure cleanup
+    setTimeout(() => {
+      navigation.goBack();
+    }, 100);
+    
+    return true; // Prevent default back action
+  };
+
+  // Force stop audio player when screen loses focus (navigation)
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused - allow audio rendering
+      setShouldRenderAudio(true);
+      
+      // Add back handler
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
+      
+      return () => {
+        // Remove back handler
+        backHandler.remove();
+        
+        // Called when screen loses focus - AGGRESSIVELY stop audio
+        console.log('🎵 OthersScreen losing focus - destroying audio player');
+        
+        // Disable audio rendering immediately
+        setShouldRenderAudio(false);
+        
+        // Try to pause current audio
+        try {
+          if (audioPlayerRef.current && audioPlayerRef.current.pause) {
+            audioPlayerRef.current.pause();
+          }
+        } catch (error) {
+          console.warn('Error pausing audio on screen blur:', error);
+        }
+        
+        // Force cleanup with timeout
+        setTimeout(() => {
+          try {
+            if (audioPlayerRef.current && audioPlayerRef.current.pause) {
+              audioPlayerRef.current.pause();
+            }
+          } catch (error) {
+            console.warn('Error in delayed audio cleanup:', error);
+          }
+        }, 50);
+      };
+    }, [])
+  );
 
   // Refresh item data when language changes
   useLanguageRefresh(() => {
@@ -64,6 +134,11 @@ const OthersScreen: React.FC = () => {
       setItem(itemData);
       await loadBusinesses(itemData);
       await loadHosting(itemData);
+      
+      // Check if item is favorite
+      if (user?.id && itemData) {
+        await checkFavoriteStatus(itemData);
+      }
       
     } catch (error) {
       console.error('Error loading item:', error);
@@ -92,6 +167,68 @@ const OthersScreen: React.FC = () => {
         console.error('Error loading hosting:', error);
       }
     };
+
+  const checkFavoriteStatus = async (itemData: ItemData) => {
+    if (!user?.id || !itemData?.id) return;
+    
+    try {
+      let favoriteStatus = false;
+      
+      if (type === 'event') {
+        favoriteStatus = await FavoriteService.isFavoriteEvent(
+          parseInt(user.id), 
+          parseInt(itemData.id)
+        );
+      } else if (type === 'location') {
+        favoriteStatus = await FavoriteService.isFavoriteLocation(
+          parseInt(user.id), 
+          parseInt(itemData.id)
+        );
+      }
+      
+      setIsFavorite(favoriteStatus);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+      setIsFavorite(false);
+    }
+  };
+
+  const toggleFavorite = async () => {
+    if (!user?.id || !item) return;
+    
+    try {
+      console.log(`🤍 Toggling favorite for ${type}:`, item.id);
+      
+      // Optimistically update UI
+      const newFavoriteState = !isFavorite;
+      setIsFavorite(newFavoriteState);
+      
+      // Call backend API
+      let result;
+      if (type === 'event') {
+        result = await FavoriteService.toggleFavoriteEvent(
+          parseInt(user.id), 
+          parseInt(item.id)
+        );
+      } else if (type === 'location') {
+        result = await FavoriteService.toggleFavoriteLocation(
+          parseInt(user.id), 
+          parseInt(item.id)
+        );
+      }
+      
+      // Update state based on API response
+      if (result) {
+        setIsFavorite(result.isFavorited);
+        console.log('🤍 Favorite toggled successfully:', result.isFavorited);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      
+      // Revert optimistic update on error
+      setIsFavorite(prev => !prev);
+    }
+  };
 
   const openInMaps = () => {
     if (!item || !('location' in item)) return;
@@ -185,7 +322,7 @@ const OthersScreen: React.FC = () => {
           style={{ width: '100%', height: '100%' }}
         />
         <Box position="absolute" top={40} left={16}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={handleBackPress}>
             <Box
               width={40}
               height={40}
@@ -286,16 +423,37 @@ const OthersScreen: React.FC = () => {
                     <Icon name="share-variant" size={18} color="#666666" />
                   </Box>
                 </TouchableOpacity>
+                {isAuthenticated && (
+                  <TouchableOpacity onPress={toggleFavorite}>
+                    <Box
+                      width={40}
+                      height={40}
+                      borderRadius={20}
+                      justifyContent="center"
+                      alignItems="center"
+                      style={{ 
+                        backgroundColor: isFavorite ? '#FF0000' : '#F5F5F5'
+                      }}
+                    >
+                      <Icon 
+                        name={isFavorite ? "heart" : "heart-outline"} 
+                        size={20} 
+                        color={isFavorite ? "#FFFFFF" : "#FF0000"} 
+                      />
+                    </Box>
+                  </TouchableOpacity>
+                )}
               </Box>
             </Box>
             
-            {/* Audio Player Component - if stories exist */}
-            {('stories' in item && item.stories && Array.isArray(item.stories) && item.stories.length > 0) ? (
-              <AudioStoriesPlayer 
+            {/* Safe Audio Player Component - Crash-resistant version */}
+            {shouldRenderAudio && ('stories' in item && item.stories && Array.isArray(item.stories) && item.stories.length > 0) ? (
+              <SafeAudioStoriesPlayer 
+                ref={audioPlayerRef}
                 stories={item.stories as Story[]}
                 currentStoryIndex={currentStoryIndex}
                 onStoryChange={setCurrentStoryIndex}
-                onDurationUpdate={(storyIndex, realDuration) => {
+                onDurationUpdate={(storyIndex: number, realDuration: number) => {
                   // Update story duration when real audio duration is discovered
                   const updatedStories = [...(item.stories as Story[])];
                   if (updatedStories[storyIndex]) {

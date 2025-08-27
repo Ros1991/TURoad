@@ -22,6 +22,8 @@ import { StoryCity } from '@/entities/StoryCity';
 import { StoryRoute } from '@/entities/StoryRoute';
 import { UserFavoriteRoute } from '@/entities/UserFavoriteRoute';
 import { UserFavoriteCity } from '@/entities/UserFavoriteCity';
+import { UserFavoriteEvent } from '@/entities/UserFavoriteEvent';
+import { UserFavoriteLocation } from '@/entities/UserFavoriteLocation';
 import { UserVisitedRoute } from '@/entities/UserVisitedRoute';
 import { UserPushSettings } from '@/entities/UserPushSettings';
 import { PushNotificationLog } from '@/entities/PushNotificationLog';
@@ -58,6 +60,8 @@ export const AppDataSource = new DataSource({
     StoryRoute,
     UserFavoriteRoute,
     UserFavoriteCity,
+    UserFavoriteEvent,
+    UserFavoriteLocation,
     UserVisitedRoute,
     UserPushSettings,
     PushNotificationLog,

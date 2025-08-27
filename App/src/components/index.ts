@@ -5,6 +5,7 @@ export { default as Input } from './Input';
 export { default as Card } from './Card';
 export { default as AuthHeader } from './AuthHeader';
 export { default as AudioStoriesPlayer } from './AudioStoriesPlayer';
+export { default as SafeAudioStoriesPlayer } from './SafeAudioStoriesPlayer';
 export { default as TranslateWithFormat } from './TranslateWithFormat';
 export { default as CustomToast } from './CustomToast';
 export { default as CategoryItem } from './CategoryItem';

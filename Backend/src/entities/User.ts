@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany, OneToOne } from 'typ
 import { JwtToken } from './JwtToken';
 import { UserFavoriteRoute } from './UserFavoriteRoute';
 import { UserFavoriteCity } from './UserFavoriteCity';
+import { UserFavoriteEvent } from './UserFavoriteEvent';
+import { UserFavoriteLocation } from './UserFavoriteLocation';
 import { UserVisitedRoute } from './UserVisitedRoute';
 import { UserPushSettings } from './UserPushSettings';
 import { PushNotificationLog } from './PushNotificationLog';
@@ -50,6 +52,12 @@ export class User extends SoftDeleteBaseEntity {
 
   @OneToMany(() => UserFavoriteCity, (favorite) => favorite.user)
   favoriteCities!: UserFavoriteCity[];
+
+  @OneToMany(() => UserFavoriteEvent, (favorite) => favorite.user)
+  favoriteEvents!: UserFavoriteEvent[];
+
+  @OneToMany(() => UserFavoriteLocation, (favorite) => favorite.user)
+  favoriteLocations!: UserFavoriteLocation[];
 
   @OneToMany(() => UserVisitedRoute, (visited) => visited.user)
   visitedRoutes!: UserVisitedRoute[];

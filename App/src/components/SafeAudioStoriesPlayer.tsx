@@ -7,20 +7,27 @@ import { Story } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import Sound from 'react-native-sound';
 
-interface AudioStoriesPlayerProps {
+interface SafeAudioStoriesPlayerProps {
   stories: Story[];
   currentStoryIndex: number;
   onStoryChange: (index: number) => void;
   onDurationUpdate?: (storyIndex: number, realDuration: number) => void;
-  onPlayStart?: () => void; // Called when this player starts playing
-  hideLanguageSelector?: boolean; // Hide language selector for screens with their own language control
+  onPlayStart?: () => void;
+  hideLanguageSelector?: boolean;
 }
 
-export interface AudioStoriesPlayerRef {
+export interface SafeAudioStoriesPlayerRef {
   pause: () => void;
 }
 
-const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ stories, currentStoryIndex, onStoryChange, onDurationUpdate, onPlayStart, hideLanguageSelector = false }, ref) => {
+const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioStoriesPlayerProps>(({ 
+  stories, 
+  currentStoryIndex, 
+  onStoryChange, 
+  onDurationUpdate, 
+  onPlayStart, 
+  hideLanguageSelector = false 
+}, ref) => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -30,28 +37,43 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playStartTime, setPlayStartTime] = useState<number | null>(null);
+  const [isDestroyed, setIsDestroyed] = useState(false);
   
   const soundRef = useRef<Sound | null>(null);
   const isInitialLoadRef = useRef(true);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressBarWidth = Dimensions.get('window').width - 64; // Account for padding
+  const isMountedRef = useRef(true);
+  const progressBarWidth = Dimensions.get('window').width - 64;
 
-  // Expose pause method to parent
+  // Safe state setter that checks if component is still mounted
+  const safeSetState = (setter: Function, value: any) => {
+    if (isMountedRef.current && !isDestroyed) {
+      try {
+        setter(value);
+      } catch (error) {
+        console.warn('Error setting state in SafeAudioStoriesPlayer:', error);
+      }
+    }
+  };
+
+  // Expose pause method to parent with safety checks
   useImperativeHandle(ref, () => ({
     pause: () => {
+      if (isDestroyed || !isMountedRef.current) return;
+      
       try {
         if (soundRef.current && isPlaying) {
           soundRef.current.pause();
-          setIsPlaying(false);
-          setPlayStartTime(null);
+          safeSetState(setIsPlaying, false);
+          safeSetState(setPlayStartTime, null);
         }
       } catch (error) {
-        console.warn('Error pausing audio:', error);
-        setIsPlaying(false);
-        setPlayStartTime(null);
+        console.warn('Error pausing audio in SafeAudioStoriesPlayer:', error);
+        safeSetState(setIsPlaying, false);
+        safeSetState(setPlayStartTime, null);
       }
     }
-  }), [isPlaying]);
+  }), [isPlaying, isDestroyed]);
 
   const languageOptions = [
     { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
@@ -61,78 +83,113 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
 
   const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
-  // Initialize Sound library
-  useEffect(() => {
-    Sound.setCategory('Playback');
-    return () => {
-      // Cleanup on unmount
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-      }
+  // SAFE cleanup function
+  const cleanupAudio = () => {
+    console.log('🎵 SafeAudioStoriesPlayer: Starting cleanup');
+    
+    // Clear interval first
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    
+    // Force stop and release sound
+    if (soundRef.current) {
       try {
-        if (soundRef.current) {
-          soundRef.current.stop(() => {
-            // Force cleanup
+        soundRef.current.stop(() => {
+          try {
             if (soundRef.current) {
               soundRef.current.release();
               soundRef.current = null;
             }
-          });
+          } catch (releaseError) {
+            console.warn('Error in sound release callback:', releaseError);
+            soundRef.current = null;
+          }
+        });
+      } catch (stopError) {
+        console.warn('Error stopping sound:', stopError);
+        try {
+          if (soundRef.current) {
+            soundRef.current.release();
+            soundRef.current = null;
+          }
+        } catch (releaseError) {
+          console.warn('Error releasing sound after stop error:', releaseError);
+          soundRef.current = null;
         }
-      } catch (error) {
-        console.warn('Error releasing audio on unmount:', error);
-        soundRef.current = null;
       }
-      // Reset all states
-      setIsPlaying(false);
-      setCurrentPosition(0);
-      setDuration(0);
-      setPlayStartTime(null);
-      setError(null);
+    }
+    
+    // Reset all states safely
+    safeSetState(setIsPlaying, false);
+    safeSetState(setCurrentPosition, 0);
+    safeSetState(setDuration, 0);
+    safeSetState(setPlayStartTime, null);
+    safeSetState(setError, null);
+    safeSetState(setIsLoading, false);
+  };
+
+  // Initialize and cleanup
+  useEffect(() => {
+    Sound.setCategory('Playback');
+    isMountedRef.current = true;
+    
+    return () => {
+      console.log('🎵 SafeAudioStoriesPlayer: Component unmounting');
+      isMountedRef.current = false;
+      setIsDestroyed(true);
+      cleanupAudio();
     };
   }, []);
 
   // Load audio when story changes
   useEffect(() => {
-    loadAudio();
+    if (!isDestroyed && isMountedRef.current) {
+      loadAudio();
+    }
   }, [currentStoryIndex]);
 
-  // Track progress when playing - usando abordagem híbrida
+  // Safe progress tracking
   useEffect(() => {
+    if (isDestroyed || !isMountedRef.current) return;
+    
     if (isPlaying && soundRef.current && playStartTime && duration > 0) {
       progressIntervalRef.current = setInterval(() => {
-        if (soundRef.current && playStartTime) {
-          try {
-            // Método 1: Tentar getCurrentTime
-            soundRef.current.getCurrentTime((seconds) => {
-              // Add null check and number validation
-              if (seconds != null && typeof seconds === 'number' && !isNaN(seconds) && seconds > 0) {
-                // Se getCurrentTime funciona, usar ele
-                setCurrentPosition(seconds);
-                if (seconds >= duration && duration > 0) {
+        if (isDestroyed || !isMountedRef.current || !soundRef.current) {
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
+          }
+          return;
+        }
+        
+        try {
+          soundRef.current.getCurrentTime((seconds) => {
+            if (isDestroyed || !isMountedRef.current) return;
+            
+            if (seconds != null && typeof seconds === 'number' && !isNaN(seconds) && seconds >= 0) {
+              safeSetState(setCurrentPosition, seconds);
+              if (seconds >= duration && duration > 0) {
+                onPlaybackFinished();
+              }
+            } else {
+              // Fallback to manual timer
+              const elapsedTime = (Date.now() - (playStartTime || 0)) / 1000;
+              const estimatedPosition = Math.min(elapsedTime + currentPosition, duration);
+              if (!isNaN(estimatedPosition) && estimatedPosition >= 0) {
+                safeSetState(setCurrentPosition, estimatedPosition);
+                if (estimatedPosition >= duration && duration > 0) {
                   onPlaybackFinished();
                 }
-              } else {
-                // Método 2: Fallback para timer manual
-                const elapsedTime = (Date.now() - playStartTime) / 1000;
-                const estimatedPosition = Math.min(elapsedTime + currentPosition, duration);
-                if (!isNaN(estimatedPosition) && estimatedPosition >= 0) {
-                  setCurrentPosition(estimatedPosition);
-                  
-                  if (estimatedPosition >= duration && duration > 0) {
-                    onPlaybackFinished();
-                  }
-                }
               }
-            });
-          } catch (error) {
-            console.warn('Error getting current time:', error);
-            // Clear interval on error to prevent repeated errors
-            if (progressIntervalRef.current) {
-              clearInterval(progressIntervalRef.current);
-              progressIntervalRef.current = null;
             }
+          });
+        } catch (error) {
+          console.warn('Error in progress tracking:', error);
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current);
+            progressIntervalRef.current = null;
           }
         }
       }, 300);
@@ -151,21 +208,20 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     };
   }, [isPlaying, duration, playStartTime]);
 
-
-
   const getCurrentAudioUrl = (): string | null => {
+    if (isDestroyed || !stories || !stories[currentStoryIndex]) return null;
+    
     const currentStory = stories[currentStoryIndex];
     if (!currentStory) return null;
     
-    if(currentStory.audioUrl){
+    if (currentStory.audioUrl) {
       return currentStory.audioUrl;
     }
-    // Check if story has audioUrlTranslations for current language
+    
     if (currentStory.audioUrlTranslations && currentStory.audioUrlTranslations[currentLanguage as keyof typeof currentStory.audioUrlTranslations]) {
       return currentStory.audioUrlTranslations[currentLanguage as keyof typeof currentStory.audioUrlTranslations];
     }
     
-    // Fallback to Portuguese if current language not available
     if (currentStory.audioUrlTranslations && currentStory.audioUrlTranslations.pt) {
       return currentStory.audioUrlTranslations.pt;
     }
@@ -174,24 +230,27 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   };
 
   const loadAudio = async () => {
+    if (isDestroyed || !isMountedRef.current) return;
+    
     try {
-      setIsLoading(true);
-      setError(null);
+      safeSetState(setIsLoading, true);
+      safeSetState(setError, null);
       
-      // Clear any existing interval first
+      // Clear existing interval
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
       }
       
-      // Stop and release previous sound more aggressively
-      try {
-        if (soundRef.current) {
-          setIsPlaying(false);
-          setPlayStartTime(null);
+      // Clean up existing sound
+      if (soundRef.current) {
+        safeSetState(setIsPlaying, false);
+        safeSetState(setPlayStartTime, null);
+        
+        try {
           soundRef.current.stop(() => {
             try {
-              if (soundRef.current) {
+              if (soundRef.current && !isDestroyed) {
                 soundRef.current.release();
                 soundRef.current = null;
               }
@@ -200,37 +259,35 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
               soundRef.current = null;
             }
           });
-          // Also try immediate release in case stop callback fails
-          setTimeout(() => {
+        } catch (stopError) {
+          console.warn('Error stopping sound in loadAudio:', stopError);
+          if (soundRef.current) {
             try {
-              if (soundRef.current) {
-                soundRef.current.release();
-                soundRef.current = null;
-              }
+              soundRef.current.release();
+              soundRef.current = null;
             } catch (releaseError) {
-              console.warn('Error in timeout release:', releaseError);
+              console.warn('Error releasing after stop error:', releaseError);
               soundRef.current = null;
             }
-          }, 100);
+          }
         }
-      } catch (error) {
-        console.warn('Error releasing previous audio:', error);
-        soundRef.current = null;
       }
       
       const audioUrl = getCurrentAudioUrl();
-      if (!audioUrl) {
-        setError(t('audioPlayer.audioNotAvailable'));
-        setIsLoading(false);
+      if (!audioUrl || isDestroyed || !isMountedRef.current) {
+        safeSetState(setError, t('audioPlayer.audioNotAvailable'));
+        safeSetState(setIsLoading, false);
         return;
       }
       
       // Create new sound instance
       soundRef.current = new Sound(audioUrl, Sound.MAIN_BUNDLE, (error) => {
-        setIsLoading(false);
+        if (isDestroyed || !isMountedRef.current) return;
+        
+        safeSetState(setIsLoading, false);
         
         if (error) {
-          setError(t('audioPlayer.loadError'));
+          safeSetState(setError, t('audioPlayer.loadError'));
           return;
         }
         
@@ -239,111 +296,113 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
         const backendDuration = stories[currentStoryIndex]?.durationSeconds || 0;
         const audioDuration = soundDuration > 0 ? soundDuration : backendDuration;
         
-        setDuration(audioDuration);
-        setCurrentPosition(0);
-        setIsPlaying(false);
-        setPlayStartTime(null);
+        safeSetState(setDuration, audioDuration);
+        safeSetState(setCurrentPosition, 0);
+        safeSetState(setIsPlaying, false);
+        safeSetState(setPlayStartTime, null);
         
-        // Update story duration if real duration is different
-        if (soundDuration > 0 && soundDuration !== backendDuration && onDurationUpdate) {
+        // Update story duration if needed
+        if (soundDuration > 0 && soundDuration !== backendDuration && onDurationUpdate && !isDestroyed) {
           onDurationUpdate(currentStoryIndex, soundDuration);
         }
         
-        // Auto-play only when NOT initial load (story change)
+        // Auto-play only when NOT initial load
         const shouldAutoPlay = !isInitialLoadRef.current;
         
-        if (shouldAutoPlay) {
-          // Notify parent that this player is starting
+        if (shouldAutoPlay && !isDestroyed && isMountedRef.current) {
           if (onPlayStart) {
             onPlayStart();
           }
           
           const startTime = Date.now();
-          setIsPlaying(true);
-          setPlayStartTime(startTime);
+          safeSetState(setIsPlaying, true);
+          safeSetState(setPlayStartTime, startTime);
           
           soundRef.current?.play((success) => {
+            if (isDestroyed || !isMountedRef.current) return;
+            
             if (!success) {
-              setIsPlaying(false);
-              setPlayStartTime(null);
+              safeSetState(setIsPlaying, false);
+              safeSetState(setPlayStartTime, null);
             }
           });
-        } else {
         }
         
-        // Mark as no longer initial load
         isInitialLoadRef.current = false;
       });
       
     } catch (err) {
-      setError(t('audioPlayer.initError'));
-      setIsLoading(false);
+      if (!isDestroyed && isMountedRef.current) {
+        safeSetState(setError, t('audioPlayer.initError'));
+        safeSetState(setIsLoading, false);
+      }
     }
   };
   
   const togglePlayback = () => {
-    if (!soundRef.current || isLoading) {
+    if (isDestroyed || !isMountedRef.current || !soundRef.current || isLoading) {
       return;
     }
     
     try {
       if (isPlaying) {
-        // Pause - definir estado imediatamente também
-        setIsPlaying(false);
-        setPlayStartTime(null);
-        
+        safeSetState(setIsPlaying, false);
+        safeSetState(setPlayStartTime, null);
         soundRef.current.pause();
       } else {
-        // Notify parent that this player is starting
         if (onPlayStart) {
           onPlayStart();
         }
         
-        // Play - definir estado imediatamente
         const startTime = Date.now();
-        setIsPlaying(true);
-        setPlayStartTime(startTime);
+        safeSetState(setIsPlaying, true);
+        safeSetState(setPlayStartTime, startTime);
         
         soundRef.current.play((success) => {
+          if (isDestroyed || !isMountedRef.current) return;
+          
           if (!success) {
-            setIsPlaying(false);
-            setPlayStartTime(null);
-            setError(t('audioPlayer.playbackError'));
+            safeSetState(setIsPlaying, false);
+            safeSetState(setPlayStartTime, null);
+            safeSetState(setError, t('audioPlayer.playbackError'));
           }
         });
       }
     } catch (error) {
       console.warn('Error in togglePlayback:', error);
-      setIsPlaying(false);
-      setPlayStartTime(null);
-      setError(t('audioPlayer.playbackError'));
+      safeSetState(setIsPlaying, false);
+      safeSetState(setPlayStartTime, null);
+      safeSetState(setError, t('audioPlayer.playbackError'));
     }
   };
   
   const onPlaybackFinished = () => {
-    setIsPlaying(false);
-    setCurrentPosition(0);
-    setPlayStartTime(null);
+    if (isDestroyed || !isMountedRef.current) return;
+    
+    safeSetState(setIsPlaying, false);
+    safeSetState(setCurrentPosition, 0);
+    safeSetState(setPlayStartTime, null);
     
     // Auto play next story if available
-    if (currentStoryIndex < stories.length - 1) {
+    if (currentStoryIndex < stories.length - 1 && !isDestroyed) {
       setTimeout(() => {
-        goToNextStory();
+        if (!isDestroyed && isMountedRef.current) {
+          goToNextStory();
+        }
       }, 500);
     }
   };
   
   const seekToPosition = (position: number) => {
-    if (!soundRef.current || isLoading) return;
+    if (isDestroyed || !isMountedRef.current || !soundRef.current || isLoading) return;
     
     try {
       const seekTime = Math.max(0, Math.min(position, duration));
       soundRef.current.setCurrentTime(seekTime);
-      setCurrentPosition(seekTime);
+      safeSetState(setCurrentPosition, seekTime);
       
-      // Reset play start time se estiver tocando
       if (isPlaying) {
-        setPlayStartTime(Date.now());
+        safeSetState(setPlayStartTime, Date.now());
       }
     } catch (error) {
       console.warn('Error seeking audio position:', error);
@@ -351,65 +410,73 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   };
 
   const goToNextStory = () => {
-    if (currentStoryIndex >= stories.length - 1) return;
+    if (isDestroyed || !isMountedRef.current || currentStoryIndex >= stories.length - 1) return;
     
-    // Stop current audio
     try {
       if (soundRef.current && isPlaying) {
         soundRef.current.stop(() => {
-          setIsPlaying(false);
-          onStoryChange(currentStoryIndex + 1);
+          if (!isDestroyed && isMountedRef.current) {
+            safeSetState(setIsPlaying, false);
+            onStoryChange(currentStoryIndex + 1);
+          }
         });
       } else {
         onStoryChange(currentStoryIndex + 1);
       }
     } catch (error) {
-      console.warn('Error stopping audio in goToNextStory:', error);
-      setIsPlaying(false);
-      onStoryChange(currentStoryIndex + 1);
+      console.warn('Error in goToNextStory:', error);
+      safeSetState(setIsPlaying, false);
+      if (!isDestroyed && isMountedRef.current) {
+        onStoryChange(currentStoryIndex + 1);
+      }
     }
   };
 
   const goToPreviousStory = () => {
-    if (currentStoryIndex <= 0) return;
+    if (isDestroyed || !isMountedRef.current || currentStoryIndex <= 0) return;
     
-    // Stop current audio
     try {
       if (soundRef.current && isPlaying) {
         soundRef.current.stop(() => {
-          setIsPlaying(false);
-          onStoryChange(currentStoryIndex - 1);
+          if (!isDestroyed && isMountedRef.current) {
+            safeSetState(setIsPlaying, false);
+            onStoryChange(currentStoryIndex - 1);
+          }
         });
       } else {
         onStoryChange(currentStoryIndex - 1);
       }
     } catch (error) {
-      console.warn('Error stopping audio in goToPreviousStory:', error);
-      setIsPlaying(false);
-      onStoryChange(currentStoryIndex - 1);
+      console.warn('Error in goToPreviousStory:', error);
+      safeSetState(setIsPlaying, false);
+      if (!isDestroyed && isMountedRef.current) {
+        onStoryChange(currentStoryIndex - 1);
+      }
     }
   };
 
   const goToStory = (index: number) => {
-    if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
+    if (isDestroyed || !isMountedRef.current || index < 0 || index >= stories.length || index === currentStoryIndex) return;
     
-    // Stop current audio
     try {
       if (soundRef.current && isPlaying) {
         soundRef.current.stop(() => {
-          setIsPlaying(false);
-          onStoryChange(index);
+          if (!isDestroyed && isMountedRef.current) {
+            safeSetState(setIsPlaying, false);
+            onStoryChange(index);
+          }
         });
       } else {
         onStoryChange(index);
       }
     } catch (error) {
-      console.warn('Error stopping audio in goToStory:', error);
-      setIsPlaying(false);
-      onStoryChange(index);
+      console.warn('Error in goToStory:', error);
+      safeSetState(setIsPlaying, false);
+      if (!isDestroyed && isMountedRef.current) {
+        onStoryChange(index);
+      }
     }
   };
-
 
   const formatTime = (seconds: number): string => {
     if (seconds == null || typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
@@ -420,7 +487,7 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (stories.length === 0) {
+  if (isDestroyed || !isMountedRef.current || stories.length === 0) {
     return null;
   }
 
@@ -522,10 +589,10 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
                   position="absolute"
                   width={12}
                   height={12}
-                  backgroundColor="success"
+                  backgroundColor="textPrimary"
                   borderRadius={8}
                   borderWidth={2}
-                  borderColor="success"
+                  borderColor="textPrimary"
                   style={{
                     left: Math.max(0, Math.min(progressBarWidth - 12, (currentPosition / duration) * progressBarWidth - 6)),
                     top: 4,
@@ -593,8 +660,10 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
                     <TouchableOpacity 
                       key={option.code} 
                       onPress={async () => {
-                        await changeLanguage(option.code);
-                        setShowLanguageDropdown(false);
+                        if (!isDestroyed && isMountedRef.current) {
+                          await changeLanguage(option.code);
+                          setShowLanguageDropdown(false);
+                        }
                       }}
                     >
                       <Box 
@@ -680,5 +749,4 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   );
 });
 
-export default AudioStoriesPlayer;
-
+export default SafeAudioStoriesPlayer;

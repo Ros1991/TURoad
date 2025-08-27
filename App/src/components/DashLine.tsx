@@ -18,7 +18,7 @@ const DashLine: React.FC<DashLineProps> = ({
   totalDashUnit = dashLength + dashGap,
   style,
 }) => {
-  const numberOfDashes = Math.ceil(100 / totalDashUnit); // Approximate for a reasonable number of dashes
+  const numberOfDashes = Math.ceil(100 / totalDashUnit);
 
   const dashes = Array.from({ length: numberOfDashes }, (_, index) => (
     <View

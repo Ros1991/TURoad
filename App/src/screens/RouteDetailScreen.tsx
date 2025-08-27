@@ -48,6 +48,7 @@ const RouteDetailScreen = () => {
   const [currentPlayingCityId, setCurrentPlayingCityId] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const audioPlayerRefs = useRef<{ [key: string]: AudioStoriesPlayerRef | null }>({});
   const { isAuthenticated, user } = useAuth();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
@@ -82,6 +83,7 @@ const RouteDetailScreen = () => {
         
         // Set all city expanders as open by default
         if (routeData.cities && routeData.cities.length > 0) {
+          console.log(routeData.cities)
           const cityIds = routeData.cities.map((city: any, index: number) => `city-${city.id || index}`);
           setExpandedCities(new Set(cityIds));
         }
@@ -97,7 +99,6 @@ const RouteDetailScreen = () => {
         }
       }
       setBusinesses(businessesResponse);
-      console.log(businessesResponse);
       setHosting(hostingResponse);
     } catch (error) {
       console.error('Error loading route details:', error);
@@ -349,6 +350,212 @@ const RouteDetailScreen = () => {
         </Text>
       </Box>
 
+      {/* Cities Carousel */}
+      {routeData.cities && routeData.cities.length > 0 && (
+        <Box marginBottom="l">
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
+          >
+            <Box flexDirection="row" alignItems="center">
+              {routeData.cities.map((city: any, cityIndex: number) => {
+                // Calculate distance from user to city if user location is available
+                let distanceToCity = null;
+                if (userLocation && city.latitude && city.longitude) {
+                  const lat1 = userLocation.latitude;
+                  const lon1 = userLocation.longitude;
+                  const lat2 = parseFloat(city.latitude);
+                  const lon2 = parseFloat(city.longitude);
+                  
+                  const R = 6371; // Earth's radius in kilometers
+                  const dLat = (lat2 - lat1) * Math.PI / 180;
+                  const dLon = (lon2 - lon1) * Math.PI / 180;
+                  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon/2) * Math.sin(dLon/2);
+                  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                  distanceToCity = R * c;
+                }
+                
+                // Determine if this is the closest city
+                let isClosest = false;
+                if (userLocation) {
+                  // Find the closest city by comparing distances
+                  const cityDistances = routeData.cities.map((cityItem: any, i: number) => {
+                    if (!cityItem.latitude || !cityItem.longitude) return { index: i, distance: Infinity };
+                    
+                    const lat1 = userLocation.latitude;
+                    const lon1 = userLocation.longitude;
+                    const lat2 = parseFloat(cityItem.latitude);
+                    const lon2 = parseFloat(cityItem.longitude);
+                    
+                    const R = 6371;
+                    const dLat = (lat2 - lat1) * Math.PI / 180;
+                    const dLon = (lon2 - lon1) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const distance = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                    return { index: i, distance: R * distance };
+                  });
+                  
+                  const closestCityIndex = cityDistances.reduce((min: {index: number, distance: number}, current: {index: number, distance: number}) => 
+                    current.distance < min.distance ? current : min
+                  ).index;
+                  
+                  isClosest = cityIndex === closestCityIndex;
+                } else {
+                  // If no user location, highlight the first city
+                  isClosest = cityIndex === 0;
+                }
+
+                return (
+                  <Box key={city.id || cityIndex} flexDirection="row" alignItems="center">
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('City', { cityId: city.id.toString() })}
+                      activeOpacity={0.7}
+                    >
+                      <Box alignItems="center">
+                        {/* City Image Circle */}
+                        <Box
+                          width={60}
+                          height={60}
+                          borderRadius={30}
+                          style={{
+                            backgroundColor: '#F0F0F0',
+                            overflow: 'hidden',
+                            marginBottom: 8,
+                            zIndex: 9999
+                          }}
+                        >
+                          {city.image_url ? (
+                            <Image
+                              source={{ uri: city.image_url }}
+                              style={{
+                                width: 60,
+                                height: 60,
+                                borderRadius: 30,
+                                zIndex: 9999
+                              }}
+                              resizeMode="cover"
+                            />
+                          ) : (
+                            <Box
+                              width={60}
+                              height={60}
+                              style={{ backgroundColor: '#E0E0E0' }}
+                              borderRadius={30}
+                              justifyContent="center"
+                              alignItems="center"
+                            >
+                              <MaterialCommunityIcons name="city" size={24} color="#999999" />
+                            </Box>
+                          )}
+                        </Box>
+
+                        {/* City Info Card */}
+                        <Box
+                          style={{
+                            backgroundColor: isClosest ? '#035A6E' : '#F8F9FA',
+                            borderRadius: 12,
+                            paddingHorizontal: 12,
+                            paddingVertical: 8,
+                            minWidth: 120,
+                            marginTop: -10,
+                            alignItems: 'center'
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              fontWeight: '600',
+                              color: isClosest ? '#FFFFFF' : '#1A1A1A',
+                              textAlign: 'center',
+                              marginBottom: 2
+                            }}
+                          >
+                            {city.name}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 10,
+                              color: isClosest ? '#E0F2F1' : '#666666',
+                              textAlign: 'center'
+                            }}
+                          >
+                            {distanceToCity 
+                              ? `em ${distanceToCity.toFixed(0)}km`
+                              : cityIndex === 0 ? 'Partida' : `Parada ${cityIndex + 1}`
+                            }
+                          </Text>
+                        </Box>
+                      </Box>
+                    </TouchableOpacity>
+
+                    {/* Horizontal connector between cities */}
+                    {cityIndex < routeData.cities.length - 1 && (
+                      <Box flexDirection="row" alignItems="center" style={{ marginTop: 55 }}>
+                        {/* First dot (green/success for closest city, gray for others) */}
+                        <Box 
+                          width={16} 
+                          height={16} 
+                          borderRadius={8} 
+                          backgroundColor={"success"}
+                          borderWidth={2}
+                          borderColor="white"
+                          style={{
+                            shadowColor: '#000000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 3,
+                            elevation: 3,
+                            marginRight: 4,
+                            zIndex: 999999
+                          }}
+                        />
+                        
+                        {/* Horizontal dashed line */}
+                        <Box flexDirection="row" alignItems="center">
+                          {Array.from({ length: 6 }, (_, i) => (
+                            <Box
+                              key={i}
+                              style={{
+                                width: 3,
+                                height: 2,
+                                backgroundColor: '#999999',
+                                marginRight: i < 5 ? 2 : 0
+                              }}
+                            />
+                          ))}
+                        </Box>
+                        
+                        {/* Second dot (always gray) */}
+                        <Box 
+                          width={16} 
+                          height={16} 
+                          borderRadius={8}  
+                          backgroundColor="secondary"
+                          borderWidth={2}
+                          borderColor="white"
+                          style={{
+                            shadowColor: '#000000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 3,
+                            elevation: 3,
+                            marginLeft: 4
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </ScrollView>
+        </Box>
+      )}
       
       {/* Route Stories */}
       {routeData.stories && routeData.stories.length > 0 && (
