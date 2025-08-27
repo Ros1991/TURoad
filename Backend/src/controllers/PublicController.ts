@@ -15,6 +15,7 @@ import { RouteCityService } from '@/services/RouteCityService';
 import { CityResponseDto } from '@/dtos/CityDto';
 import { UserFavoriteCityService } from '@/services/UserFavoriteCityService';
 import { UserFavoriteRouteService } from '@/services/UserFavoriteRouteService';
+import { UserFavoritesService } from '@/services/UserFavoritesService';
 
 export class PublicController {
   private categoryService: CategoryService;
@@ -25,6 +26,7 @@ export class PublicController {
   private routeCityService: RouteCityService;
   private userFavoriteCityService: UserFavoriteCityService;
   private userFavoriteRouteService: UserFavoriteRouteService;
+  private userFavoritesService: UserFavoritesService;
 
   constructor() {
     this.categoryService = new CategoryService();
@@ -35,6 +37,7 @@ export class PublicController {
     this.routeCityService = new RouteCityService();
     this.userFavoriteCityService = new UserFavoriteCityService();
     this.userFavoriteRouteService = new UserFavoriteRouteService();
+    this.userFavoritesService = new UserFavoritesService();
   }
 
   private async getLocalizedText(textRefId: number | undefined, language: string): Promise<string | null> {
@@ -821,6 +824,34 @@ export class PublicController {
       return res.status(500).json({
         success: false,
         message: 'Error fetching route hosting'
+      });
+    }
+  }
+
+  async getUserFavorites(req: RequestWithLanguage, res: Response): Promise<void> {
+    try {
+      const language = req.language || 'pt';
+      const userId = (req as any).user?.userId;
+      
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          message: 'User authentication required'
+        });
+        return;
+      }
+
+      const favorites = await this.userFavoritesService.getUserFavorites(userId, language);
+      
+      res.json({
+        success: true,
+        data: favorites
+      });
+    } catch (error) {
+      console.error('Error fetching user favorites:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Error fetching user favorites'
       });
     }
   }

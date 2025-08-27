@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PublicController } from '../controllers/PublicController';
-import { optionalAuthenticate } from '@/middleware/auth';
+import { optionalAuthenticate, authenticate } from '@/middleware/auth';
 
 const router = Router();
 const publicController = new PublicController();
@@ -36,5 +36,8 @@ router.get('/routes/:id', optionalAuthenticate, publicController.getRouteById.bi
 // Route businesses and hosting endpoints
 router.get('/routes/:routeId/businesses', publicController.getRouteBusinesses.bind(publicController));
 router.get('/routes/:routeId/hosting', publicController.getRouteHosting.bind(publicController));
+
+// User favorites endpoint (requires authentication)
+router.get('/users/favorites', authenticate, publicController.getUserFavorites.bind(publicController));
 
 export default router;
