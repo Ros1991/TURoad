@@ -12,15 +12,22 @@ interface AudioStoriesPlayerProps {
   currentStoryIndex: number;
   onStoryChange: (index: number) => void;
   onDurationUpdate?: (storyIndex: number, realDuration: number) => void;
-  onPlayStart?: () => void; // Called when this player starts playing
-  hideLanguageSelector?: boolean; // Hide language selector for screens with their own language control
+  onPlayStart?: () => void;
+  hideLanguageSelector?: boolean;
 }
 
 export interface AudioStoriesPlayerRef {
   pause: () => void;
 }
 
-const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ stories, currentStoryIndex, onStoryChange, onDurationUpdate, onPlayStart, hideLanguageSelector = false }, ref) => {
+const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerProps>(({ 
+  stories, 
+  currentStoryIndex, 
+  onStoryChange, 
+  onDurationUpdate, 
+  onPlayStart, 
+  hideLanguageSelector = false 
+}, ref) => {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage, availableLanguages } = useLanguage();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
@@ -30,32 +37,47 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playStartTime, setPlayStartTime] = useState<number | null>(null);
+  const [isDestroyed, setIsDestroyed] = useState(false);
   
   const soundRef = useRef<Sound | null>(null);
   const isInitialLoadRef = useRef(true);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const progressBarWidth = Dimensions.get('window').width - 64; // Account for padding
+  const isMountedRef = useRef(true);
+  const progressBarWidth = Dimensions.get('window').width - 64;
 
-  // Expose pause method to parent
+  // Safe state setter that checks if component is still mounted
+  const safeSetState = (setter: Function, value: any) => {
+    if (isMountedRef.current && !isDestroyed) {
+      try {
+        setter(value);
+      } catch (error) {
+        console.warn('Error setting state in AudioStoriesPlayer:', error);
+      }
+    }
+  };
+
+  // Expose pause method to parent with safety checks
   useImperativeHandle(ref, () => ({
     pause: () => {
+      if (isDestroyed || !isMountedRef.current) return;
+      
       try {
         if (soundRef.current && isPlaying) {
           // Additional safety check for sound object state
           if (soundRef.current.getDuration && soundRef.current.getDuration() >= 0) {
             soundRef.current.pause();
           }
-          setIsPlaying(false);
-          setPlayStartTime(null);
+          safeSetState(setIsPlaying, false);
+          safeSetState(setPlayStartTime, null);
         }
       } catch (error) {
-        console.warn('Error pausing audio:', error);
-        setIsPlaying(false);
-        setPlayStartTime(null);
+        console.warn('Error pausing audio in AudioStoriesPlayer:', error);
+        safeSetState(setIsPlaying, false);
+        safeSetState(setPlayStartTime, null);
         soundRef.current = null; // Clear broken reference
       }
     }
-  }), [isPlaying]);
+  }), [isPlaying, isDestroyed]);
 
   const languageOptions = [
     { code: 'pt' as const, flag: '🇧🇷', name: 'Português' },
@@ -65,75 +87,28 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
 
   const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
-  // Initialize Sound library
+  // Initialize and cleanup
   useEffect(() => {
     Sound.setCategory('Playback');
+    isMountedRef.current = true;
+    
     return () => {
-      console.log('🎵 AudioStoriesPlayer: Component unmounting');
-      // Cleanup on unmount
+      console.log('🎵 AudioStoriesPlayer: Component unmounting - SAFE cleanup without stop()');
+      isMountedRef.current = false;
+      setIsDestroyed(true);
+      
+      // CRITICAL FIX: Never call ANY methods on sound during unmount
+      // Clear interval first
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
       }
       
-      // Enhanced safe cleanup
+      // React Native will handle garbage collection - just clear reference
       if (soundRef.current) {
-        try {
-          // Check if sound object is in valid state before calling stop
-          if (soundRef.current.getDuration && typeof soundRef.current.getDuration === 'function') {
-            try {
-              const duration = soundRef.current.getDuration();
-              if (duration >= 0) {
-                // Sound is in valid state, safe to stop
-                soundRef.current.stop(() => {
-                  try {
-                    if (soundRef.current) {
-                      soundRef.current.release();
-                      soundRef.current = null;
-                    }
-                  } catch (releaseError) {
-                    console.warn('Error in sound release callback:', releaseError);
-                    soundRef.current = null;
-                  }
-                });
-              } else {
-                // Invalid duration, just release directly
-                if (soundRef.current && soundRef.current.release) {
-                  soundRef.current.release();
-                }
-                soundRef.current = null;
-              }
-            } catch (durationError) {
-              // getDuration failed, just release directly
-              if (soundRef.current && soundRef.current.release) {
-                soundRef.current.release();
-              }
-              soundRef.current = null;
-            }
-          } else {
-            // No getDuration method, object is broken, just clear reference
-            soundRef.current = null;
-          }
-        } catch (stopError) {
-          console.warn('Error in cleanup process:', stopError);
-          try {
-            if (soundRef.current && soundRef.current.release) {
-              soundRef.current.release();
-            }
-          } catch (releaseError) {
-            console.warn('Error releasing sound after stop error:', releaseError);
-          } finally {
-            soundRef.current = null;
-          }
-        }
+        console.log('🎵 AudioStoriesPlayer: Clearing sound reference during unmount (no method calls)');
+        soundRef.current = null;
       }
-      
-      // Reset all states
-      setIsPlaying(false);
-      setCurrentPosition(0);
-      setDuration(0);
-      setPlayStartTime(null);
-      setError(null);
     };
   }, []);
 
@@ -251,8 +226,8 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
                 }
               });
             } else {
-              // Invalid sound object, skip stop and go straight to release
-              console.warn('🎵 Invalid sound object detected in cleanup, skipping stop');
+              // Invalid sound object, try to release anyway for cleanup
+              console.warn('🎵 Invalid sound object detected in cleanup, attempting release');
               try {
                 soundRef.current.release();
               } catch (releaseError) {
@@ -262,8 +237,8 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
               }
             }
           } catch (durationError) {
-            // getDuration failed, sound object is corrupted
-            console.warn('🎵 Sound object corrupted in cleanup:', durationError);
+            // getDuration failed, try to release anyway for cleanup
+            console.warn('🎵 Sound object corrupted in cleanup, attempting release:', durationError);
             try {
               if (soundRef.current) {
                 soundRef.current.release();
@@ -429,128 +404,102 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     
     // Stop current audio safely
     try {
-      if (soundRef.current && isPlaying) {
-        // Check if sound object is in valid state before stopping
-        try {
-          const duration = soundRef.current.getDuration();
-          if (duration >= 0) {
-            // Sound is in valid state, safe to stop
-            soundRef.current.stop(() => {
-              setIsPlaying(false);
-              onStoryChange(currentStoryIndex + 1);
-            });
-          } else {
-            // Invalid sound object, just update state
-            console.warn('🎵 Invalid sound object detected in goToNextStory, skipping stop');
-            soundRef.current = null;
             setIsPlaying(false);
             onStoryChange(currentStoryIndex + 1);
-          }
-        } catch (durationError) {
-          // getDuration failed, sound object is corrupted
-          console.warn('🎵 Sound object corrupted in goToNextStory:', durationError);
-          soundRef.current = null;
+          });
+        } else {
+          // Invalid sound object, just update state and continue
+          console.warn(' Invalid sound object detected in goToNextStory, continuing navigation');
           setIsPlaying(false);
           onStoryChange(currentStoryIndex + 1);
         }
-      } else {
+      } catch (durationError) {
+        // getDuration failed, just continue navigation
+        console.warn(' Sound object corrupted in goToNextStory, continuing navigation:', durationError);
+        setIsPlaying(false);
         onStoryChange(currentStoryIndex + 1);
       }
-    } catch (error) {
-      console.warn('Error stopping audio in goToNextStory:', error);
-      soundRef.current = null;
-      setIsPlaying(false);
+    } else {
       onStoryChange(currentStoryIndex + 1);
     }
-  };
+  } catch (error) {
+    console.warn('Error stopping audio in goToNextStory:', error);
+    setIsPlaying(false);
+    onStoryChange(currentStoryIndex + 1);
+  }
+};
 
-  const goToPreviousStory = () => {
-    if (currentStoryIndex <= 0) return;
-    
-    // Stop current audio safely
-    try {
-      if (soundRef.current && isPlaying) {
-        // Check if sound object is in valid state before stopping
-        try {
-          const duration = soundRef.current.getDuration();
-          if (duration >= 0) {
-            // Sound is in valid state, safe to stop
-            soundRef.current.stop(() => {
-              setIsPlaying(false);
-              onStoryChange(currentStoryIndex - 1);
-            });
-          } else {
-            // Invalid sound object, just update state
-            console.warn('🎵 Invalid sound object detected in goToPreviousStory, skipping stop');
-            soundRef.current = null;
+const goToPreviousStory = () => {
+  if (currentStoryIndex <= 0) return;
+  
+  // Stop current audio safely
+  try {
+    if (soundRef.current && isPlaying) {
+      // Check if sound object is in valid state before stopping
+      try {
+        const duration = soundRef.current.getDuration();
+        if (duration >= 0) {
+          // Sound is in valid state, safe to stop
+          soundRef.current.stop(() => {
             setIsPlaying(false);
             onStoryChange(currentStoryIndex - 1);
-          }
-        } catch (durationError) {
-          // getDuration failed, sound object is corrupted
-          console.warn('🎵 Sound object corrupted in goToPreviousStory:', durationError);
-          soundRef.current = null;
+          });
+        } else {
+          // Invalid sound object, just update state and continue
+          console.warn(' Invalid sound object detected in goToPreviousStory, continuing navigation');
           setIsPlaying(false);
           onStoryChange(currentStoryIndex - 1);
         }
-      } else {
+      } catch (durationError) {
+        // getDuration failed, just continue navigation
+        console.warn(' Sound object corrupted in goToPreviousStory, continuing navigation:', durationError);
+        setIsPlaying(false);
         onStoryChange(currentStoryIndex - 1);
       }
-    } catch (error) {
-      console.warn('Error stopping audio in goToPreviousStory:', error);
-      soundRef.current = null;
-      setIsPlaying(false);
+    } else {
       onStoryChange(currentStoryIndex - 1);
     }
-  };
+  } catch (error) {
+    console.warn('Error stopping audio in goToPreviousStory:', error);
+    setIsPlaying(false);
+    onStoryChange(currentStoryIndex - 1);
+  }
+};
 
-  const goToStory = (index: number) => {
-    if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
-    
-    // Stop current audio safely
-    try {
-      if (soundRef.current && isPlaying) {
-        // Check if sound object is in valid state before stopping
-        try {
-          const duration = soundRef.current.getDuration();
-          if (duration >= 0) {
-            // Sound is in valid state, safe to stop
-            soundRef.current.stop(() => {
-              setIsPlaying(false);
-              onStoryChange(index);
-            });
-          } else {
-            // Invalid sound object, just update state
-            console.warn('🎵 Invalid sound object detected in goToStory, skipping stop');
-            soundRef.current = null;
+const goToStory = (index: number) => {
+  if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
+  
+  // Stop current audio safely
+  try {
+    if (soundRef.current && isPlaying) {
+      // Check if sound object is in valid state before stopping
+      try {
+        const duration = soundRef.current.getDuration();
+        if (duration >= 0) {
+          // Sound is in valid state, safe to stop
+          soundRef.current.stop(() => {
             setIsPlaying(false);
             onStoryChange(index);
-          }
-        } catch (durationError) {
-          // getDuration failed, sound object is corrupted
-          console.warn('🎵 Sound object corrupted in goToStory:', durationError);
-          soundRef.current = null;
+          });
+        } else {
+          // Invalid sound object, just update state and continue
+          console.warn(' Invalid sound object detected in goToStory, continuing navigation');
           setIsPlaying(false);
           onStoryChange(index);
         }
-      } else {
+      } catch (durationError) {
+        // getDuration failed, just continue navigation
+        console.warn(' Sound object corrupted in goToStory, continuing navigation:', durationError);
+        setIsPlaying(false);
         onStoryChange(index);
       }
-    } catch (error) {
-      console.warn('Error stopping audio in goToStory:', error);
-      soundRef.current = null;
-      setIsPlaying(false);
+    } else {
       onStoryChange(index);
     }
-  };
-
-
-  const formatTime = (seconds: number): string => {
-    if (seconds == null || typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
-      return '0:00';
-    }
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+  } catch (error) {
+    console.warn('Error stopping audio in goToStory:', error);
+    setIsPlaying(false);
+    onStoryChange(index);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 

@@ -164,10 +164,22 @@ const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioSt
     isMountedRef.current = true;
     
     return () => {
-      console.log('🎵 SafeAudioStoriesPlayer: Component unmounting');
+      console.log('🎵 SafeAudioStoriesPlayer: Component unmounting - SAFE cleanup without stop()');
       isMountedRef.current = false;
       setIsDestroyed(true);
-      cleanupAudio();
+      
+      // CRITICAL FIX: Never call ANY methods on sound during unmount
+      // Clear interval first
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      
+      // React Native will handle garbage collection - just clear reference
+      if (soundRef.current) {
+        console.log('🎵 SafeAudioStoriesPlayer: Clearing sound reference during unmount (no method calls)');
+        soundRef.current = null;
+      }
     };
   }, []);
 
