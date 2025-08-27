@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Box, Text } from '../components';
 import { favoritesService, UserFavoriteItem } from '../services/FavoritesService';
 
+type RootStackParamList = {
+  RouteDetail: { routeId: string };
+  City: { cityId: string };
+  Others: { type: 'event' | 'location'; itemId: string };
+};
+
 const FavoritesScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [favorites, setFavorites] = useState<UserFavoriteItem[]>([]);
@@ -31,9 +37,22 @@ const FavoritesScreen: React.FC = () => {
     }
   };
 
+  const handleCardPress = (item: UserFavoriteItem) => {
+    if (item.type === 'route') {
+      navigation.navigate('RouteDetail', { routeId: item.id });
+    } else if (item.type === 'city') {
+      navigation.navigate('City', { cityId: item.id });
+    } else {
+      // For events and locations, navigate to OthersScreen
+      const othersType = item.type === 'event' ? 'event' : 'location';
+      navigation.navigate('Others', { type: othersType, itemId: item.id });
+    }
+  };
+
   const FavoriteCard = ({ item }: { item: UserFavoriteItem }) => (
     <TouchableOpacity
       activeOpacity={0.85}
+      onPress={() => handleCardPress(item)}
       style={{
         transform: [{ scale: 1 }],
       }}

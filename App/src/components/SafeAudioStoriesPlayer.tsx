@@ -63,7 +63,10 @@ const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioSt
       
       try {
         if (soundRef.current && isPlaying) {
-          soundRef.current.pause();
+          // Additional safety check for sound object state
+          if (soundRef.current.getDuration && soundRef.current.getDuration() >= 0) {
+            soundRef.current.pause();
+          }
           safeSetState(setIsPlaying, false);
           safeSetState(setPlayStartTime, null);
         }
@@ -71,6 +74,7 @@ const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioSt
         console.warn('Error pausing audio in SafeAudioStoriesPlayer:', error);
         safeSetState(setIsPlaying, false);
         safeSetState(setPlayStartTime, null);
+        soundRef.current = null; // Clear broken reference
       }
     }
   }), [isPlaying, isDestroyed]);
@@ -83,7 +87,7 @@ const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioSt
 
   const currentLanguageOption = languageOptions.find(lang => lang.code === currentLanguage) || languageOptions[0];
 
-  // SAFE cleanup function
+  // SAFE cleanup function with enhanced null checks
   const cleanupAudio = () => {
     console.log('🎵 SafeAudioStoriesPlayer: Starting cleanup');
     
@@ -93,29 +97,53 @@ const SafeAudioStoriesPlayer = forwardRef<SafeAudioStoriesPlayerRef, SafeAudioSt
       progressIntervalRef.current = null;
     }
     
-    // Force stop and release sound
+    // Force stop and release sound with enhanced safety
     if (soundRef.current) {
       try {
-        soundRef.current.stop(() => {
+        // Check if sound object is in valid state before calling stop
+        if (soundRef.current.getDuration && typeof soundRef.current.getDuration === 'function') {
           try {
-            if (soundRef.current) {
-              soundRef.current.release();
+            const duration = soundRef.current.getDuration();
+            if (duration >= 0) {
+              // Sound is in valid state, safe to stop
+              soundRef.current.stop(() => {
+                try {
+                  if (soundRef.current) {
+                    soundRef.current.release();
+                    soundRef.current = null;
+                  }
+                } catch (releaseError) {
+                  console.warn('Error in sound release callback:', releaseError);
+                  soundRef.current = null;
+                }
+              });
+            } else {
+              // Invalid duration, just release directly
+              if (soundRef.current && soundRef.current.release) {
+                soundRef.current.release();
+              }
               soundRef.current = null;
             }
-          } catch (releaseError) {
-            console.warn('Error in sound release callback:', releaseError);
+          } catch (durationError) {
+            // getDuration failed, just release directly
+            if (soundRef.current && soundRef.current.release) {
+              soundRef.current.release();
+            }
             soundRef.current = null;
           }
-        });
+        } else {
+          // No getDuration method, object is broken, just clear reference
+          soundRef.current = null;
+        }
       } catch (stopError) {
-        console.warn('Error stopping sound:', stopError);
+        console.warn('Error in cleanup process:', stopError);
         try {
-          if (soundRef.current) {
+          if (soundRef.current && soundRef.current.release) {
             soundRef.current.release();
-            soundRef.current = null;
           }
         } catch (releaseError) {
           console.warn('Error releasing sound after stop error:', releaseError);
+        } finally {
           soundRef.current = null;
         }
       }

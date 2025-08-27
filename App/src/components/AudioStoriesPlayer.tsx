@@ -41,7 +41,10 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
     pause: () => {
       try {
         if (soundRef.current && isPlaying) {
-          soundRef.current.pause();
+          // Additional safety check for sound object state
+          if (soundRef.current.getDuration && soundRef.current.getDuration() >= 0) {
+            soundRef.current.pause();
+          }
           setIsPlaying(false);
           setPlayStartTime(null);
         }
@@ -49,6 +52,7 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
         console.warn('Error pausing audio:', error);
         setIsPlaying(false);
         setPlayStartTime(null);
+        soundRef.current = null; // Clear broken reference
       }
     }
   }), [isPlaying]);
@@ -65,25 +69,65 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   useEffect(() => {
     Sound.setCategory('Playback');
     return () => {
+      console.log('🎵 AudioStoriesPlayer: Component unmounting');
       // Cleanup on unmount
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
         progressIntervalRef.current = null;
       }
-      try {
-        if (soundRef.current) {
-          soundRef.current.stop(() => {
-            // Force cleanup
-            if (soundRef.current) {
-              soundRef.current.release();
+      
+      // Enhanced safe cleanup
+      if (soundRef.current) {
+        try {
+          // Check if sound object is in valid state before calling stop
+          if (soundRef.current.getDuration && typeof soundRef.current.getDuration === 'function') {
+            try {
+              const duration = soundRef.current.getDuration();
+              if (duration >= 0) {
+                // Sound is in valid state, safe to stop
+                soundRef.current.stop(() => {
+                  try {
+                    if (soundRef.current) {
+                      soundRef.current.release();
+                      soundRef.current = null;
+                    }
+                  } catch (releaseError) {
+                    console.warn('Error in sound release callback:', releaseError);
+                    soundRef.current = null;
+                  }
+                });
+              } else {
+                // Invalid duration, just release directly
+                if (soundRef.current && soundRef.current.release) {
+                  soundRef.current.release();
+                }
+                soundRef.current = null;
+              }
+            } catch (durationError) {
+              // getDuration failed, just release directly
+              if (soundRef.current && soundRef.current.release) {
+                soundRef.current.release();
+              }
               soundRef.current = null;
             }
-          });
+          } else {
+            // No getDuration method, object is broken, just clear reference
+            soundRef.current = null;
+          }
+        } catch (stopError) {
+          console.warn('Error in cleanup process:', stopError);
+          try {
+            if (soundRef.current && soundRef.current.release) {
+              soundRef.current.release();
+            }
+          } catch (releaseError) {
+            console.warn('Error releasing sound after stop error:', releaseError);
+          } finally {
+            soundRef.current = null;
+          }
         }
-      } catch (error) {
-        console.warn('Error releasing audio on unmount:', error);
-        soundRef.current = null;
       }
+      
       // Reset all states
       setIsPlaying(false);
       setCurrentPosition(0);
@@ -189,17 +233,47 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
         if (soundRef.current) {
           setIsPlaying(false);
           setPlayStartTime(null);
-          soundRef.current.stop(() => {
+          
+          // Check if sound object is in valid state before stopping
+          try {
+            const duration = soundRef.current.getDuration();
+            if (duration >= 0) {
+              // Sound is in valid state, safe to stop
+              soundRef.current.stop(() => {
+                try {
+                  if (soundRef.current) {
+                    soundRef.current.release();
+                    soundRef.current = null;
+                  }
+                } catch (releaseError) {
+                  console.warn('Error in release callback:', releaseError);
+                  soundRef.current = null;
+                }
+              });
+            } else {
+              // Invalid sound object, skip stop and go straight to release
+              console.warn('🎵 Invalid sound object detected in cleanup, skipping stop');
+              try {
+                soundRef.current.release();
+              } catch (releaseError) {
+                console.warn('🎵 Error releasing invalid sound:', releaseError);
+              } finally {
+                soundRef.current = null;
+              }
+            }
+          } catch (durationError) {
+            // getDuration failed, sound object is corrupted
+            console.warn('🎵 Sound object corrupted in cleanup:', durationError);
             try {
               if (soundRef.current) {
                 soundRef.current.release();
-                soundRef.current = null;
               }
             } catch (releaseError) {
-              console.warn('Error in release callback:', releaseError);
+              console.warn('🎵 Error releasing corrupted sound:', releaseError);
+            } finally {
               soundRef.current = null;
             }
-          });
+          }
           // Also try immediate release in case stop callback fails
           setTimeout(() => {
             try {
@@ -353,18 +427,38 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const goToNextStory = () => {
     if (currentStoryIndex >= stories.length - 1) return;
     
-    // Stop current audio
+    // Stop current audio safely
     try {
       if (soundRef.current && isPlaying) {
-        soundRef.current.stop(() => {
+        // Check if sound object is in valid state before stopping
+        try {
+          const duration = soundRef.current.getDuration();
+          if (duration >= 0) {
+            // Sound is in valid state, safe to stop
+            soundRef.current.stop(() => {
+              setIsPlaying(false);
+              onStoryChange(currentStoryIndex + 1);
+            });
+          } else {
+            // Invalid sound object, just update state
+            console.warn('🎵 Invalid sound object detected in goToNextStory, skipping stop');
+            soundRef.current = null;
+            setIsPlaying(false);
+            onStoryChange(currentStoryIndex + 1);
+          }
+        } catch (durationError) {
+          // getDuration failed, sound object is corrupted
+          console.warn('🎵 Sound object corrupted in goToNextStory:', durationError);
+          soundRef.current = null;
           setIsPlaying(false);
           onStoryChange(currentStoryIndex + 1);
-        });
+        }
       } else {
         onStoryChange(currentStoryIndex + 1);
       }
     } catch (error) {
       console.warn('Error stopping audio in goToNextStory:', error);
+      soundRef.current = null;
       setIsPlaying(false);
       onStoryChange(currentStoryIndex + 1);
     }
@@ -373,18 +467,38 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const goToPreviousStory = () => {
     if (currentStoryIndex <= 0) return;
     
-    // Stop current audio
+    // Stop current audio safely
     try {
       if (soundRef.current && isPlaying) {
-        soundRef.current.stop(() => {
+        // Check if sound object is in valid state before stopping
+        try {
+          const duration = soundRef.current.getDuration();
+          if (duration >= 0) {
+            // Sound is in valid state, safe to stop
+            soundRef.current.stop(() => {
+              setIsPlaying(false);
+              onStoryChange(currentStoryIndex - 1);
+            });
+          } else {
+            // Invalid sound object, just update state
+            console.warn('🎵 Invalid sound object detected in goToPreviousStory, skipping stop');
+            soundRef.current = null;
+            setIsPlaying(false);
+            onStoryChange(currentStoryIndex - 1);
+          }
+        } catch (durationError) {
+          // getDuration failed, sound object is corrupted
+          console.warn('🎵 Sound object corrupted in goToPreviousStory:', durationError);
+          soundRef.current = null;
           setIsPlaying(false);
           onStoryChange(currentStoryIndex - 1);
-        });
+        }
       } else {
         onStoryChange(currentStoryIndex - 1);
       }
     } catch (error) {
       console.warn('Error stopping audio in goToPreviousStory:', error);
+      soundRef.current = null;
       setIsPlaying(false);
       onStoryChange(currentStoryIndex - 1);
     }
@@ -393,18 +507,38 @@ const AudioStoriesPlayer = forwardRef<AudioStoriesPlayerRef, AudioStoriesPlayerP
   const goToStory = (index: number) => {
     if (index < 0 || index >= stories.length || index === currentStoryIndex) return;
     
-    // Stop current audio
+    // Stop current audio safely
     try {
       if (soundRef.current && isPlaying) {
-        soundRef.current.stop(() => {
+        // Check if sound object is in valid state before stopping
+        try {
+          const duration = soundRef.current.getDuration();
+          if (duration >= 0) {
+            // Sound is in valid state, safe to stop
+            soundRef.current.stop(() => {
+              setIsPlaying(false);
+              onStoryChange(index);
+            });
+          } else {
+            // Invalid sound object, just update state
+            console.warn('🎵 Invalid sound object detected in goToStory, skipping stop');
+            soundRef.current = null;
+            setIsPlaying(false);
+            onStoryChange(index);
+          }
+        } catch (durationError) {
+          // getDuration failed, sound object is corrupted
+          console.warn('🎵 Sound object corrupted in goToStory:', durationError);
+          soundRef.current = null;
           setIsPlaying(false);
           onStoryChange(index);
-        });
+        }
       } else {
         onStoryChange(index);
       }
     } catch (error) {
       console.warn('Error stopping audio in goToStory:', error);
+      soundRef.current = null;
       setIsPlaying(false);
       onStoryChange(index);
     }
